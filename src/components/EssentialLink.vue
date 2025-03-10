@@ -1,44 +1,58 @@
 <template>
-  <q-item
-    clickable
-    tag="a"
-    target="_blank"
-    :href="props.link"
+  <div
+    class="q-pa-md mainMenu"
+    style="max-width: 350px"
   >
-    <q-item-section
-      v-if="props.icon"
-      avatar
+    <q-list
+      class="rounded-borders"
     >
-      <q-icon :name="props.icon" />
-    </q-item-section>
+      <q-expansion-item
 
-    <q-item-section>
-      <q-item-label>{{ props.title }}</q-item-label>
-      <q-item-label caption>{{ props.caption }}</q-item-label>
-    </q-item-section>
-  </q-item>
+       :content-inset-level="0.5"
+
+        icon="category"
+        label="Справочники"
+
+      >
+        <q-item>
+          <span>Точки продаж</span>
+        </q-item>
+        <q-item>
+          <span>Товары</span>
+        </q-item>
+
+      </q-expansion-item>
+
+      <q-expansion-item
+        :content-inset-level="0.5"
+
+        icon="settings"
+        label="Конфигурация"
+      >
+        <q-item>
+          <span>Кассы</span>
+        </q-item>
+        <q-item>
+          <span>Сервисы</span>
+        </q-item>
+
+      </q-expansion-item>
+    </q-list>
+  </div>
 </template>
+
 
 <script setup>
 const props = defineProps({
-  title: {
-    type: String,
-    required: true
-  },
+  miniState: Boolean,
+});
 
-  caption: {
-    type: String,
-    default: ''
-  },
-
-  link: {
-    type: String,
-    default: '#'
-  },
-
-  icon: {
-    type: String,
-    default: ''
-  }
-})
+console.log(props.message);
 </script>
+
+<style>
+
+.mainMenu {
+  height: calc(100% - 250px);
+}
+</style>
