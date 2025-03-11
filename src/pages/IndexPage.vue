@@ -1,5 +1,14 @@
 <template>
   <div>
+  <span>Сервисы</span>
+  <q-input
+    rounded
+    outlined
+    label="Поиск"
+    type="search"
+    placeholder="Введите 3 символа для поиска"
+  >
+  </q-input>
   <ProductCard />
   <div class="q-pa-md">
     <!-- Контейнер для карточек -->

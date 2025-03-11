@@ -6,6 +6,15 @@
     <q-list
       class="rounded-borders"
     >
+              <q-item>
+              <q-item-section avatar>
+                <q-icon name="inbox" />
+              </q-item-section>
+
+              <q-item-section>
+                 <img src="/src/assets/photo_2025-03-10_12-46-15.jpg" style="width: 120px">
+              </q-item-section>
+          </q-item>
       <q-expansion-item
 
        :content-inset-level="0.5"
@@ -53,6 +62,6 @@ console.log(props.message);
 <style>
 
 .mainMenu {
-  height: calc(100% - 250px);
+  height: calc(100% - 230px);
 }
 </style>

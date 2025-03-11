@@ -1,5 +1,6 @@
 <template>
-  <div class="q-pa-md">
+  <div class="row q-pa-md">
+    <q-btn class="q-mx-md">Создать сервис</q-btn>
     <div class="q-gutter-md row items-start">
       <q-select
         filled
@@ -8,7 +9,6 @@
         :options="options"
         style="width: 250px"
       />
-
     </div>
   </div>
 </template>

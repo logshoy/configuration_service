@@ -23,11 +23,11 @@
         @mouseleave="miniState = true"
         mini-to-overlay
     >
-      <q-list class="justify-between" style="height: 100%;">
+      <div style="height: 100%;">
 
         <EssentialLink :miniState="miniState" />
         <DrawerLeftFooter/>
-      </q-list>
+      </div>
       <div>
 
       </div>
@@ -40,51 +40,7 @@
       </q-page-container>
     </div>
 
-  <div class="drawer_container">
-        <q-btn
-        v-if="!drawerOpen"
-                class="drawer_right"
-                dense
-                round
-                color="accent"
-                icon="chevron_left"
-                @click="drawerOpen = !drawerOpen"
-              />
-        <q-btn
-                v-if="drawerOpen"
-                class="drawer_left"
-                dense
-                round
-                color="accent"
-                icon="chevron_right"
-                @click="drawerOpen = !drawerOpen"
-              />
-        <!-- QDrawer с информацией -->
-        <q-drawer
-          overlay
-          v-model="drawerOpen"
-          side="right"
-          bordered
-          :width="315"
-          behavior="desktop"
-          persistent="false"
-        >
-          <q-scroll-area class="fit">
-
-
-            <div
-              class="q-pa-md"
-              v-if="selectedItem"
-              >
-              <h5 class="q-mt-none">Свойства элемента</h5>
-              <p><strong>ID:</strong> {{ selectedItem.id }}</p>
-              <p><strong>Имя:</strong> {{ selectedItem.name }}</p>
-              <p><strong>Описание:</strong> {{ selectedItem.description }}</p>
-            </div>
-          </q-scroll-area>
-
-        </q-drawer>
-        </div>
+      <DrawerRight></DrawerRight>
 
       </div>
 
@@ -93,19 +49,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-
-import { useConfigurationStore } from 'stores/configurationStore';
+import { ref} from 'vue'
 
 import EssentialLink from 'components/EssentialLink.vue'
 import DrawerLeftFooter from 'components/DrawerLeftFooter.vue'
+import DrawerRight from 'components/DrawerRight.vue'
 
 const miniState = ref(true)
-const drawerOpen = ref(true);
-
-const selectedItemStore = useConfigurationStore();
-const selectedItem = computed(() => selectedItemStore.configuration); // Получаем выбранный элемент из хранилища
-
 
 </script>
 <style>
@@ -137,23 +87,5 @@ const selectedItem = computed(() => selectedItemStore.configuration); // Пол�
   width: 0px;
 }
 
-.q-page-container {
-  padding-right: 330px;
-  /* padding-left: 300px; */
-}
-
-@media (min-width: 1200px) {
-  .q-page-container {
-    padding-right: 350px;
-    /* padding-left: 400px; */
-  }
-}
-
-@media (min-width: 1600px) {
-  .q-page-container {
-    padding-right: 400px;
-    /* padding-left: 600px; */
-  }
-}
 
 </style>
