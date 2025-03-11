@@ -1,6 +1,6 @@
 <template>
   <div class="row q-pa-md">
-    <q-btn class="q-mx-md">Создать сервис</q-btn>
+    <q-btn class="q-mx-md" @click="enableCreateForm">Создать сервис</q-btn>
     <div class="q-gutter-md row items-start">
       <q-select
         filled
@@ -13,17 +13,21 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue'
 
-export default {
-  setup () {
-    return {
-      model: ref(null),
-      options: [
-        'Google', 'Facebook', 'Twitter', 'Apple', 'Oracle'
-      ]
-    }
-  }
-}
+import { useConfigurationStore } from 'stores/configurationStore';
+
+const selectedItemStore = useConfigurationStore();
+
+
+const model = ref(null)
+
+const options = ref(['Google', 'Facebook', 'Twitter', 'Apple', 'Oracle'])
+
+// Переключение видимости формы
+const enableCreateForm = () => {
+  selectedItemStore.enableCreateFormVisibility();
+};
+
 </script>
