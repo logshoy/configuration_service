@@ -66,7 +66,9 @@
                 </q-icon>
               </template>
             </q-input>
-            <q-item class="q-ma-md">{{ localItem.lastEditedUtc }}</q-item>
+            <q-item class="q-ma-md column"> <p>Послед. изм:</p>
+              {{ localItem.lastEditedUtc }}
+            </q-item>
           </q-form>
         </div>
         <FormCreateConfiguration v-if="isCreateFormVisible" />

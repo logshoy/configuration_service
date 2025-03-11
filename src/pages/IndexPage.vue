@@ -36,7 +36,6 @@
 
 <script setup>
 import ProductCard from 'components/ProductCard.vue';
-
 import { ref, onMounted, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
 
@@ -55,14 +54,15 @@ const selectItem = (item) => {
 };
 
 // Получаем данные из хранилища
-// const configurationList = computed(() => selectedItemStore.configurationList);
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
 
 // Используем геттер filteredConfigurationList
-const filteredList = computed(() =>
-  selectedItemStore.filteredConfigurationList(searchQuery.value)
-);
+const filteredList = computed(() => {
+  const result = selectedItemStore.filteredConfigurationList(searchQuery.value);
+  console.log('Результат поиска:', result); // Отладка
+  return result;
+});
 </script>
 
 <style scoped>
