@@ -17,79 +17,23 @@
         @popup-hide="isDropdownOpen = false"
       />
 
-      <!-- Блок для appCash -->
-      <div v-if="typeConfiguration?.value === 'appCash'">
-        <!-- Поле для ширины -->
-        <q-input
-          class="q-ma-md"
-          v-model.number="width"
-          label="Ширина"
-          type="number"
-          outlined
-          required
-        />
+      <!-- Компонент для настроек кассы -->
+      <CashSettings
+        v-if="typeConfiguration?.value === 'appCash'"
+        :width="width"
+        :height="height"
+        :color="color"
+        @update:width="width = $event"
+        @update:height="height = $event"
+        @update:color="color = $event"
+      />
 
-        <!-- Поле для высоты -->
-        <q-input
-          class="q-ma-md"
-          v-model.number="height"
-          label="Высота"
-          type="number"
-          outlined
-          required
-        />
-
-        <!-- Поле для цвета -->
-        <q-input
-          class="q-ma-md"
-          filled
-          v-model="color"
-          hint="Цвет"
-        >
-          <template v-slot:append>
-            <q-icon name="colorize" class="cursor-pointer">
-              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-color v-model="color" />
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
-      </div>
-
-      <!-- Блок для agentFiscalization -->
-      <div v-if="typeConfiguration?.value === 'agentFiscalization'">
-        <!-- Динамические строки для фискальных регистраторов -->
-        <div v-for="(fiscal, index) in fiscalRegistrators" :key="index" class="q-ma-md">
-          <q-select
-            filled
-            v-model="fiscal.type"
-            :options="fiscalOptions"
-            label="Тип фискального регистратора"
-          />
-          <q-input
-            filled
-            v-model="fiscal.portName"
-            label="PortName"
-            class="q-mt-md"
-          />
-          <q-btn
-            v-if="index === fiscalRegistrators.length - 1"
-            color="green"
-            class="q-mt-md"
-            @click="addFiscalRegistrator"
-          >
-            Добавить
-          </q-btn>
-          <q-btn
-            v-if="fiscalRegistrators.length > 1"
-            color="red"
-            class="q-mt-md q-ml-md"
-            @click="removeFiscalRegistrator(index)"
-          >
-            Удалить
-          </q-btn>
-        </div>
-      </div>
+      <!-- Компонент для настроек агента фискализации -->
+      <FiscalAgentSettings
+        v-if="typeConfiguration?.value === 'agentFiscalization'"
+        :fiscalRegistrators="fiscalRegistrators"
+        @update:fiscalRegistrators="fiscalRegistrators = $event"
+      />
     </q-form>
 
     <!-- Модальное окно подтверждения -->
@@ -115,6 +59,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
+import CashSettings from './Configuration/AppCash.vue';
+import FiscalAgentSettings from './Configuration/FiscalAgent.vue';
 
 const selectedItemStore = useConfigurationStore();
 const formContainer = ref(null);
@@ -126,46 +72,25 @@ const width = ref(0);
 const height = ref(0);
 const color = ref('');
 const typeConfiguration = ref(null);
-
-// Данные для фискальных регистраторов
-const fiscalRegistrators = ref([
-  { type: null, portName: '' } // Начальная строка
-]);
+const fiscalRegistrators = ref([{ type: null, portName: '' }]);
 
 const options = ref([
   {
     label: 'Касса',
     value: 'appCash',
-    description: 'Search engine',
     category: '1'
   },
   {
     label: 'Агент фискализации',
     value: 'agentFiscalization',
-    description: 'Social media',
     category: '1'
   }
-]);
-
-const fiscalOptions = ref([
-  { label: 'АТОЛ', value: 'atol' },
-  { label: 'ШТРИХ', value: 'shtrih' }
 ]);
 
 // Состояние загрузки и ошибки
 const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible);
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
-
-// Добавление новой строки для фискального регистратора
-const addFiscalRegistrator = () => {
-  fiscalRegistrators.value.push({ type: null, portName: '' });
-};
-
-// Удаление строки для фискального регистратора
-const removeFiscalRegistrator = (index) => {
-  fiscalRegistrators.value.splice(index, 1);
-};
 
 // Обработчик кликов вне формы
 const handleClickOutside = (event) => {
@@ -221,7 +146,7 @@ const resetForm = () => {
   height.value = 0;
   color.value = '';
   typeConfiguration.value = null;
-  fiscalRegistrators.value = [{ type: null, portName: '' }]; // Сброс фискальных регистраторов
+  fiscalRegistrators.value = [{ type: null, portName: '' }];
 };
 
 // Создание конфигурации
@@ -238,8 +163,8 @@ const createConfiguration = async () => {
       };
     } else if (typeConfiguration.value?.value === 'agentFiscalization') {
       settings = {
-        typeConfiguration: typeConfiguration.value.value,
-        fiscalRegistrators: fiscalRegistrators.value
+        fiscalRegistrators: fiscalRegistrators.value,
+        typeConfiguration: typeConfiguration.value.value
       };
     }
 
@@ -257,13 +182,3 @@ const createConfiguration = async () => {
   }
 };
 </script>
-
-<style scoped>
-/* Кастомные стили для выпадающего списка */
-.custom-popup {
-  position: absolute !important;
-  top: 100% !important;
-  left: 0 !important;
-  margin-top: 4px !important;
-}
-</style>
