@@ -26,7 +26,6 @@
           <q-card-section>
             <div class="text-h6">ID: {{ item.id }}</div>
             <div class="text-subtitle2">Настройки: {{ item.settings }}</div>
-            <div class="text-subtitle2">Последнее изменение: {{ item.lastEditedUtc }}</div>
           </q-card-section>
         </q-card>
       </div>

@@ -55,7 +55,7 @@ export const useConfigurationStore = defineStore('configuration', {
     },
 
     // Создать новую конфигурацию
-    async createConfiguration(newConfiguration) {
+    async createConfiguration(settings) {
       this.isLoading = true
       this.error = null
 
@@ -63,11 +63,19 @@ export const useConfigurationStore = defineStore('configuration', {
         // Генерируем UUID для новой конфигурации
         const id = uuidv4()
 
-        // Добавляем UUID в объект конфигурации
         const configurationWithId = {
-          ...newConfiguration,
+          settings: JSON.stringify(settings),
+        }
+
+        const newConfiguration = {
+          ...configurationWithId,
           id, // Добавляем сгенерированный UUID
         }
+
+
+        console.log(newConfiguration)
+        // Добавляем UUID в объект конфигурации
+
 
         // Отправляем POST-запрос для создания новой конфигурации
         const response = await fetch('http://26.15.251.91:6003/api/v0/configuration', {
@@ -75,7 +83,7 @@ export const useConfigurationStore = defineStore('configuration', {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(configurationWithId), // Данные новой конфигурации с UUID
+          body: JSON.stringify(newConfiguration), // Данные новой конфигурации с UUID
         })
 
         // Проверяем, что ответ успешный (статус 200-299)
@@ -91,8 +99,15 @@ export const useConfigurationStore = defineStore('configuration', {
           throw new Error('Ошибка в данных: ' + data.message)
         }
 
+        const configurationPinia = {
+          settings,
+          id
+        }
+
+        console.log('Pinia',configurationPinia)
+
         // Добавляем новую конфигурацию в список
-        this.configurationList.push(data.data)
+        this.configurationList.push(configurationPinia)
 
         // Возвращаем созданную конфигурацию
         return data.data
@@ -112,6 +127,8 @@ export const useConfigurationStore = defineStore('configuration', {
 
       this.isLoading = true
       this.error = null
+
+
 
       try {
         // Преобразуем настройки в JSON-строку

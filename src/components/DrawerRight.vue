@@ -62,8 +62,6 @@ watch(
       // Создаем глубокую копию объекта для редактирования
       localItem.value = JSON.parse(JSON.stringify(newValue));
       // Вручную преобразуем строки в числа
-      localItem.value.settings.width = Number(localItem.value.settings.width);
-      localItem.value.settings.height = Number(localItem.value.settings.height);
     } else {
       localItem.value = null; // Сбрасываем локальное состояние, если элемент не выбран
     }

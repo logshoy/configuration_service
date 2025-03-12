@@ -168,11 +168,8 @@ const createConfiguration = async () => {
       };
     }
 
-    const newConfiguration = {
-      settings: JSON.stringify(settings),
-    };
 
-    const createdConfiguration = await selectedItemStore.createConfiguration(newConfiguration);
+    const createdConfiguration = await selectedItemStore.createConfiguration(settings);
     console.log('Конфигурация создана:', createdConfiguration);
 
     resetForm();
