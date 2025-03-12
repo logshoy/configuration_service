@@ -5,8 +5,16 @@
       <div class="row">
         <span>Создание</span>
         <q-btn type="submit" color="primary" class="q-mx-md">Создать</q-btn>
-        <q-btn @click="confirmcloseForm" color="negative">Отмена</q-btn>
+        <q-btn @click="confirmcloseForm" color="negative">X</q-btn>
       </div>
+
+      <q-select
+        filled
+        class="q-ma-md"
+        v-model="single"
+        :options="options"
+        label="Тип конфигурации"
+      />
 
       <!-- Поле для ширины -->
       <q-input
@@ -54,7 +62,7 @@
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Отмена" color="primary" @click="confirmcloseForm" />
+          <q-btn flat label="Отмена" color="primary" @click="closeForm" />
           <q-btn flat label="Закрыть" color="negative" @click="confirmClose" />
         </q-card-actions>
       </q-card>
@@ -77,6 +85,8 @@ const showConfirmationDialog = ref(false);
 const width = ref(0);
 const height = ref(0);
 const color = ref('');
+
+const options = ref(['Касса', 'Агент Фискализации'])
 
 // Состояние загрузки и ошибки
 const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible);
@@ -118,10 +128,19 @@ const confirmClose = () => {
 // Закрытие формы без подтверждения (при нажатии "Отмена" в форме)
 const confirmcloseForm = () => {
   document.removeEventListener('click', handleClickOutside);
+  selectedItemStore.disableCreateFormVisibility();
   showConfirmationDialog.value = false;
 };
 
 // Закрытие формы без подтверждения (при нажатии "Отмена" в форме)
+
+const closeForm = () => {
+  document.removeEventListener('click', handleClickOutside);
+  showConfirmationDialog.value = false;
+    setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 100);
+};
 
 // Сброс формы
 const resetForm = () => {

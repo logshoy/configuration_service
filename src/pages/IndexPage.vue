@@ -19,7 +19,7 @@
         <q-card
           v-for="item in filteredList"
           :key="item.id"
-          class="my-card rounded-borders"
+          :class="['my-card', 'rounded-borders', { 'selected-card': item.id === selectedItemId }]"
           clickable
           @click="selectItem(item)"
         >
@@ -44,6 +44,9 @@ const selectedItemStore = useConfigurationStore();
 // Поисковый запрос
 const searchQuery = ref('');
 
+// ID выбранного элемента
+const selectedItemId = ref(null);
+
 // Загружаем данные при монтировании компонента
 onMounted(() => {
   selectedItemStore.fetchConfigurationList();
@@ -51,6 +54,7 @@ onMounted(() => {
 
 const selectItem = (item) => {
   selectedItemStore.setConfiguration(item); // Используем метод хранилища
+  selectedItemId.value = item.id; // Обновляем ID выбранного элемента
 };
 
 // Получаем данные из хранилища
@@ -71,11 +75,14 @@ const filteredList = computed(() => {
   width: 200px; /* Фиксированная ширина карточки */
   border-radius: 10px; /* Закругленные углы */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Тень для карточки */
+  transition: all 0.3s ease; /* Плавное изменение стилей */
 }
 
-/* Контейнер для карточек */
-.row {
-  display: flex;
-  flex-wrap: wrap; /* Перенос карточек на новую строку */
+/* Стили для выделенной карточки */
+.selected-card {
+  border: 2px solid #1976d2; /* Синяя рамка */
+  background-color: #e3f2fd; /* Светло-голубой фон */
+  transform: scale(1.05); /* Увеличение карточки */
 }
+
 </style>
