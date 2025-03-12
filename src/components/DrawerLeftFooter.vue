@@ -26,8 +26,7 @@
         <q-item-section avatar>
           <q-icon name="translate" />
         </q-item-section>
-
-        <q-item-section>Язык</q-item-section>
+        <LanguageSettings/>
       </q-item>
             <q-item clickable v-ripple>
         <q-item-section avatar>
@@ -44,6 +43,9 @@
 
 
 <script setup>
+import LanguageSettings from 'components/DrawerLeftFooter/LanguageSettings.vue';
+
+
 const props = defineProps({
   miniState: Boolean,
 });

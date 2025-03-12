@@ -1,6 +1,7 @@
 <template>
   <div>
     <div class="text-h5 q-pa-xs">Конфигурации</div>
+    <div>{{ $t('success') }}</div>
     <q-input
       rounded
       outlined

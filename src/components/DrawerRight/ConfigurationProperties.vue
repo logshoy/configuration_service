@@ -3,7 +3,14 @@
     <q-form @submit.prevent="saveChanges">
       <div class="row">
         <span class="q-mt-none">Свойства элемента</span>
-        <q-btn type="submit" color="primary" class="q-mx-md">Сохранить</q-btn>
+        <q-btn
+          type="submit"
+          color="primary"
+          class="q-mx-md"
+          :disabled="!hasChanges"
+        >
+          Сохранить
+        </q-btn>
       </div>
       <p>ID: {{ localItem.id }}</p>
 
@@ -13,15 +20,15 @@
         :width="localItem.settings.width"
         :height="localItem.settings.height"
         :color="localItem.settings.color"
-        @update:width="localItem.settings.width = $event"
-        @update:height="localItem.settings.height = $event"
-        @update:color="localItem.settings.color = $event"
+        @update:width="updateWidth"
+        @update:height="updateHeight"
+        @update:color="updateColor"
       />
 
       <FiscalAgent
         v-if="localItem.settings.typeConfiguration === 'agentFiscalization'"
         :fiscalRegistrators="localItem.settings.fiscalRegistrators || []"
-        @update:fiscalRegistrators="localItem.settings.fiscalRegistrators = $event"
+        @update:fiscalRegistrators="updateFiscalRegistrators"
       />
 
     </q-form>
@@ -41,6 +48,9 @@ const selectedItem = computed(() => selectedItemStore.configuration); // Пол�
 // Локальная копия элемента для редактирования
 const localItem = ref(null);
 
+// Исходное состояние элемента (для сравнения)
+const initialItem = ref(null);
+
 // Следим за изменением выбранного элемента
 watch(
   selectedItem,
@@ -48,12 +58,38 @@ watch(
     if (newValue) {
       // Создаем глубокую копию объекта для редактирования
       localItem.value = JSON.parse(JSON.stringify(newValue));
+      // Сохраняем исходное состояние
+      initialItem.value = JSON.parse(JSON.stringify(newValue));
     } else {
       localItem.value = null; // Сбрасываем локальное состояние, если элемент не выбран
+      initialItem.value = null;
     }
   },
   { immediate: true }
 );
+
+// Методы для обновления свойств
+const updateWidth = (newWidth) => {
+  localItem.value.settings.width = newWidth;
+};
+
+const updateHeight = (newHeight) => {
+  localItem.value.settings.height = newHeight;
+};
+
+const updateColor = (newColor) => {
+  localItem.value.settings.color = newColor;
+};
+
+const updateFiscalRegistrators = (newRegistrators) => {
+  localItem.value.settings.fiscalRegistrators = newRegistrators;
+};
+
+// Вычисляемое свойство для проверки изменений
+const hasChanges = computed(() => {
+  if (!localItem.value || !initialItem.value) return false;
+  return JSON.stringify(localItem.value) !== JSON.stringify(initialItem.value);
+});
 
 // Сохранение изменений
 const saveChanges = () => {
@@ -64,5 +100,8 @@ const saveChanges = () => {
 
   // Обновляем элемент в хранилище только после нажатия "Сохранить"
   selectedItemStore.updateItem(localItem.value);
+
+  // Обновляем исходное состояние после сохранения
+  initialItem.value = JSON.parse(JSON.stringify(localItem.value));
 };
 </script>
