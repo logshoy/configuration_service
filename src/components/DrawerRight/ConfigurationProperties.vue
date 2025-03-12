@@ -1,58 +1,49 @@
 <template>
-  <div class="drawer_container">
-    <q-btn
-      v-if="!drawerOpen"
-      class="drawer_right"
-      dense
-      round
-      color="accent"
-      icon="chevron_left"
-      @click="drawerOpen = !drawerOpen"
-    />
-    <q-btn
-      v-if="drawerOpen"
-      class="drawer_left"
-      dense
-      round
-      color="accent"
-      icon="chevron_right"
-      @click="drawerOpen = !drawerOpen"
-    />
-    <!-- QDrawer с информацией -->
-    <q-drawer
-      overlay
-      v-model="drawerOpen"
-      side="right"
-      bordered
-      :width="315"
-      behavior="desktop"
-      persistent="false"
-    >
-      <q-scroll-area class="fit">
-        <!-- Используем новый компонент -->
-        <ConfigurationProperties v-if="localItem && !isCreateFormVisible" :localItem="localItem" @save="saveChanges" />
-        <FormCreateConfiguration v-if="isCreateFormVisible" />
-      </q-scroll-area>
-    </q-drawer>
+  <div class="q-pa-md">
+    <q-form @submit.prevent="saveChanges">
+      <div class="row">
+        <span class="q-mt-none">Свойства элемента</span>
+        <q-btn type="submit" color="primary" class="q-mx-md">Сохранить</q-btn>
+      </div>
+      <p>ID: {{ localItem.id }}</p>
+
+      <!-- Условие для отображения AppCash или FiscalAgent -->
+      <AppCash
+        v-if="localItem.settings.typeConfiguration === 'appCash'"
+        :width="localItem.settings.width"
+        :height="localItem.settings.height"
+        :color="localItem.settings.color"
+        @update:width="localItem.settings.width = $event"
+        @update:height="localItem.settings.height = $event"
+        @update:color="localItem.settings.color = $event"
+      />
+
+      <FiscalAgent
+        v-if="localItem.settings.typeConfiguration === 'agentFiscalization'"
+        :fiscalRegistrators="localItem.settings.fiscalRegistrators || []"
+        @update:fiscalRegistrators="localItem.settings.fiscalRegistrators = $event"
+      />
+
+      <q-item class="q-ma-md column">
+        <p>Послед. изм:</p>
+        {{ localItem.lastEditedUtc }}
+      </q-item>
+    </q-form>
   </div>
 </template>
 
 <script setup>
-import FormCreateConfiguration from 'components/FormCreateConfiguration.vue';
-import ConfigurationProperties from 'components/DrawerRight/ConfigurationProperties.vue'; // Импортируем новый компонент
-import { ref, computed, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
 
-const drawerOpen = ref(true);
+import AppCash from 'components/Configuration/AppCash.vue';
+import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 
 const selectedItemStore = useConfigurationStore();
 const selectedItem = computed(() => selectedItemStore.configuration); // Получаем выбранный элемент из хранилища
 
 // Локальная копия элемента для редактирования
 const localItem = ref(null);
-
-// Видимость формы
-const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible);
 
 // Следим за изменением выбранного элемента
 watch(
