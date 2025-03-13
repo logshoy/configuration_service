@@ -1,8 +1,9 @@
 <template>
   <div class="drawer_container">
+    <!-- Кнопка для открытия/закрытия QDrawer -->
     <q-btn
       v-if="!drawerOpen"
-      class="drawer_right"
+      class="drawer_button drawer_right"
       dense
       round
       color="accent"
@@ -11,7 +12,7 @@
     />
     <q-btn
       v-if="drawerOpen"
-      class="drawer_left"
+      class="drawer_button drawer_left"
       dense
       round
       color="accent"
@@ -96,3 +97,16 @@ const saveChanges = () => {
   selectedItemStore.updateItem(localItem.value);
 };
 </script>
+
+<style scoped>
+.drawer_button {
+  position: fixed;
+  z-index: 10000; /* Увеличиваем z-index, чтобы кнопки были поверх других элементов */
+}
+
+
+
+.drawer_left {
+  right: 300px; /* Расстояние от правого края, учитывая ширину QDrawer */
+}
+</style>
