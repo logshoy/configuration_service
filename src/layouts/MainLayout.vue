@@ -1,5 +1,5 @@
 <template>
-  <q-layout no-scroll view="hHh lpR fFf">
+  <q-layout view="hHh lpR fFf">
     <q-header elevated>
       <q-toolbar>
         <q-toolbar-title>
@@ -19,14 +19,14 @@
           @mouseleave="handleDrawerLeave"
           mini-to-overlay
         >
-          <div style="height: 100%;">
+          <div style="height: 100%">
             <EssentialLink />
             <DrawerLeftFooter />
           </div>
         </q-drawer>
       </div>
       <div class="_content_center">
-        <q-page-container :style="pageContainerStyle">
+        <q-page-container  :style="contentStyle">
           <router-view />
         </q-page-container>
       </div>
@@ -50,6 +50,14 @@ const shouldMiniState = computed(() => {
   return drawerStore.miniState && !drawerStore.isLocked;
 });
 
+// Вычисляемое свойство для стилей контейнера
+const contentStyle = computed(() => {
+  return {
+    width: drawerStore.drawerOpenRight ? 'calc(100% - 300px)' : '100%',
+    transition: 'width 0.3s ease', // Плавный переход
+  };
+});
+
 // Обработчик при наведении на drawer
 const handleDrawerEnter = () => {
   if (!drawerStore.isLocked) {
@@ -66,6 +74,7 @@ const handleDrawerLeave = () => {
 </script>
 
 <style>
+
 ._content_center {
   display: flex;
   width: 100%;
@@ -73,6 +82,7 @@ const handleDrawerLeave = () => {
   flex: 1;
   flex-direction: column;
 }
+
 
 .drawer_right {
   z-index: 99999;

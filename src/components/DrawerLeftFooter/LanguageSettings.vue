@@ -4,8 +4,9 @@
       <q-icon name="translate" />
     </q-item-section>
     <q-item-section>
-      <q-btn flat>
-        {{ $t('language') }}: {{ selectedLocaleLabel }}
+      <div>
+            {{ $t('language') }}:{{ selectedLocaleLabel }}
+      </div>
         <q-menu
           anchor="bottom right"
           self="bottom left"
@@ -25,7 +26,6 @@
             </q-item>
           </q-list>
         </q-menu>
-      </q-btn>
     </q-item-section>
   </q-item>
 </template>
@@ -92,9 +92,5 @@ watch(
 .q-menu {
   min-width: 160px;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
-}
-
-.q-item__section--avatar {
-  min-width: 40px;
 }
 </style>

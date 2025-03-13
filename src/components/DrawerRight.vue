@@ -7,7 +7,7 @@
       round
       color="accent"
       icon="chevron_left"
-      @click="drawerOpen = !drawerOpen"
+      @click="change"
     />
     <q-btn
       v-if="drawerOpen"
@@ -16,7 +16,7 @@
       round
       color="accent"
       icon="chevron_right"
-      @click="drawerOpen = !drawerOpen"
+      @click="change"
     />
     <!-- QDrawer с информацией -->
     <q-drawer
@@ -32,6 +32,13 @@
         <!-- Используем новый компонент -->
         <ConfigurationProperties v-if="localItem && !isCreateFormVisible" :localItem="localItem" @save="saveChanges" />
         <FormCreateConfiguration v-if="isCreateFormVisible" />
+        <div
+        v-else-if="!localItem || isCreateFormVisible"
+        class="flex justify-center items-center"
+        style="height: 100vh;"
+        >
+          Выберите элемент
+        </div>
       </q-scroll-area>
     </q-drawer>
   </div>
@@ -43,7 +50,16 @@ import ConfigurationProperties from 'components/DrawerRight/ConfigurationPropert
 import { ref, computed, watch } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
 
-const drawerOpen = ref(true);
+import { useDrawerStore } from 'stores/drawerStore';
+
+const drawerStore = useDrawerStore();
+
+const drawerOpen = computed(() => drawerStore.drawerOpenRight);
+
+const change = () => {
+  console.log('я выполняюсь')
+  drawerStore.setDrawerOpenRight()
+}
 
 const selectedItemStore = useConfigurationStore();
 const selectedItem = computed(() => selectedItemStore.configuration); // Получаем выбранный элемент из хранилища

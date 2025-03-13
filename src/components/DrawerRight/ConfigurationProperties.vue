@@ -14,6 +14,29 @@
       </div>
       <p>ID: {{ localItem.id }}</p>
 
+      <!-- Кнопка для копирования ID -->
+      <q-btn
+        color="primary"
+        icon="content_copy"
+        @click="copyToClipboard"
+        class="q-mt-md"
+      />
+
+      <!-- Уведомление об успешном копировании -->
+      <q-dialog v-model="showCopiedNotification" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Успешно!</div>
+          </q-card-section>
+          <q-card-section>
+            ID скопирован в буфер обмена.
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="OK" color="primary" v-close-popup />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+
       <!-- Условие для отображения AppCash или FiscalAgent -->
       <AppCash
         v-if="localItem.settings.typeConfiguration === 'appCash'"
@@ -30,7 +53,6 @@
         :fiscalRegistrators="localItem.settings.fiscalRegistrators || []"
         @update:fiscalRegistrators="updateFiscalRegistrators"
       />
-
     </q-form>
   </div>
 </template>
@@ -38,10 +60,12 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
+import { useQuasar } from 'quasar';
 
 import AppCash from 'components/Configuration/AppCash.vue';
 import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 
+const $q = useQuasar();
 const selectedItemStore = useConfigurationStore();
 const selectedItem = computed(() => selectedItemStore.configuration); // Получаем выбранный элемент из хранилища
 
@@ -50,6 +74,9 @@ const localItem = ref(null);
 
 // Исходное состояние элемента (для сравнения)
 const initialItem = ref(null);
+
+// Состояние уведомления о копировании
+const showCopiedNotification = ref(false);
 
 // Следим за изменением выбранного элемента
 watch(
@@ -104,4 +131,20 @@ const saveChanges = () => {
   // Обновляем исходное состояние после сохранения
   initialItem.value = JSON.parse(JSON.stringify(localItem.value));
 };
+
+// Метод для копирования ID в буфер обмена
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(localItem.value.id); // Копируем ID
+    showCopiedNotification.value = true; // Показываем уведомление
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Не удалось скопировать ID',
+    });
+    console.log(error)
+  }
+};
 </script>
+
+
