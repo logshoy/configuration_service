@@ -3,5 +3,6 @@
 
 export default {
   failed: 'Неудача',
-  success: 'Успешно'
+  success: 'Успешно',
+  language: "Язык"
 }

@@ -21,14 +21,8 @@
 
         <q-item-section>Настройки</q-item-section>
       </q-item>
-
-            <q-item clickable v-ripple>
-        <q-item-section avatar>
-          <q-icon name="translate" />
-        </q-item-section>
-        <LanguageSettings/>
-      </q-item>
-            <q-item clickable v-ripple>
+          <LanguageSettings/>
+          <q-item clickable v-ripple>
         <q-item-section avatar>
           <q-icon color="red" name="logout" />
         </q-item-section>
