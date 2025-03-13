@@ -1,26 +1,42 @@
 <template>
   <div class="q-pa-md">
     <q-form @submit.prevent="saveChanges">
-      <div class="row">
-        <span class="q-mt-none">Свойства элемента</span>
+      <div class="row items-center q-mb-md">
         <q-btn
           type="submit"
           color="primary"
           class="q-mx-md"
           :disabled="!hasChanges"
-        >
-          Сохранить
-        </q-btn>
+          icon="save"
+          round
+        />
+        <q-btn
+          color="negative"
+          icon="delete"
+          @click="confirmDelete"
+          class="q-mx-md"
+          round
+        />
       </div>
-      <p>ID: {{ localItem.id }}</p>
 
-      <!-- Кнопка для копирования ID -->
-      <q-btn
-        color="primary"
-        icon="content_copy"
-        @click="copyToClipboard"
-        class="q-mt-md"
-      />
+      <!-- ID и кнопка копирования на одной линии -->
+      <div class="row items-center">
+        <q-input
+          v-model="localItem.id"
+          label="ID"
+          readonly
+          outlined
+          dense
+          class="col-grow q-ma-md"
+        />
+        <q-btn
+          color="primary"
+          icon="content_copy"
+          @click="copyToClipboard"
+          class="q-ml-md"
+          round
+        />
+      </div>
 
       <!-- Уведомление об успешном копировании -->
       <q-dialog v-model="showCopiedNotification" persistent>
@@ -67,35 +83,26 @@ import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 
 const $q = useQuasar();
 const selectedItemStore = useConfigurationStore();
-const selectedItem = computed(() => selectedItemStore.configuration); // Получаем выбранный элемент из хранилища
+const selectedItem = computed(() => selectedItemStore.configuration);
 
-// Локальная копия элемента для редактирования
 const localItem = ref(null);
-
-// Исходное состояние элемента (для сравнения)
 const initialItem = ref(null);
-
-// Состояние уведомления о копировании
 const showCopiedNotification = ref(false);
 
-// Следим за изменением выбранного элемента
 watch(
   selectedItem,
   (newValue) => {
     if (newValue) {
-      // Создаем глубокую копию объекта для редактирования
       localItem.value = JSON.parse(JSON.stringify(newValue));
-      // Сохраняем исходное состояние
       initialItem.value = JSON.parse(JSON.stringify(newValue));
     } else {
-      localItem.value = null; // Сбрасываем локальное состояние, если элемент не выбран
+      localItem.value = null;
       initialItem.value = null;
     }
   },
   { immediate: true }
 );
 
-// Методы для обновления свойств
 const updateWidth = (newWidth) => {
   localItem.value.settings.width = newWidth;
 };
@@ -112,39 +119,74 @@ const updateFiscalRegistrators = (newRegistrators) => {
   localItem.value.settings.fiscalRegistrators = newRegistrators;
 };
 
-// Вычисляемое свойство для проверки изменений
 const hasChanges = computed(() => {
   if (!localItem.value || !initialItem.value) return false;
   return JSON.stringify(localItem.value) !== JSON.stringify(initialItem.value);
 });
 
-// Сохранение изменений
 const saveChanges = () => {
   if (!localItem.value) {
     console.error('Локальный элемент не определен');
     return;
   }
 
-  // Обновляем элемент в хранилище только после нажатия "Сохранить"
   selectedItemStore.updateItem(localItem.value);
-
-  // Обновляем исходное состояние после сохранения
   initialItem.value = JSON.parse(JSON.stringify(localItem.value));
 };
 
-// Метод для копирования ID в буфер обмена
 const copyToClipboard = async () => {
+  if (!localItem.value || !localItem.value.id) {
+    $q.notify({
+      type: 'negative',
+      message: 'ID не найден',
+    });
+    return;
+  }
+
   try {
-    await navigator.clipboard.writeText(localItem.value.id); // Копируем ID
-    showCopiedNotification.value = true; // Показываем уведомление
+    await navigator.clipboard.writeText(localItem.value.id);
+    showCopiedNotification.value = true;
   } catch (error) {
     $q.notify({
       type: 'negative',
       message: 'Не удалось скопировать ID',
     });
-    console.log(error)
+    console.log(error);
+  }
+};
+
+const confirmDelete = () => {
+  $q.dialog({
+    title: 'Подтверждение удаления',
+    message: 'Вы уверены, что хотите удалить этот элемент?',
+    cancel: true,
+    persistent: true,
+  }).onOk(() => {
+    deleteItem();
+  });
+};
+
+const deleteItem = async () => {
+  if (!localItem.value) {
+    console.error('Локальный элемент не определен');
+    return;
+  }
+
+  try {
+    await selectedItemStore.deleteItem(localItem.value.id);
+    $q.notify({
+      type: 'positive',
+      message: 'Элемент успешно удален',
+    });
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Не удалось удалить элемент',
+    });
+    console.log(error);
   }
 };
 </script>
 
-
+<style scoped>
+</style>

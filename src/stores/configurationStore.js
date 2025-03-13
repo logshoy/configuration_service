@@ -111,6 +111,20 @@ export const useConfigurationStore = defineStore('configuration', {
       return data
     },
 
+    async deleteItem(id) {
+      await this._fetchData(`${API_BASE_URL}/${id}`, {
+        method: 'DELETE',
+      })
+
+      // Удаляем элемент из списка
+      this.configurationList = this.configurationList.filter((item) => item.id !== id)
+
+      // Сбрасываем выбранный элемент, если он был удален
+      if (this.configuration && this.configuration.id === id) {
+        this.configuration = null
+      }
+    },
+
     // Показать форму создания
     enableCreateFormVisibility() {
       this.isCreateFormVisible = true
