@@ -1,6 +1,9 @@
 <template>
   <div>
-    <div class="text-h5 q-pa-xs">Конфигурации</div>
+
+    <div class="_content_center">
+    <DrawerListElements/>
+    <div class="text-h5 q-pa-xs">{{ $t('configuration') }}</div>
     <div>{{ $t('success') }}</div>
     <q-input
       rounded
@@ -31,13 +34,19 @@
         </q-card>
       </div>
     </div>
+      <DrawerRight />
+    </div>
   </div>
 </template>
 
 <script setup>
-import ProductCard from 'components/ProductCard.vue';
 import { ref, onMounted, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
+
+import ProductCard from 'components/ProductCard.vue';
+import DrawerRight from 'components/DrawerRight.vue';
+import DrawerListElements from 'components/DrawerListElements.vue';
+
 
 const selectedItemStore = useConfigurationStore();
 
@@ -64,7 +73,6 @@ const error = computed(() => selectedItemStore.error);
 // Используем геттер filteredConfigurationList
 const filteredList = computed(() => {
   const result = selectedItemStore.filteredConfigurationList(searchQuery.value);
-  console.log('Результат поиска:', result); // Отладка
   return result;
 });
 </script>
@@ -83,6 +91,30 @@ const filteredList = computed(() => {
   border: 2px solid #1976d2; /* Синяя рамка */
   background-color: #e3f2fd; /* Светло-голубой фон */
   transform: scale(1.05); /* Увеличение карточки */
+}
+
+.drawer_right {
+  z-index: 99999;
+  margin-top: 50vh;
+  right: 5px;
+  position: absolute;
+  display: flex;
+}
+
+.drawer_left {
+  z-index: 99999;
+  margin-top: 50vh;
+  right: 300px;
+  position: absolute;
+}
+
+
+._content_center {
+  display: flex;
+  width: 100%;
+  padding: 30px 25px 20px 60px;
+  flex: 1;
+  flex-direction: column;
 }
 
 </style>

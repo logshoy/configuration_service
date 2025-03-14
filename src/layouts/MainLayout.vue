@@ -30,7 +30,7 @@
           <router-view />
         </q-page-container>
       </div>
-      <DrawerRight />
+
     </div>
   </q-layout>
 </template>
@@ -40,7 +40,7 @@ import { ref, computed } from 'vue';
 import { useDrawerStore } from 'stores/drawerStore';
 import EssentialLink from 'components/EssentialLink.vue';
 import DrawerLeftFooter from 'components/DrawerLeftFooter.vue';
-import DrawerRight from 'components/DrawerRight.vue';
+
 
 const drawerStore = useDrawerStore();
 const leftDrawerOpen = ref(false);
@@ -84,22 +84,5 @@ const handleDrawerLeave = () => {
 }
 
 
-.drawer_right {
-  z-index: 99999;
-  margin-top: 50vh;
-  right: 5px;
-  position: absolute;
-  display: flex;
-}
 
-.drawer_left {
-  z-index: 99999;
-  margin-top: 50vh;
-  right: 300px;
-  position: absolute;
-}
-
-.drawer_container {
-  width: 0px;
-}
 </style>

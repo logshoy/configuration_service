@@ -36,9 +36,9 @@
         <div
         v-else-if="!localItem || isCreateFormVisible"
         class="flex justify-center items-center"
-        style="height: 100vh;"
+        style="height: 90vh;"
         >
-          Выберите элемент
+          <h5>Выберите элемент</h5>
         </div>
       </q-scroll-area>
     </q-drawer>
@@ -101,12 +101,15 @@ const saveChanges = () => {
 <style scoped>
 .drawer_button {
   position: fixed;
-  z-index: 10000; /* Увеличиваем z-index, чтобы кнопки были поверх других элементов */
+  top: 50%;
+  z-index: 20000; /* Увеличиваем z-index, чтобы кнопки были поверх других элементов */
 }
-
-
 
 .drawer_left {
   right: 300px; /* Расстояние от правого края, учитывая ширину QDrawer */
+}
+
+.drawer_right {
+  right: 0px; /* Расстояние от правого края, учитывая ширину QDrawer */
 }
 </style>

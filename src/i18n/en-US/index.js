@@ -4,5 +4,13 @@
 export default {
   failed: 'Action failed',
   success: 'Action was successful123123',
-  language: "Lang"
+  language: 'Lang',
+  configuration: 'Сonfiguration',
+  directories: 'Directories',
+  shops: 'Shops',
+  goods: 'Goods',
+  cashboxs: 'Cashboxs',
+  services: 'Services',
+  exit: 'Exit',
+  devices: 'Devices',
 }

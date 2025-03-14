@@ -4,5 +4,13 @@
 export default {
   failed: 'Неудача',
   success: 'Успешно',
-  language: "Язык"
+  language: 'Язык',
+  configuration: 'Конфигурация',
+  directories: 'Справочники',
+  shops: 'Магазины',
+  goods: 'Товары',
+  cashboxs: 'Кассы',
+  services: 'Сервисы',
+  exit: 'Выход',
+  devices: 'Устройства'
 }

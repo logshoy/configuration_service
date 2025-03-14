@@ -25,7 +25,7 @@
         <q-item-section avatar>
           <q-icon color="red" name="logout" />
       </q-item-section>
-        <q-item-section>Выход</q-item-section>
+        <q-item-section>{{ $t('exit') }}</q-item-section>
       </q-item>
 
 

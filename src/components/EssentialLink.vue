@@ -18,16 +18,16 @@
       <q-expansion-item
 
        :content-inset-level="0.5"
-
+        
         icon="category"
-        label="Справочники"
+        :label="$t('directories')"
 
       >
         <q-item>
-          <span>Точки продаж</span>
+          <span>{{ $t('shops') }}</span>
         </q-item>
         <q-item>
-          <span>Товары</span>
+          <span>{{ $t('goods') }}</span>
         </q-item>
 
       </q-expansion-item>
@@ -36,14 +36,18 @@
         :content-inset-level="0.5"
 
         icon="settings"
-        label="Конфигурация"
+        :label="$t('configuration')"
       >
         <q-item>
-          <span>Кассы</span>
+          <span>{{ $t('cashboxs') }}</span>
         </q-item>
         <q-item>
-          <span>Сервисы</span>
+          <span>{{ $t('services') }}</span>
         </q-item>
+        <q-item>
+          <span>{{ $t('devices') }}</span>
+        </q-item>
+
 
       </q-expansion-item>
     </q-list>
