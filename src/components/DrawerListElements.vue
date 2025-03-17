@@ -81,6 +81,8 @@ const drawerOpen = ref(true);
 const showAddDialog = ref(false);
 const newItemName = ref('');
 
+// Определяем заголовок диалога в зависимости от выбранного элемента
+
 // Данные для дерева
 const treeData = computed(() => shopStore.treeData);
 
@@ -101,6 +103,15 @@ const selectedItemId = computed({
   }
 });
 
+const dialogTitle = computed(() => {
+  const node = findNodeById(treeData.value, selectedItemId.value);
+  if (!node.type) return 'магазин';
+  if (node.type === 'shop') return 'группу касс';
+  if (node.type === 'cashGroup') return 'кассу';
+  return node;
+});
+
+
 // Поиск узла по ID
 const findNodeById = (nodes, id) => {
   for (const node of nodes) {
@@ -113,21 +124,7 @@ const findNodeById = (nodes, id) => {
   return null;
 };
 
-// Обработчик выбора узла
-// const handleNodeSelect = (id) => {
-//   const node = findNodeById(treeData.value, id);
-//   if (node) {
-//     configurationStore.setConfiguration({
-//       id: node.id,
-//       settings: {
-//         name: node.label,
-//         typeConfiguration: 'AppCash'
-//       }
-//     });
-//   }
-// };
 
-// Иконки для разных типов узлов
 const getIcon = (node) => {
   return {
     shop: 'store',
@@ -145,10 +142,21 @@ const openAddDialog = () => {
 // Добавление нового элемента
 const addItem = () => {
   if (newItemName.value.trim()) {
-    shopStore.addNewItem({
-      name: newItemName.value,
-      parentId: selectedItemId.value
-    });
+    if (!selectedItemId.value) {
+      // Добавляем магазин
+      shopStore.addShop(newItemName.value);
+    } else if (selectedItemId.value.type === 'shop') {
+      // Добавляем группу касс
+      shopStore.addCashGroup(selectedItemId.value.data.id, newItemName.value);
+    } else if (selectedItemId.value.type === 'cashGroup') {
+      // Добавляем кассу
+      shopStore.addCashRegister(
+        selectedItemId.value.shopId,
+        selectedItemId.value.cashGroupId,
+        newItemName.value
+      );
+    }
+    newItemName.value = '';
     showAddDialog.value = false;
   }
 };
