@@ -53,7 +53,7 @@ export const useConfigurationStore = defineStore('configuration', {
         console.error('Некорректный элемент для выбора')
         return
       }
-      console.log('cash', newConfiguration)
+      console.log('Appcash', newConfiguration)
       this.configuration = newConfiguration
     },
 
