@@ -52,7 +52,7 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
-
+      <!-- {{ localItem }} -->
       <!-- Условие для отображения AppCash или FiscalAgent -->
       <AppCash
         v-if="localItem.settings.typeConfiguration === 'appCash'"

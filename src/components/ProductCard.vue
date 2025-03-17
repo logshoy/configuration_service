@@ -1,6 +1,6 @@
 <template>
   <div class="row q-pa-md">
-    <q-btn class="q-mx-md" @click="enableCreateForm">Создать сервис</q-btn>
+    <q-btn class="q-mx-md" @click="enableCreateForm">Создать конфигурацию</q-btn>
     <div class="q-gutter-md row items-start">
       <q-select
         filled

@@ -7,7 +7,7 @@
       class="rounded-borders"
     >
               <q-item>
-              <q-item-section avatar>
+              <q-item-section  avatar>
                 <q-icon name="inbox" />
               </q-item-section>
 
@@ -18,15 +18,15 @@
       <q-expansion-item
 
        :content-inset-level="0.5"
-        
+
         icon="category"
         :label="$t('directories')"
 
       >
-        <q-item>
+        <q-item clickable>
           <span>{{ $t('shops') }}</span>
         </q-item>
-        <q-item>
+        <q-item clickable>
           <span>{{ $t('goods') }}</span>
         </q-item>
 
@@ -38,13 +38,13 @@
         icon="settings"
         :label="$t('configuration')"
       >
-        <q-item>
+        <q-item clickable>
           <span>{{ $t('cashboxs') }}</span>
-        </q-item>
-        <q-item>
+        </q-item >
+        <q-item clickable>
           <span>{{ $t('services') }}</span>
         </q-item>
-        <q-item>
+        <q-item clickable>
           <span>{{ $t('devices') }}</span>
         </q-item>
 
