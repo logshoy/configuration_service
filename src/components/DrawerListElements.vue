@@ -14,6 +14,7 @@
       style="margin-left: 50px; background-color: aliceblue"
       show-if-above
       v-model="drawerOpen"
+      @click="handleDrawerClick"
     >
       <q-scroll-area class="fit q-pa-md">
         <!-- Кнопка добавления -->
@@ -36,7 +37,7 @@
           <!-- Кастомный рендеринг узлов -->
           <template v-slot:default-header="prop">
             <div class="row items-center"
-            :class="{ 'selected-node': selectedItemId === prop.node.id }">
+              :class="{ 'selected-node': selectedItemId === prop.node.id }">
               <q-icon
                 :name="getIcon(prop.node)"
                 class="q-mr-sm"
@@ -81,8 +82,6 @@ const drawerOpen = ref(true);
 const showAddDialog = ref(false);
 const newItemName = ref('');
 
-// Определяем заголовок диалога в зависимости от выбранного элемента
-
 // Данные для дерева
 const treeData = computed(() => shopStore.treeData);
 
@@ -103,14 +102,14 @@ const selectedItemId = computed({
   }
 });
 
+// Определяем заголовок диалога в зависимости от выбранного элемента
 const dialogTitle = computed(() => {
   const node = findNodeById(treeData.value, selectedItemId.value);
-  if (!node.type) return 'магазин';
+  if (!node?.type) return 'магазин';
   if (node.type === 'shop') return 'группу касс';
   if (node.type === 'cashGroup') return 'кассу';
-  return node;
+  return '';
 });
-
 
 // Поиск узла по ID
 const findNodeById = (nodes, id) => {
@@ -124,7 +123,7 @@ const findNodeById = (nodes, id) => {
   return null;
 };
 
-
+// Иконки для разных типов узлов
 const getIcon = (node) => {
   return {
     shop: 'store',
@@ -141,23 +140,30 @@ const openAddDialog = () => {
 
 // Добавление нового элемента
 const addItem = () => {
+  const node = findNodeById(treeData.value, selectedItemId.value);
   if (newItemName.value.trim()) {
-    if (!selectedItemId.value) {
+    if (!node?.type) {
       // Добавляем магазин
       shopStore.addShop(newItemName.value);
-    } else if (selectedItemId.value.type === 'shop') {
+    } else if (node.type === 'shop') {
       // Добавляем группу касс
-      shopStore.addCashGroup(selectedItemId.value.data.id, newItemName.value);
-    } else if (selectedItemId.value.type === 'cashGroup') {
+      shopStore.addCashGroup(node.id, newItemName.value);
+    } else if (node.type === 'cashGroup') {
       // Добавляем кассу
-      shopStore.addCashRegister(
-        selectedItemId.value.shopId,
-        selectedItemId.value.cashGroupId,
-        newItemName.value
-      );
+      shopStore.addCashRegister(node.shopId, node.id, newItemName.value);
     }
     newItemName.value = '';
     showAddDialog.value = false;
+  }
+};
+
+// Обработчик клика по q-drawer
+const handleDrawerClick = (event) => {
+  console.log('я кликнул')
+  // Проверяем, был ли клик вне дерева
+  console.log(!treeRef.value?.$el.contains(event.target))
+  if (!treeRef.value?.$el.contains(event.target)) {
+    configurationStore.setConfiguration(null)
   }
 };
 </script>

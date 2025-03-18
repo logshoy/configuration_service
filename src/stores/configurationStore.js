@@ -49,11 +49,7 @@ export const useConfigurationStore = defineStore('configuration', {
 
     // Установить выбранный элемент
     setConfiguration(newConfiguration) {
-      if (!newConfiguration || typeof newConfiguration !== 'object') {
-        console.error('Некорректный элемент для выбора')
-        return
-      }
-      console.log('Appcash', newConfiguration)
+
       this.configuration = newConfiguration
     },
 

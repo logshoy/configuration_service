@@ -80,6 +80,7 @@ export const useShopStore = defineStore('shop', {
       }
     },
     addCashRegister(shopId, cashGroupId, name) {
+            console.log('добавляю', shopId, cashGroupId, name)
       const shop = this.shops.find((s) => s.id === shopId)
       if (shop) {
         const cashGroup = shop.cashGroups.find((g) => g.id === cashGroupId)
