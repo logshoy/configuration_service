@@ -5,6 +5,7 @@ export const useDrawerStore = defineStore('drawer', {
     miniState: true,
     isLocked: false,
     drawerOpenRight: true, // Состояние блокировки
+    drawerOpenLeft: true, // Состояние блокировки
   }),
   actions: {
     // Установка состояния miniState
@@ -21,6 +22,10 @@ export const useDrawerStore = defineStore('drawer', {
 
     setDrawerOpenRight() {
       this.drawerOpenRight = !this.drawerOpenRight
+    },
+
+    setDrawerOpenLeft() {
+      this.drawerOpenLeft = !this.drawerOpenLeft
     },
   },
 })

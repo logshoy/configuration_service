@@ -25,9 +25,8 @@ const model = ref(null)
 
 const options = ref(['Google', 'Facebook', 'Twitter', 'Apple', 'Oracle'])
 
-// Переключение видимости формы
 const enableCreateForm = () => {
-  selectedItemStore.enableCreateFormVisibility();
+  selectedItemStore.enableCreateFormVisibility('service');
 };
 
 </script>

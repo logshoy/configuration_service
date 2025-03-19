@@ -1,12 +1,12 @@
 <template>
-  <div>
+  <div >
     <!-- Кнопка управления drawer -->
     <q-btn
       class="drawer_button"
       :class="drawerOpen ? 'drawer_right' : 'drawer_left'"
       dense round color="blue"
       :icon="drawerOpen ? 'chevron_left' : 'chevron_right'"
-      @click="drawerOpen = !drawerOpen"
+      @click="change"
     />
 
     <!-- Drawer с деревом -->
@@ -18,17 +18,22 @@
     >
       <q-scroll-area class="fit q-pa-md">
         <!-- Кнопка добавления -->
+        <div >
         <q-btn
+          ref="buttonRef"
           color="green"
           icon="add"
           class="q-mb-md"
-          @click="openAddDialog"
-        />
-
+          @click="enableCreateForm(dialogTitle)"
+        >
+        <q-tooltip>
+      Это подсказка при наведении!
+    </q-tooltip>
+      </q-btn>
         <!-- Дерево элементов -->
         <q-tree
-          ref="treeRef"
           :nodes="treeData"
+          ref="treeRef"
           node-key="id"
           selected-color="primary"
           v-model:selected="selectedItemId"
@@ -49,38 +54,53 @@
             </div>
           </template>
         </q-tree>
+        </div>
       </q-scroll-area>
     </q-drawer>
 
     <!-- Диалог добавления -->
-    <q-dialog v-model="showAddDialog">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Добавить {{ dialogTitle }}</div>
-        </q-card-section>
-        <q-card-section>
-          <q-input v-model="newItemName" :label="`Название ${dialogTitle}`" />
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Отмена" color="negative" v-close-popup />
-          <q-btn flat label="Добавить" color="positive" @click="addItem" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed} from 'vue';
 import { useShopStore } from 'stores/shopStore';
 import { useConfigurationStore } from 'stores/configurationStore';
+
+import { useDrawerStore } from 'stores/drawerStore';
 
 const configurationStore = useConfigurationStore();
 const shopStore = useShopStore();
 const treeRef = ref(null);
-const drawerOpen = ref(true);
-const showAddDialog = ref(false);
-const newItemName = ref('');
+const buttonRef = ref(null);
+
+
+
+
+const drawerStore = useDrawerStore();
+
+const drawerOpen = computed(() => drawerStore.drawerOpenLeft);
+
+const change = () => {
+  drawerStore.setDrawerOpenLeft()
+}
+
+// создание элемента
+const enableCreateForm = () => {
+  const node = findNodeById(treeData.value, selectedItemId.value);
+  console.log('node',node)
+
+    if (!node?.type) {
+      // Добавляем магазин
+      configurationStore.enableCreateFormVisibility('shop');
+    } else if (node.type === 'shop') {
+      // Добавляем группу касс
+      configurationStore.enableCreateFormVisibility('cashGroup');
+    } else if (node.type === 'cashGroup') {
+      // Добавляем кассу
+      configurationStore.enableCreateFormVisibility('appCash');
+    }
+};
 
 // Данные для дерева
 const treeData = computed(() => shopStore.treeData);
@@ -102,14 +122,6 @@ const selectedItemId = computed({
   }
 });
 
-// Определяем заголовок диалога в зависимости от выбранного элемента
-const dialogTitle = computed(() => {
-  const node = findNodeById(treeData.value, selectedItemId.value);
-  if (!node?.type) return 'магазин';
-  if (node.type === 'shop') return 'группу касс';
-  if (node.type === 'cashGroup') return 'кассу';
-  return '';
-});
 
 // Поиск узла по ID
 const findNodeById = (nodes, id) => {
@@ -132,40 +144,19 @@ const getIcon = (node) => {
   }[node.type];
 };
 
-// Открытие диалога добавления
-const openAddDialog = () => {
-  newItemName.value = '';
-  showAddDialog.value = true;
-};
-
-// Добавление нового элемента
-const addItem = () => {
-  const node = findNodeById(treeData.value, selectedItemId.value);
-  if (newItemName.value.trim()) {
-    if (!node?.type) {
-      // Добавляем магазин
-      shopStore.addShop(newItemName.value);
-    } else if (node.type === 'shop') {
-      // Добавляем группу касс
-      shopStore.addCashGroup(node.id, newItemName.value);
-    } else if (node.type === 'cashGroup') {
-      // Добавляем кассу
-      shopStore.addCashRegister(node.shopId, node.id, newItemName.value);
-    }
-    newItemName.value = '';
-    showAddDialog.value = false;
-  }
-};
-
-// Обработчик клика по q-drawer
 const handleDrawerClick = (event) => {
-  console.log('я кликнул')
-  // Проверяем, был ли клик вне дерева
-  console.log(!treeRef.value?.$el.contains(event.target))
-  if (!treeRef.value?.$el.contains(event.target)) {
-    configurationStore.setConfiguration(null)
+  if (
+    treeRef.value?.$el &&
+    !treeRef.value.$el.contains(event.target) &&
+    buttonRef.value?.$el &&
+    !buttonRef.value?.$el.contains(event.target)
+  ) {
+    configurationStore.setConfiguration(null);
+    console.log('Клик вне дерева и не по кнопке');
   }
 };
+
+
 </script>
 
 <style scoped>

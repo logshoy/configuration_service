@@ -1,5 +1,5 @@
 // stores/shopStore.js
-import {defineStore} from 'pinia'
+import { defineStore } from 'pinia'
 
 export const useShopStore = defineStore('shop', {
   state: () => ({
@@ -32,7 +32,7 @@ export const useShopStore = defineStore('shop', {
           },
         ],
       },
-    ]
+    ],
   }),
   getters: {
     treeData: (state) => {
@@ -57,9 +57,6 @@ export const useShopStore = defineStore('shop', {
     },
   },
   actions: {
-    selectItem(itemId) {
-      this.selectedItemId = itemId
-    },
     addShop(name) {
       const newShop = {
         id: `shop${this.shops.length + 1}`,
@@ -80,7 +77,7 @@ export const useShopStore = defineStore('shop', {
       }
     },
     addCashRegister(shopId, cashGroupId, name) {
-            console.log('добавляю', shopId, cashGroupId, name)
+      console.log('добавляю', shopId, cashGroupId, name)
       const shop = this.shops.find((s) => s.id === shopId)
       if (shop) {
         const cashGroup = shop.cashGroups.find((g) => g.id === cashGroupId)

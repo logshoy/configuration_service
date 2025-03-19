@@ -21,7 +21,6 @@
     />
     <!-- QDrawer с информацией -->
     <q-drawer
-      overlay
       v-model="drawerOpen"
       side="right"
       bordered
@@ -58,7 +57,6 @@ const drawerStore = useDrawerStore();
 const drawerOpen = computed(() => drawerStore.drawerOpenRight);
 
 const change = () => {
-  console.log('я выполняюсь')
   drawerStore.setDrawerOpenRight()
 }
 

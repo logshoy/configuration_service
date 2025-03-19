@@ -65,7 +65,7 @@
       />
 
       <FiscalAgent
-        v-if="localItem.settings.typeConfiguration === 'agentFiscalization'"
+        v-if="localItem.settings.typeConfiguration === 'service'"
         :fiscalRegistrators="localItem.settings.fiscalRegistrators || []"
         @update:fiscalRegistrators="updateFiscalRegistrators"
       />

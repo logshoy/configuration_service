@@ -6,20 +6,26 @@
         <q-btn type="submit" color="primary" class="q-mx-md">Создать</q-btn>
         <q-btn @click="confirmCloseForm" color="negative">X</q-btn>
       </div>
-
+      {{ typeConfiguration }}
+      <q-input
+        outlined
+        required
+        v-model="configurationName"
+        label="Название"
+        class="q-ma-md"
+      />
       <q-select
+        v-if="typeConfiguration === 'service'"
         filled
         class="q-ma-md"
-        v-model="typeConfiguration"
+        v-model="configurationService"
         :options="options"
         label="Тип конфигурации"
-        @popup-show="isDropdownOpen = true"
-        @popup-hide="isDropdownOpen = false"
       />
 
       <!-- Компонент для настроек кассы -->
       <CashSettings
-        v-if="typeConfiguration?.value === 'appCash'"
+        v-if="typeConfiguration === 'appCash'"
         :width="width"
         :height="height"
         :color="color"
@@ -30,9 +36,15 @@
 
       <!-- Компонент для настроек агента фискализации -->
       <FiscalAgentSettings
-        v-if="typeConfiguration?.value === 'agentFiscalization'"
+        v-if="configurationService?.value === 'agentFiscalization'"
         :fiscalRegistrators="fiscalRegistrators"
         @update:fiscalRegistrators="fiscalRegistrators = $event"
+      />
+      <GroupCash
+        v-if="typeConfiguration === 'cashGroup'"
+      />
+      <ShopСompany
+        v-if="typeConfiguration === 'shop'"
       />
     </q-form>
 
@@ -57,27 +69,41 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
+import { useShopStore } from 'stores/shopStore';
+
+
+
 import CashSettings from './Configuration/AppCash.vue';
 import FiscalAgentSettings from './Configuration/FiscalAgent.vue';
+import GroupCash from './Configuration/GroupCash.vue';
+import ShopСompany from './Configuration/ShopСompany.vue';
 
 const selectedItemStore = useConfigurationStore();
+const shopeStore = useShopStore();
+
+
 const formContainer = ref(null);
-const isDropdownOpen = ref(false);
 const showConfirmationDialog = ref(false);
+const configurationName = ref(null)
 
 // Данные для новой конфигурации
 const width = ref(0);
 const height = ref(0);
 const color = ref('');
-const typeConfiguration = ref(null);
+
+const typeConfiguration = computed(() => selectedItemStore.typeCreateConfigutation);
+
+const configurationService = ref(null)
+
 const fiscalRegistrators = ref([{ type: null, portName: '' }]);
+
 
 const options = ref([
   {
-    label: 'Касса',
-    value: 'appCash',
+    label: 'Агент оплат',
+    value: 'agentPayment',
     category: '1'
   },
   {
@@ -92,33 +118,15 @@ const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
 
-// Обработчик кликов вне формы
-const handleClickOutside = (event) => {
-  if (
-    formContainer.value &&
-    !formContainer.value.contains(event.target) &&
-    isCreateFormVisible.value &&
-    !isDropdownOpen.value
-  ) {
-    showConfirmationDialog.value = true;
-  }
-};
 
-// Добавляем обработчик при монтировании компонента
-onMounted(() => {
-  setTimeout(() => {
-    // document.addEventListener('click', handleClickOutside);
-  }, 300);
-});
+
+
 
 // Удаляем обработчик при размонтировании компонента
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
-});
+
 
 // Закрытие формы с подтверждением
 const confirmClose = () => {
-  document.removeEventListener('click', handleClickOutside);
   selectedItemStore.disableCreateFormVisibility();
   showConfirmationDialog.value = false;
   resetForm();
@@ -126,18 +134,14 @@ const confirmClose = () => {
 
 // Закрытие формы без подтверждения
 const confirmCloseForm = () => {
-  document.removeEventListener('click', handleClickOutside);
+
   selectedItemStore.disableCreateFormVisibility();
   showConfirmationDialog.value = false;
 };
 
 // Закрытие формы без подтверждения (при нажатии "Отмена" в диалоге)
 const closeForm = () => {
-  document.removeEventListener('click', handleClickOutside);
   showConfirmationDialog.value = false;
-  setTimeout(() => {
-    document.addEventListener('click', handleClickOutside);
-  }, 100);
 };
 
 // Сброс формы
@@ -145,7 +149,6 @@ const resetForm = () => {
   width.value = 0;
   height.value = 0;
   color.value = '';
-  typeConfiguration.value = null;
   fiscalRegistrators.value = [{ type: null, portName: '' }];
 };
 
@@ -154,20 +157,34 @@ const createConfiguration = async () => {
   try {
     let settings = null;
 
-    if (typeConfiguration.value?.value === 'appCash') {
+    console.log(typeConfiguration.value)
+
+    if (typeConfiguration.value === 'appCash') {
       settings = {
+        configurationName: configurationName.value,
         width: width.value,
         height: height.value,
         color: color.value,
-        typeConfiguration: typeConfiguration.value.value
+        typeConfiguration: typeConfiguration.value
       };
-    } else if (typeConfiguration.value?.value === 'agentFiscalization') {
+      shopeStore.addCashRegister(0, 0, configurationName.value);
+    } else if (typeConfiguration.value === 'service') {
       settings = {
+        configurationName: configurationName.value,
+        configurationService: configurationService.value,
         fiscalRegistrators: fiscalRegistrators.value,
-        typeConfiguration: typeConfiguration.value.value
+        typeConfiguration: typeConfiguration.value
       };
+    } else if (typeConfiguration.value === 'cashGroup') {
+      settings = {
+      };
+      console.log(' выбранный элемент', selectedItemStore.configuration)
+      shopeStore.addCashGroup(0 ,configurationName.value);
     }
-
+    else if (typeConfiguration.value === 'shop') {
+      settings = {};
+      shopeStore.addShop(configurationName.value);
+    }
 
     const createdConfiguration = await selectedItemStore.createConfiguration(settings);
     console.log('Конфигурация создана:', createdConfiguration);
@@ -178,4 +195,7 @@ const createConfiguration = async () => {
     console.error('Ошибка при создании конфигурации:', err);
   }
 };
+
+
+
 </script>

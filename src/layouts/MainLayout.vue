@@ -25,8 +25,8 @@
           </div>
         </q-drawer>
       </div>
-      <div class="_content_center">
-        <q-page-container  :style="contentStyle">
+      <div>
+        <q-page-container >
           <router-view />
         </q-page-container>
       </div>
@@ -51,12 +51,14 @@ const shouldMiniState = computed(() => {
 });
 
 // Вычисляемое свойство для стилей контейнера
-const contentStyle = computed(() => {
-  return {
-    width: drawerStore.drawerOpenRight ? 'calc(100% - 300px)' : '100%',
-    transition: 'width 0.3s ease', // Плавный переход
-  };
-});
+// Возможно надо от него избавиться
+// const contentStyle = computed(() => {
+//   return {
+//     width: drawerStore.drawerOpenRight ? 'calc(100% - 300px)' : '100%',
+//     transition: 'width 0.3s ease', // Плавный переход
+//     margin:  drawerStore.drawerOpenLeft ? '0 0 0 200px': '0px',
+//   };
+// });
 
 // Обработчик при наведении на drawer
 const handleDrawerEnter = () => {

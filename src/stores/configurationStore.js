@@ -12,6 +12,7 @@ export const useConfigurationStore = defineStore('configuration', {
     error: null, // Ошибка, если есть
     configuration: null, // Выбранная конфигурация
     isCreateFormVisible: false, // Видимость формы создания
+    typeCreateConfigutation: ''
   }),
   actions: {
     // Общая функция для обработки запросов
@@ -49,8 +50,8 @@ export const useConfigurationStore = defineStore('configuration', {
 
     // Установить выбранный элемент
     setConfiguration(newConfiguration) {
-
       this.configuration = newConfiguration
+      console.log(this.configuration)
     },
 
     // Создать новую конфигурацию
@@ -122,9 +123,11 @@ export const useConfigurationStore = defineStore('configuration', {
       }
     },
 
-    // Показать форму создания
-    enableCreateFormVisibility() {
+    // Форма создания
+    enableCreateFormVisibility(type) {
       this.isCreateFormVisible = true
+      this.typeCreateConfigutation = type
+      console.log(this.typeCreateConfigutation)
     },
 
     // Скрыть форму создания
