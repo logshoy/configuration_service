@@ -45,6 +45,8 @@
       />
       <ShopСompany
         v-if="typeConfiguration === 'shop'"
+        :language="language"
+        @update:language="language = $event"
       />
     </q-form>
 
@@ -99,6 +101,8 @@ const configurationService = ref(null)
 
 const fiscalRegistrators = ref([{ type: null, portName: '' }]);
 
+const language = ref(null)
+
 
 const options = ref([
   {
@@ -117,6 +121,7 @@ const options = ref([
 const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible);
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
+const configuration = computed(() => selectedItemStore.configuration);
 
 
 
@@ -152,14 +157,32 @@ const resetForm = () => {
   fiscalRegistrators.value = [{ type: null, portName: '' }];
 };
 
+const treeData = computed(() => shopeStore.treeData);
+
+
+// Поиск узла по ID
+const findNodeById = (nodes, id) => {
+  for (const node of nodes) {
+    if (node.id === id) return node;
+    if (node.children) {
+      const found = findNodeById(node.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+
 // Создание конфигурации
 const createConfiguration = async () => {
   try {
     let settings = null;
 
-    console.log(typeConfiguration.value)
+
 
     if (typeConfiguration.value === 'appCash') {
+      const node = findNodeById(treeData.value, configuration.value.id);
+      console.log('node', node)
       settings = {
         configurationName: configurationName.value,
         width: width.value,
@@ -167,7 +190,7 @@ const createConfiguration = async () => {
         color: color.value,
         typeConfiguration: typeConfiguration.value
       };
-      shopeStore.addCashRegister(0, 0, configurationName.value);
+      shopeStore.addCashRegister(node.shopId, node.id, configurationName.value , settings);
     } else if (typeConfiguration.value === 'service') {
       settings = {
         configurationName: configurationName.value,
@@ -177,17 +200,24 @@ const createConfiguration = async () => {
       };
     } else if (typeConfiguration.value === 'cashGroup') {
       settings = {
+        typeConfiguration: typeConfiguration.value,
+        configurationName: configurationName.value,
       };
-      console.log(' выбранный элемент', selectedItemStore.configuration)
-      shopeStore.addCashGroup(0 ,configurationName.value);
+      shopeStore.addCashGroup(configuration.value.id ,configurationName.value , settings);
     }
     else if (typeConfiguration.value === 'shop') {
-      settings = {};
-      shopeStore.addShop(configurationName.value);
+      settings = {
+        typeConfiguration: typeConfiguration.value,
+        configurationName: configurationName.value,
+        language: language.value
+      };
+
+      console.log(settings)
+      shopeStore.addShop(configurationName.value , settings);
     }
 
-    const createdConfiguration = await selectedItemStore.createConfiguration(settings);
-    console.log('Конфигурация создана:', createdConfiguration);
+    // const createdConfiguration = await selectedItemStore.createConfiguration(settings);
+    // console.log('Конфигурация создана:', createdConfiguration);
 
     resetForm();
     selectedItemStore.disableCreateFormVisibility();

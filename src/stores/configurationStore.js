@@ -55,8 +55,16 @@ export const useConfigurationStore = defineStore('configuration', {
     },
 
     // Создать новую конфигурацию
-    async createConfiguration(settings) {
-      const id = uuidv4() // Генерируем UUID
+    async createConfiguration(settings , id = null) {
+      console.log('до', id)
+      if (!id ) {
+        id = uuidv4()
+      } else {
+        ''
+      }
+
+      console.log(settings)
+
       const newConfiguration = {
         id,
         settings: JSON.stringify(settings),

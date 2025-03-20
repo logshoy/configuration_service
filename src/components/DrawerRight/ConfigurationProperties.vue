@@ -69,6 +69,14 @@
         :fiscalRegistrators="localItem.settings.fiscalRegistrators || []"
         @update:fiscalRegistrators="updateFiscalRegistrators"
       />
+       <GroupCash
+        v-if="localItem.settings.typeConfiguration === 'cashGroup'"
+      />
+      <ShopСompany
+        v-if="localItem.settings.typeConfiguration === 'shop'"
+        :language="localItem.settings.language"
+        @update:language="language = $event"
+      />
     </q-form>
   </div>
 </template>
@@ -80,6 +88,8 @@ import { useQuasar } from 'quasar';
 
 import AppCash from 'components/Configuration/AppCash.vue';
 import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
+import GroupCash from 'components/Configuration/GroupCash.vue';
+import ShopСompany from 'components/Configuration/ShopСompany.vue';
 
 const $q = useQuasar();
 const selectedItemStore = useConfigurationStore();

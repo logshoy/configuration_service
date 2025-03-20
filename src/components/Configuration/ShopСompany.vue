@@ -1,20 +1,19 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div>
-        <q-select
-        filled
-        class="q-ma-md"
-        v-model="language"
-        :options="optionsLanguage"
-        label="Выберите язык"
-      />
+    <q-select
+      filled
+      class="q-ma-md"
+      v-model="selectedLanguage"
+      :options="optionsLanguage"
+      label="Выберите язык"
+      @update:model-value="updateLanguage"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
-const language = ref(null)
+import { ref } from 'vue';
 
 const optionsLanguage = ref([
   {
@@ -27,5 +26,21 @@ const optionsLanguage = ref([
   }
 ]);
 
-//
+const props = defineProps({
+  language: {
+    type: String,
+    required: true
+  }
+});
+
+const emit = defineEmits(['update:language']);
+
+// Локальное состояние для выбранного языка
+const selectedLanguage = ref(props.language);
+
+
+// Обновляем язык при изменении выбора
+const updateLanguage = (value) => {
+  emit('update:language', value);
+};
 </script>
