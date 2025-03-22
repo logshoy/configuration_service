@@ -6,7 +6,7 @@
         <q-btn type="submit" color="primary" class="q-mx-md">Создать</q-btn>
         <q-btn @click="confirmCloseForm" color="negative">X</q-btn>
       </div>
-      {{ typeConfiguration }}
+
       <q-input
         outlined
         required

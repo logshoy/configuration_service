@@ -38,6 +38,14 @@
         />
       </div>
 
+        <q-input
+        outlined
+        required
+        v-model="localItem.settings.configurationName"
+        label="Название"
+        class="q-ma-md"
+      />
+
       <!-- Уведомление об успешном копировании -->
       <q-dialog v-model="showCopiedNotification" persistent>
         <q-card>
@@ -94,7 +102,9 @@ import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import GroupCash from 'components/Configuration/GroupCash.vue';
 import ShopСompany from 'components/Configuration/ShopСompany.vue';
 
+// Инициализация Quasar
 const $q = useQuasar();
+
 const selectedItemStore = useConfigurationStore();
 const selectedItem = computed(() => selectedItemStore.configuration);
 
@@ -163,15 +173,43 @@ const copyToClipboard = async () => {
     return;
   }
 
+  const textToCopy = localItem.value.id;
+
+  // Проверяем, поддерживается ли Clipboard API
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      showCopiedNotification.value = true;
+      return;
+    } catch (error) {
+      console.error('Ошибка при использовании Clipboard API:', error);
+    }
+  }
+
+  // Fallback: Используем document.execCommand('copy')
+  const textArea = document.createElement('textarea');
+  textArea.value = textToCopy;
+  document.body.appendChild(textArea);
+  textArea.select();
+
   try {
-    await navigator.clipboard.writeText(localItem.value.id);
-    showCopiedNotification.value = true;
+    const successful = document.execCommand('copy');
+    if (successful) {
+      showCopiedNotification.value = true;
+    } else {
+      $q.notify({
+        type: 'negative',
+        message: 'Не удалось скопировать ID',
+      });
+    }
   } catch (error) {
     $q.notify({
       type: 'negative',
       message: 'Не удалось скопировать ID',
     });
     console.log(error);
+  } finally {
+    document.body.removeChild(textArea);
   }
 };
 
