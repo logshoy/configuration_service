@@ -6,20 +6,20 @@ import { v4 as uuidv4 } from 'uuid'
 export const useShopStore = defineStore('shop', {
   state: () => ({
     shops: [
-      // {
-      //   id: 'shop1',
-      //   name: 'Магазин №1',
-      //   cashGroups: [
-      //     {
-      //       id: 'group1',
-      //       name: 'Группа касс 1',
-      //       cashRegisters: [
-      //         { id: 'cash1-group1-shop1', name: 'Касса 1' },
-      //         { id: 'cash2-group1-shop1', name: 'Касса 2' },
-      //       ],
-      //     },
-      //   ],
-      // },
+       {
+        id: '8a564c6d-cba7-4ec0-ac19-9a6ebe365a32',
+        name: 'Магазин №1',
+        cashGroups: [
+          // {
+          //   id: 'group1',
+          //   name: 'Группа касс 1',
+          //   cashRegisters: [
+          //     { id: 'cash1-group1-shop1', name: 'Касса 1' },
+          //     { id: 'cash2-group1-shop1', name: 'Касса 2' },
+          //   ],
+          // },
+        ],
+      },
       // {
       //   id: 'shop2',
       //   name: 'Магазин №1',

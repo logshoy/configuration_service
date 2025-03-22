@@ -12,7 +12,7 @@ export const useConfigurationStore = defineStore('configuration', {
     error: null, // Ошибка, если есть
     configuration: null, // Выбранная конфигурация
     isCreateFormVisible: false, // Видимость формы создания
-    typeCreateConfigutation: ''
+    typeCreateConfigutation: '',
   }),
   actions: {
     // Общая функция для обработки запросов
@@ -49,18 +49,22 @@ export const useConfigurationStore = defineStore('configuration', {
     },
 
     // Установить выбранный элемент
-    setConfiguration(newConfiguration) {
-      this.configuration = newConfiguration
-      console.log(this.configuration)
+    setConfiguration(id) {
+      if(id != null) {
+        this.configuration = this.configuration = this.configurationList.find((item) => item.id === id)
+      } else {
+        this.configuration = null
+      }
+
     },
 
     // Создать новую конфигурацию
-    async createConfiguration(settings , id = null) {
+    async createConfiguration(settings, id = null) {
       console.log('до', id)
-      if (!id ) {
+      if (!id) {
         id = uuidv4()
       } else {
-        ''
+        ;('')
       }
 
       console.log(settings)
@@ -155,6 +159,9 @@ export const useConfigurationStore = defineStore('configuration', {
           .includes(query.toLowerCase())
         return idMatch || settingsMatch
       })
+    },
+    getConfiguration: (state) => (id) => {
+      return state.configurationList.find((item) => item.id === id)
     },
   },
 })

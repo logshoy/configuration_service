@@ -42,6 +42,8 @@
       />
       <GroupCash
         v-if="typeConfiguration === 'cashGroup'"
+        v-model:modelValue="parentSettings"
+        @update:parentSettings="parentSettings = $event"
       />
       <ShopСompany
         v-if="typeConfiguration === 'shop'"
@@ -103,6 +105,10 @@ const fiscalRegistrators = ref([{ type: null, portName: '' }]);
 
 const language = ref(null)
 
+const parentSettings = ref({
+  keyboard: false,
+  advance: false, // Другие свойства объекта
+});
 
 const options = ref([
   {
@@ -122,8 +128,6 @@ const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
 const configuration = computed(() => selectedItemStore.configuration);
-
-
 
 
 
@@ -202,6 +206,10 @@ const createConfiguration = async () => {
       settings = {
         typeConfiguration: typeConfiguration.value,
         configurationName: configurationName.value,
+        parentSettings: parentSettings.value
+        // keyboard: parentSettings.value.keyboard,
+        // advance: parentSettings.value.advance
+
       };
       shopeStore.addCashGroup(configuration.value.id ,configurationName.value , settings);
     }

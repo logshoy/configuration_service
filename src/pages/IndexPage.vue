@@ -23,9 +23,9 @@
         <q-card
           v-for="item in filteredList"
           :key="item.id"
-          :class="['my-card', 'rounded-borders', { 'selected-card': item.id === selectedItemId }]"
+          :class="['my-card', 'rounded-borders', { 'selected-card': selectedItemId == item.id   }]"
           clickable
-          @click="selectItem(item)"
+          @click="selectItem(item.id)"
         >
           <q-card-section>
             <div class="text-h6">ID: {{ item.id }}</div>
@@ -62,8 +62,9 @@ onMounted(() => {
 });
 
 const selectItem = (item) => {
+
   selectedItemStore.setConfiguration(item); // Используем метод хранилища
-  selectedItemId.value = item.id; // Обновляем ID выбранного элемента
+  selectedItemId.value = item; // Обновляем ID выбранного элемента
 };
 
 // Получаем данные из хранилища

@@ -52,7 +52,7 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
-      <!-- {{ localItem }} -->
+
       <!-- Условие для отображения AppCash или FiscalAgent -->
       <AppCash
         v-if="localItem.settings.typeConfiguration === 'appCash'"
@@ -69,9 +69,12 @@
         :fiscalRegistrators="localItem.settings.fiscalRegistrators || []"
         @update:fiscalRegistrators="updateFiscalRegistrators"
       />
-       <GroupCash
+
+      <GroupCash
         v-if="localItem.settings.typeConfiguration === 'cashGroup'"
+        v-model:modelValue="localItem.settings.parentSettings"
       />
+
       <ShopСompany
         v-if="localItem.settings.typeConfiguration === 'shop'"
         :language="localItem.settings.language"
@@ -103,6 +106,13 @@ watch(
   selectedItem,
   (newValue) => {
     if (newValue) {
+      // Убедимся, что свойства advance и keyboard существуют
+      if (!newValue.settings.parentSettings) {
+        newValue.settings.parentSettings = {
+          advance: false,
+          keyboard: false,
+        };
+      }
       localItem.value = JSON.parse(JSON.stringify(newValue));
       initialItem.value = JSON.parse(JSON.stringify(newValue));
     } else {

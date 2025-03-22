@@ -109,16 +109,7 @@ const treeData = computed(() => shopStore.treeData);
 const selectedItemId = computed({
   get: () => configurationStore.configuration?.id || null,
   set: (value) => {
-    const node = findNodeById(treeData.value, value);
-    if (node) {
-      configurationStore.setConfiguration({
-        id: node.id,
-        settings: {
-          name: node.label,
-          typeConfiguration: 'AppCash',
-        }
-      });
-    }
+    configurationStore.setConfiguration(value);
   }
 });
 
@@ -151,7 +142,7 @@ const handleDrawerClick = (event) => {
     buttonRef.value?.$el &&
     !buttonRef.value?.$el.contains(event.target)
   ) {
-    configurationStore.setConfiguration(null);
+    configurationStore.setConfiguration(1);
     console.log('Клик вне дерева и не по кнопке');
   }
 };
