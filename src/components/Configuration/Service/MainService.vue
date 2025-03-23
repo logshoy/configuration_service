@@ -8,16 +8,18 @@
       :options="options"
       label="Тип конфигурации"
     />
+    {{ configurationService }}
 
     <!-- Компонент для фискального агента -->
     <FiscalAgent
-      v-model="fiscalSettings"
       v-if="localConfigurationService?.value === 'agentFiscalization'"
+      v-model="fiscalSettings"
     />
+
     <!-- Компонент для платежного агента -->
     <PaymentAgent
-      v-model="paymentSettings"
       v-if="localConfigurationService?.value === 'agentPayment'"
+      v-model="paymentSettings"
     />
   </div>
 </template>
@@ -52,7 +54,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'update:configurationService']);
 
 // Локальные настройки для каждого типа сервиса
-const fiscalSettings = ref(props.modelValue.fiscalRegistrators || [{ type: null, portName: '' }]);
+const fiscalSettings = ref({ fiscalRegistrators: props.modelValue.fiscalRegistrators || [{ type: null, portName: '' }] });
 const paymentSettings = ref(props.modelValue.paymentSettings || {});
 
 // Локальное состояние для выбора типа сервиса
@@ -62,7 +64,7 @@ const localConfigurationService = ref(props.configurationService);
 watch([fiscalSettings, paymentSettings], ([fiscal, payment]) => {
   const updatedSettings = {
     ...props.modelValue,
-    fiscalRegistrators: fiscal,
+    fiscalRegistrators: fiscal.fiscalRegistrators,
     paymentSettings: payment,
   };
   emit('update:modelValue', updatedSettings);

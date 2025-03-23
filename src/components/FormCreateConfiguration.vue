@@ -51,7 +51,8 @@ import { useConfigurationStore } from 'stores/configurationStore';
 import { useShopStore } from 'stores/shopStore';
 
 import CashSettings from './Configuration/AppCash.vue';
-import MainService from './Configuration/Service/MainService.vue';
+// import MainService from './Configuration/Service/MainService.vue';
+import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import GroupCash from './Configuration/GroupCash.vue';
 import ShopСompany from './Configuration/ShopСompany.vue';
 
@@ -77,7 +78,7 @@ const settingsComponent = computed(() => {
     case 'appCash':
       return CashSettings;
     case 'service':
-      return MainService;
+      return FiscalAgent;
     case 'cashGroup':
       return GroupCash;
     case 'shop':
@@ -100,7 +101,7 @@ const initializeSettings = () => {
       settings.value = { keyboard: true, advance: false };
       break;
     case 'shop':
-      settings.value =   { language: {label: 'Русский', value: 'ru'} }; // Инициализация language вместо shopSettings
+      settings.value = { language: {label: 'Русский', value: 'ru'} }; // Инициализация language вместо shopSettings
       break;
     default:
       settings.value = {};
