@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-for="(fiscal, index) in fiscalRegistrators" :key="index" class="q-ma-md">
+    <div v-for="(fiscal, index) in modelValue.fiscalRegistrators" :key="index" class="q-ma-md">
       <q-select
         filled
         :model-value="fiscal.type"
@@ -16,7 +16,7 @@
         class="q-mt-md"
       />
       <q-btn
-        v-if="index === fiscalRegistrators.length - 1"
+        v-if="index === modelValue.fiscalRegistrators.length - 1"
         color="green"
         class="q-mt-md"
         @click="addFiscalRegistrator"
@@ -24,7 +24,7 @@
         Добавить
       </q-btn>
       <q-btn
-        v-if="fiscalRegistrators.length > 1"
+        v-if="modelValue.fiscalRegistrators.length > 1"
         color="red"
         class="q-mt-md q-ml-md"
         @click="removeFiscalRegistrator(index)"
@@ -44,27 +44,27 @@ const fiscalOptions = ref([
 ]);
 
 const props = defineProps({
-  fiscalRegistrators: {
-    type: Array,
+  modelValue: {
+    type: Object,
     required: true
   }
 });
 
-const emit = defineEmits(['update:fiscalRegistrators']);
+const emit = defineEmits(['update:modelValue']);
 
 const updateFiscal = (index, field, value) => {
-  const updatedFiscals = [...props.fiscalRegistrators];
+  const updatedFiscals = [...props.modelValue.fiscalRegistrators];
   updatedFiscals[index][field] = value;
-  emit('update:fiscalRegistrators', updatedFiscals);
+  emit('update:modelValue', { ...props.modelValue, fiscalRegistrators: updatedFiscals });
 };
 
 const addFiscalRegistrator = () => {
-  const updatedFiscals = [...props.fiscalRegistrators, { type: null, portName: '' }];
-  emit('update:fiscalRegistrators', updatedFiscals);
+  const updatedFiscals = [...props.modelValue.fiscalRegistrators, { type: null, portName: '' }];
+  emit('update:modelValue', { ...props.modelValue, fiscalRegistrators: updatedFiscals });
 };
 
 const removeFiscalRegistrator = (index) => {
-  const updatedFiscals = props.fiscalRegistrators.filter((_, i) => i !== index);
-  emit('update:fiscalRegistrators', updatedFiscals);
+  const updatedFiscals = props.modelValue.fiscalRegistrators.filter((_, i) => i !== index);
+  emit('update:modelValue', { ...props.modelValue, fiscalRegistrators: updatedFiscals });
 };
 </script>

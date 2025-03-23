@@ -38,7 +38,8 @@
         />
       </div>
 
-        <q-input
+      <!-- Название конфигурации -->
+      <q-input
         outlined
         required
         v-model="localItem.settings.configurationName"
@@ -61,32 +62,11 @@
         </q-card>
       </q-dialog>
 
-      <!-- Условие для отображения AppCash или FiscalAgent -->
-      <AppCash
-        v-if="localItem.settings.typeConfiguration === 'appCash'"
-        :width="localItem.settings.width"
-        :height="localItem.settings.height"
-        :color="localItem.settings.color"
-        @update:width="updateWidth"
-        @update:height="updateHeight"
-        @update:color="updateColor"
-      />
-
-      <FiscalAgent
-        v-if="localItem.settings.typeConfiguration === 'service'"
-        :fiscalRegistrators="localItem.settings.fiscalRegistrators || []"
-        @update:fiscalRegistrators="updateFiscalRegistrators"
-      />
-
-      <GroupCash
-        v-if="localItem.settings.typeConfiguration === 'cashGroup'"
-        v-model:modelValue="localItem.settings.parentSettings"
-      />
-
-      <ShopСompany
-        v-if="localItem.settings.typeConfiguration === 'shop'"
-        :language="localItem.settings.language"
-        @update:language="language = $event"
+      <!-- Универсальный компонент для настроек -->
+      <component
+        :is="settingsComponent"
+        v-if="settingsComponent"
+        v-model="localItem.settings"
       />
     </q-form>
   </div>
@@ -112,17 +92,30 @@ const localItem = ref(null);
 const initialItem = ref(null);
 const showCopiedNotification = ref(false);
 
+// Определяем, какой компонент настроек использовать
+const settingsComponent = computed(() => {
+  if (!localItem.value) return null;
+
+  switch (localItem.value.settings.typeConfiguration) {
+    case 'appCash':
+      return AppCash;
+    case 'service':
+      return FiscalAgent;
+    case 'cashGroup':
+      return GroupCash;
+    case 'shop':
+      return ShopСompany;
+    default:
+      return null;
+  }
+});
+
+// Отслеживаем изменения выбранного элемента
 watch(
   selectedItem,
   (newValue) => {
     if (newValue) {
       // Убедимся, что свойства advance и keyboard существуют
-      if (!newValue.settings.parentSettings) {
-        newValue.settings.parentSettings = {
-          advance: false,
-          keyboard: false,
-        };
-      }
       localItem.value = JSON.parse(JSON.stringify(newValue));
       initialItem.value = JSON.parse(JSON.stringify(newValue));
     } else {
@@ -133,27 +126,13 @@ watch(
   { immediate: true }
 );
 
-const updateWidth = (newWidth) => {
-  localItem.value.settings.width = newWidth;
-};
-
-const updateHeight = (newHeight) => {
-  localItem.value.settings.height = newHeight;
-};
-
-const updateColor = (newColor) => {
-  localItem.value.settings.color = newColor;
-};
-
-const updateFiscalRegistrators = (newRegistrators) => {
-  localItem.value.settings.fiscalRegistrators = newRegistrators;
-};
-
+// Проверка наличия изменений
 const hasChanges = computed(() => {
   if (!localItem.value || !initialItem.value) return false;
   return JSON.stringify(localItem.value) !== JSON.stringify(initialItem.value);
 });
 
+// Сохранение изменений
 const saveChanges = () => {
   if (!localItem.value) {
     console.error('Локальный элемент не определен');
@@ -164,6 +143,7 @@ const saveChanges = () => {
   initialItem.value = JSON.parse(JSON.stringify(localItem.value));
 };
 
+// Копирование ID в буфер обмена
 const copyToClipboard = async () => {
   if (!localItem.value || !localItem.value.id) {
     $q.notify({
@@ -213,6 +193,7 @@ const copyToClipboard = async () => {
   }
 };
 
+// Подтверждение удаления
 const confirmDelete = () => {
   $q.dialog({
     title: 'Подтверждение удаления',
@@ -224,6 +205,7 @@ const confirmDelete = () => {
   });
 };
 
+// Удаление элемента
 const deleteItem = async () => {
   if (!localItem.value) {
     console.error('Локальный элемент не определен');

@@ -3,8 +3,8 @@
     <!-- Поле для ширины -->
     <q-input
       class="q-ma-md"
-      :model-value="width"
-      @update:model-value="$emit('update:width', $event)"
+      :model-value="modelValue.width"
+      @update:model-value="updateModelValue('width', $event)"
       label="Ширина"
       type="number"
       outlined
@@ -14,8 +14,8 @@
     <!-- Поле для высоты -->
     <q-input
       class="q-ma-md"
-      :model-value="height"
-      @update:model-value="$emit('update:height', $event)"
+      :model-value="modelValue.height"
+      @update:model-value="updateModelValue('height', $event)"
       label="Высота"
       type="number"
       outlined
@@ -26,14 +26,14 @@
     <q-input
       class="q-ma-md"
       filled
-      :model-value="color"
-      @update:model-value="$emit('update:color', $event)"
+      :model-value="modelValue.color"
+      @update:model-value="updateModelValue('color', $event)"
       hint="Цвет"
     >
       <template v-slot:append>
         <q-icon name="colorize" class="cursor-pointer">
           <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-            <q-color :model-value="color" @update:model-value="$emit('update:color', $event)" />
+            <q-color :model-value="modelValue.color" @update:model-value="updateModelValue('color', $event)" />
           </q-popup-proxy>
         </q-icon>
       </template>
@@ -42,20 +42,17 @@
 </template>
 
 <script setup>
-defineProps({
-  width: {
-    type: Number,
-    required: true
-  },
-  height: {
-    type: Number,
-    required: true
-  },
-  color: {
-    type: String,
+const props = defineProps({
+  modelValue: {
+    type: Object,
     required: true
   }
 });
 
-defineEmits(['update:width', 'update:height', 'update:color']);
+const emit = defineEmits(['update:modelValue']);
+
+const updateModelValue = (key, value) => {
+  const updatedModelValue = { ...props.modelValue, [key]: value };
+  emit('update:modelValue', updatedModelValue);
+};
 </script>

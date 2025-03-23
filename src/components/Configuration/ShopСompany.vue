@@ -1,19 +1,20 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div>
+    <!-- Поле для выбора языка -->
     <q-select
       filled
       class="q-ma-md"
-      v-model="selectedLanguage"
+      :model-value="modelValue.language"
       :options="optionsLanguage"
       label="Выберите язык"
-      @update:model-value="updateLanguage"
+      @update:model-value="updateModelValue('language', $event)"
     />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const optionsLanguage = ref([
   {
@@ -27,20 +28,27 @@ const optionsLanguage = ref([
 ]);
 
 const props = defineProps({
-  language: {
-    type: String,
+  modelValue: {
+    type: Object,
     required: true
   }
 });
 
-const emit = defineEmits(['update:language']);
+const emit = defineEmits(['update:modelValue']);
 
-// Локальное состояние для выбранного языка
-const selectedLanguage = ref(props.language);
-
-
-// Обновляем язык при изменении выбора
-const updateLanguage = (value) => {
-  emit('update:language', value);
+// Обновляем значение в modelValue
+const updateModelValue = (key, value) => {
+  const updatedModelValue = { ...props.modelValue, [key]: value };
+  emit('update:modelValue', updatedModelValue);
 };
+
+// Следим за изменениями modelValue.language
+watch(
+  () => props.modelValue.language,
+  (newValue) => {
+    if (newValue !== props.modelValue.language) {
+      updateModelValue('language', newValue);
+    }
+  }
+);
 </script>
