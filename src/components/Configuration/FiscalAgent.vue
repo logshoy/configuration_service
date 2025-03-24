@@ -1,6 +1,21 @@
 <template>
   <div>
     <div v-for="(fiscal, index) in modelValue.fiscalRegistrators" :key="index" class="q-ma-md">
+        <div class="row justify-center q-my-md">
+        <q-input
+          label="ID"
+          :model-value="fiscal.id"
+          @update:model-value="updateFiscal(index, 'id', $event)"
+          filled
+          class="q-mx-xs"
+        />
+        <q-btn
+          color="primary"
+          icon="sync"
+          @click="generateuid"
+          round
+        />
+      </div>
       <q-select
         filled
         :model-value="fiscal.type"

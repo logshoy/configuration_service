@@ -1,7 +1,6 @@
 <template>
   <div>
     <!-- Выбор типа сервиса -->
-
     <q-select
       filled
       class="q-ma-md"
@@ -10,17 +9,17 @@
       label="Тип конфигурации"
       v-if="isCreating"
     />
+
     <!-- Компонент для фискального агента -->
-    {{ localConfigurationService }}
     <FiscalAgent
       v-if="localConfigurationService?.value === 'agentFiscalization'"
-      v-model=" f"
+      v-model="f"
     />
 
     <!-- Компонент для платежного агента -->
     <PaymentAgent
       v-if="localConfigurationService?.value === 'agentPayment'"
-      v-model="paymentSettings"
+      v-model="f"
     />
   </div>
 </template>
@@ -31,14 +30,8 @@ import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import PaymentAgent from 'components/Configuration/Service/PaymentAgent.vue';
 
 const options = ref([
-  {
-    label: 'Агент оплат',
-    value: 'agentPayment',
-  },
-  {
-    label: 'Агент фискализации',
-    value: 'agentFiscalization',
-  }
+  { label: 'Агент оплат', value: 'agentPayment' },
+  { label: 'Агент фискализации', value: 'agentFiscalization' },
 ]);
 
 const props = defineProps({
@@ -46,32 +39,47 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-    isCreating: {
+  isCreating: {
     type: Boolean,
     required: true,
-  }
+  },
 });
 
 const emit = defineEmits(['update:modelValue', 'update:configurationService']);
 
 // Локальные настройки для каждого типа сервиса
-const fiscalSettings = ref({ fiscalRegistrators: props.modelValue.fiscalRegistrators });
+const fiscalSettings = ref(props.modelValue.fiscalRegistrators || {});
 const paymentSettings = ref(props.modelValue.paymentSettings || {});
-
-const f = computed(() => props.modelValue )
 
 // Локальное состояние для выбора типа сервиса
 const localConfigurationService = ref(props.modelValue.serviceType);
 
+// Компьютед для передачи modelValue в дочерний компонент
+const f = computed(() => props.modelValue);
+
+// Следим за изменениями props.modelValue.serviceType
+watch(
+  () => props.modelValue.serviceType,
+  (newValue) => {
+    if (localConfigurationService.value !== newValue) {
+      localConfigurationService.value = newValue;
+    }
+  }
+);
+
 // Отслеживаем изменения локальных настроек и отправляем их в родительский компонент
-watch([fiscalSettings, paymentSettings], ([fiscal, payment]) => {
-  const updatedSettings = {
-    ...props.modelValue,
-    fiscalRegistrators: fiscal.fiscalRegistrators,
-    paymentSettings: payment,
-  };
-  emit('update:modelValue', updatedSettings);
-}, { deep: true });
+watch(
+  [fiscalSettings, paymentSettings],
+  ([fiscal, payment]) => {
+    const updatedSettings = {
+      ...props.modelValue,
+      fiscalRegistrators: fiscal,
+      paymentSettings: payment,
+    };
+    emit('update:modelValue', updatedSettings);
+  },
+  { deep: true }
+);
 
 // Отслеживаем изменения выбора типа сервиса
 watch(localConfigurationService, (newValue) => {

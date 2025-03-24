@@ -67,6 +67,7 @@
         :is="settingsComponent"
         v-if="settingsComponent"
         v-model="localItem.settings"
+        :isCreating="false"
       />
     </q-form>
   </div>
@@ -92,6 +93,7 @@ const selectedItem = computed(() => selectedItemStore.configuration);
 const localItem = ref(null);
 const initialItem = ref(null);
 const showCopiedNotification = ref(false);
+// const configurationService = ref(null);
 
 // Определяем, какой компонент настроек использовать
 const settingsComponent = computed(() => {
