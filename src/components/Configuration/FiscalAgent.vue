@@ -47,6 +47,10 @@ const props = defineProps({
   modelValue: {
     type: Object,
     required: true
+  },
+  configurationService: {
+    type: Object,
+    required: true
   }
 });
 

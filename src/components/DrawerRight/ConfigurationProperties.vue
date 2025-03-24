@@ -78,7 +78,8 @@ import { useConfigurationStore } from 'stores/configurationStore';
 import { useQuasar } from 'quasar';
 
 import AppCash from 'components/Configuration/AppCash.vue';
-import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
+// import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
+import MainService from 'components/Configuration/Service/MainService.vue';
 import GroupCash from 'components/Configuration/GroupCash.vue';
 import ShopСompany from 'components/Configuration/ShopСompany.vue';
 
@@ -100,7 +101,7 @@ const settingsComponent = computed(() => {
     case 'appCash':
       return AppCash;
     case 'service':
-      return FiscalAgent;
+      return MainService;
     case 'cashGroup':
       return GroupCash;
     case 'shop':

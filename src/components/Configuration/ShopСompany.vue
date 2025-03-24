@@ -1,7 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div>
-    <!-- Поле для выбора языка -->
     <q-select
       filled
       class="q-ma-md"

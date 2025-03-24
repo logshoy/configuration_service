@@ -22,6 +22,7 @@
         v-model="settings"
         :configurationService="configurationService"
         @update:configurationService="configurationService = $event"
+        :isCreating="isCreating"
       />
 
       <!-- Модальное окно подтверждения -->
@@ -51,8 +52,8 @@ import { useConfigurationStore } from 'stores/configurationStore';
 import { useShopStore } from 'stores/shopStore';
 
 import CashSettings from './Configuration/AppCash.vue';
-// import MainService from './Configuration/Service/MainService.vue';
-import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
+// import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
+import MainService from 'components/Configuration/Service/MainService.vue';
 import GroupCash from './Configuration/GroupCash.vue';
 import ShopСompany from './Configuration/ShopСompany.vue';
 
@@ -64,6 +65,7 @@ const showConfirmationDialog = ref(false);
 const configurationName = ref(null);
 const configurationService = ref(null);
 const settings = ref({});
+const isCreating = ref(true);
 
 const typeConfiguration = computed(() => selectedItemStore.typeCreateConfigutation);
 const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible);
@@ -78,7 +80,7 @@ const settingsComponent = computed(() => {
     case 'appCash':
       return CashSettings;
     case 'service':
-      return FiscalAgent;
+      return MainService;
     case 'cashGroup':
       return GroupCash;
     case 'shop':
@@ -101,7 +103,7 @@ const initializeSettings = () => {
       settings.value = { keyboard: true, advance: false };
       break;
     case 'shop':
-      settings.value = { language: {label: 'Русский', value: 'ru'} }; // Инициализация language вместо shopSettings
+      settings.value = { language: { label: 'Русский', value: 'ru' } };
       break;
     default:
       settings.value = {};
@@ -155,7 +157,7 @@ const cleanSettings = (settings) => {
     appCash: ['width', 'height', 'color'],
     service: ['fiscalRegistrators'],
     cashGroup: ['keyboard', 'advance'],
-    shop: ['language'], // Оставляем только language
+    shop: ['language'],
   };
 
   const fieldsToKeep = allowedFields[typeConfiguration.value] || [];
@@ -181,13 +183,17 @@ const createConfiguration = async () => {
     // Очищаем настройки от лишних полей
     const cleanedSettings = cleanSettings(settings.value);
 
+    // Формируем объект configurationData
     const configurationData = {
       configurationName: configurationName.value,
       typeConfiguration: typeConfiguration.value,
       ...cleanedSettings, // Передаем только нужные настройки
     };
 
-    console.log(configurationData)
+    // Если serviceType задан, добавляем его в configurationData
+    if (configurationService.value) {
+      configurationData.serviceType = configurationService.value;
+    }
 
     switch (typeConfiguration.value) {
       case 'appCash':

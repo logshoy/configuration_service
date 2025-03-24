@@ -1,19 +1,20 @@
 <template>
   <div>
     <!-- Выбор типа сервиса -->
+
     <q-select
       filled
       class="q-ma-md"
       v-model="localConfigurationService"
       :options="options"
       label="Тип конфигурации"
+      v-if="isCreating"
     />
-    {{ configurationService }}
-
     <!-- Компонент для фискального агента -->
+    {{ localConfigurationService }}
     <FiscalAgent
       v-if="localConfigurationService?.value === 'agentFiscalization'"
-      v-model="fiscalSettings"
+      v-model=" f"
     />
 
     <!-- Компонент для платежного агента -->
@@ -25,7 +26,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import PaymentAgent from 'components/Configuration/Service/PaymentAgent.vue';
 
@@ -45,8 +46,8 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  configurationService: {
-    type: Object,
+    isCreating: {
+    type: Boolean,
     required: true,
   }
 });
@@ -54,11 +55,13 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'update:configurationService']);
 
 // Локальные настройки для каждого типа сервиса
-const fiscalSettings = ref({ fiscalRegistrators: props.modelValue.fiscalRegistrators || [{ type: null, portName: '' }] });
+const fiscalSettings = ref({ fiscalRegistrators: props.modelValue.fiscalRegistrators });
 const paymentSettings = ref(props.modelValue.paymentSettings || {});
 
+const f = computed(() => props.modelValue )
+
 // Локальное состояние для выбора типа сервиса
-const localConfigurationService = ref(props.configurationService);
+const localConfigurationService = ref(props.modelValue.serviceType);
 
 // Отслеживаем изменения локальных настроек и отправляем их в родительский компонент
 watch([fiscalSettings, paymentSettings], ([fiscal, payment]) => {
