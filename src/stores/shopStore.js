@@ -44,13 +44,11 @@ export const useShopStore = defineStore('shop', {
   },
   actions: {
     setBranch(id) {
-      console.log(id)
       if (id != null) {
         this.branch = id
       } else {
         this.branch = null
       }
-      console.log(this.branch)
     },
     addShop(name, settings) {
       const configurationStore = useConfigurationStore()

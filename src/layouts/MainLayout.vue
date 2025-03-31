@@ -1,12 +1,5 @@
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header elevated>
-      <q-toolbar>
-        <q-toolbar-title>
-          Quasar App
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-header>
 
     <div class="flex">
       <div>
@@ -18,6 +11,7 @@
           @mouseenter="handleDrawerEnter"
           @mouseleave="handleDrawerLeave"
           mini-to-overlay
+          :mini-width="75"
         >
           <div style="height: 100%">
             <EssentialLink />
@@ -25,12 +19,16 @@
           </div>
         </q-drawer>
       </div>
-      <div>
-        <q-page-container >
+      <q-page-container  style="width: 100%">
+      <q-header elevated>
+      <q-toolbar>
+        <q-toolbar-title>
+          Quasar App
+        </q-toolbar-title>
+      </q-toolbar>
+    </q-header>
           <router-view />
-        </q-page-container>
-      </div>
-
+    </q-page-container>
     </div>
   </q-layout>
 </template>

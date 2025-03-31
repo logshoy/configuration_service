@@ -13,6 +13,7 @@
     <q-drawer
       style="margin-left: 60px;
       background-color: aliceblue;"
+      :width="315"
       show-if-above
       v-model="drawerOpen"
       bordered
@@ -145,8 +146,7 @@ const handleDrawerClick = (event) => {
     buttonRef.value?.$el &&
     !buttonRef.value?.$el.contains(event.target)
   ) {
-    configurationStore.setConfiguration(1);
-    console.log('Клик вне дерева и не по кнопке');
+    shopStore.setBranch(null);
   }
 };
 

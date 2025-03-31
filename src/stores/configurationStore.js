@@ -152,17 +152,31 @@ export const useConfigurationStore = defineStore('configuration', {
   },
   getters: {
     // Геттер для получения отфильтрованного списка
-    filteredConfigurationList: (state) => (query) => {
-      if (!query) return state.configurationList
+    filteredConfigurationList:
+      (state) =>
+      ({ query = null, nodeId = null }) => {
+        // Если nodeId не передан → возвращаем null
+        if (nodeId === null || nodeId === undefined) {
+          return null
+        }
 
-      return state.configurationList.filter((item) => {
-        const idMatch = item.id.toLowerCase().includes(query.toLowerCase())
-        const settingsMatch = JSON.stringify(item.settings)
-          .toLowerCase()
-          .includes(query.toLowerCase())
-        return idMatch || settingsMatch
-      })
-    },
+        let result = [...state.configurationList]
+
+        // Фильтрация по nodeId (обязательное условие)
+        result = result.filter((item) => item.settings.node == nodeId)
+
+        // Дополнительная фильтрация по query (если указан)
+        if (query !== null && query.trim() !== '') {
+          const searchTerm = query.toLowerCase()
+          result = result.filter((item) => {
+            const idMatch = item.id.toLowerCase().includes(searchTerm)
+            const nameMatch = item.settings?.configurationName?.toLowerCase().includes(searchTerm)
+            return idMatch || nameMatch
+          })
+        }
+
+        return result.length ? result : null
+      },
     // Геттер для получения отфильтрованного списка по типу
     typeFilteredConfigurationList: (state) => (type) => {
       if (!type) {
@@ -178,13 +192,6 @@ export const useConfigurationStore = defineStore('configuration', {
           value: item.id,
           label: item.settings?.configurationName,
         }))
-    },
-    filteredConfigurationListByNode: (state) => (id) => {
-      console.log(id)
-
-      if (!id) return null
-
-      return state.configurationList.filter((item) => item.settings.node == id)
     },
   },
 })

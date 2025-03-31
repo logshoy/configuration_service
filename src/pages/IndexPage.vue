@@ -1,10 +1,8 @@
 <template>
-  <div>
-
-    <div class="_content_center main">
+  <div >
+    <div class="_content_center main q-pa-md">
     <DrawerListElements/>
     <div class="text-h5 q-pa-xs">{{ $t('configuration') }}</div>
-    <div>{{ $t('success') }}</div>
     <q-input
       rounded
       outlined
@@ -18,10 +16,13 @@
     <div v-if="isLoading">Загрузка...</div>
     <div v-else-if="error">Ошибка: {{ error }}</div>
     <div v-else class="q-pa-md">
+
+      <div class="flex justify-center items center">
+          <h3 v-if="!filteredListByNode"> Выбери что-то</h3>
+        </div>
       <!-- Контейнер для карточек -->
-      <div class="row q-gutter-md">
+      <div v-if="filteredListByNode" class="row q-gutter-md">
         <!-- Динамическое создание карточек -->
-        <h3 v-if="!filteredListByNode"> Выбери что-то</h3>
         <q-card
           v-for="item in filteredListByNode"
           :key="item.id"
@@ -79,7 +80,7 @@ const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
 // const configuration = computed(() => selectedItemStore.configuration);
 
-const configuration = computed(() => shopStore.branch);
+const branch = computed(() => shopStore.branch);
 
 
 // Используем геттер filteredConfigurationList
@@ -90,8 +91,10 @@ const configuration = computed(() => shopStore.branch);
 
 // Используем геттер filteredConfigurationListByNode
 const filteredListByNode = computed(() => {
-  const result = selectedItemStore.filteredConfigurationListByNode(configuration.value);
-  console.log(shopStore.branch)
+  const result = selectedItemStore.filteredConfigurationList({
+  query: searchQuery.value,
+  nodeId: branch.value
+});
   return result;
 });
 
@@ -133,7 +136,7 @@ const filteredListByNode = computed(() => {
 ._content_center {
   display: flex;
   width: 100%;
-  padding: 30px 25px 20px 60px;
+  padding: 30px 25px 20px 80px;
   flex: 1;
   flex-direction: column;
 }
