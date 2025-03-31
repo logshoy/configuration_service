@@ -99,7 +99,7 @@ const showCopiedNotification = ref(false);
 const settingsComponent = computed(() => {
   if (!localItem.value) return null;
 
-  switch (localItem.value.settings.typeConfiguration) {
+  switch (localItem.value.settings.сonfigurationType) {
     case 'appCash':
       return AppCash;
     case 'service':

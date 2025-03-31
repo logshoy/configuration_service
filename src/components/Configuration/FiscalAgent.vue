@@ -1,9 +1,9 @@
 <template>
   <div>
     <div v-for="(fiscal, index) in modelValue.fiscalRegistrators" :key="index" class="q-ma-md">
-        <div class="row justify-center q-my-md">
+      <div class="row justify-between q-my-md">
         <q-input
-          label="ID"
+          label="DeviceID"
           :model-value="fiscal.id"
           @update:model-value="updateFiscal(index, 'id', $event)"
           filled
@@ -12,8 +12,10 @@
         <q-btn
           color="primary"
           icon="sync"
-          @click="generateuid"
+          @click="generateuid(index)"
           round
+          padding="10px 10px"
+          class="q-my-xs"
         />
       </div>
       <q-select
@@ -52,6 +54,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { v4 as uuidv4 } from 'uuid'
 
 const fiscalOptions = ref([
   { label: 'АТОЛ', value: 'atol' },
@@ -69,6 +72,12 @@ const props = defineProps({
   }
 });
 
+const generateuid = (index) => {
+  const id = uuidv4()
+  updateFiscal(index, 'id', id);
+}
+
+
 const emit = defineEmits(['update:modelValue']);
 
 const updateFiscal = (index, field, value) => {
@@ -78,7 +87,7 @@ const updateFiscal = (index, field, value) => {
 };
 
 const addFiscalRegistrator = () => {
-  const updatedFiscals = [...props.modelValue.fiscalRegistrators, { type: null, portName: '' }];
+  const updatedFiscals = [...props.modelValue.fiscalRegistrators, { id:null, type: null, portName: '' }];
   emit('update:modelValue', { ...props.modelValue, fiscalRegistrators: updatedFiscals });
 };
 

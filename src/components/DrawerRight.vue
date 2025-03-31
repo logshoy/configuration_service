@@ -27,6 +27,7 @@
       :width="315"
       behavior="desktop"
       persistent="false"
+      class="drawer_21"
     >
       <q-scroll-area class="fit">
         <!-- Используем новый компонент -->
@@ -109,5 +110,9 @@ const saveChanges = () => {
 
 .drawer_right {
   right: 0px; /* Расстояние от правого края, учитывая ширину QDrawer */
+}
+
+:deep(.q-drawer) {
+  box-shadow: -12px 8px 5px rgba(73, 62, 129, 0.078);
 }
 </style>

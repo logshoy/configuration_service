@@ -6,36 +6,20 @@ import { v4 as uuidv4 } from 'uuid'
 export const useShopStore = defineStore('shop', {
   state: () => ({
     shops: [
-       {
-        id: '8a564c6d-cba7-4ec0-ac19-9a6ebe365a32',
+      {
+        id: '2f4728ce-e7fc-42b8-bfdf-0b76317b87e8',
         name: 'Магазин №1',
         cashGroups: [
-          // {
-          //   id: 'group1',
-          //   name: 'Группа касс 1',
-          //   cashRegisters: [
-          //     { id: 'cash1-group1-shop1', name: 'Касса 1' },
-          //     { id: 'cash2-group1-shop1', name: 'Касса 2' },
-          //   ],
-          // },
+          {
+            id: '92289205-5c41-460d-a501-fa1acae0d0a1',
+            name: 'Группа 2',
+            cashRegisters: [{ id: '01adaf56-4fff-4a34-b7f7-3a10f91054cf', name: 'Касса 2' }],
+          },
         ],
       },
-      // {
-      //   id: 'shop2',
-      //   name: 'Магазин №1',
-      //   cashGroups: [
-      //     {
-      //       id: 'group2',
-      //       name: 'Группа касс 1',
-      //       cashRegisters: [
-      //         { id: 'cash1-group1-shop2', name: 'Касса 1' },
-      //         { id: 'cash2-group1-shop2', name: 'Касса 2' },
-      //       ],
-      //     },
-      //   ],
-      // },
     ],
   }),
+  branch: null,
   getters: {
     treeData: (state) => {
       return state.shops.map((shop) => ({
@@ -59,6 +43,15 @@ export const useShopStore = defineStore('shop', {
     },
   },
   actions: {
+    setBranch(id) {
+      console.log(id)
+      if (id != null) {
+        this.branch = id
+      } else {
+        this.branch = null
+      }
+      console.log(this.branch)
+    },
     addShop(name, settings) {
       const configurationStore = useConfigurationStore()
       const id = uuidv4()

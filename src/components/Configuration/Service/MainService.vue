@@ -21,17 +21,24 @@
       v-if="localConfigurationService?.value === 'agentPayment'"
       v-model="f"
     />
+
+    <AgentDevice
+      v-if="localConfigurationService?.value === 'agentDevice'"
+      v-model="f"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import PaymentAgent from 'components/Configuration/Service/PaymentAgent.vue';
+import AgentDevice from 'components/Configuration/Service/AgentDevice.vue';
 
 const options = ref([
   { label: 'Агент оплат', value: 'agentPayment' },
   { label: 'Агент фискализации', value: 'agentFiscalization' },
+  { label: 'Агент оборудования', value: 'agentDevice' },
 ]);
 
 const props = defineProps({
@@ -54,8 +61,17 @@ const paymentSettings = ref(props.modelValue.paymentSettings || {});
 // Локальное состояние для выбора типа сервиса
 const localConfigurationService = ref(props.modelValue.serviceType);
 
-// Компьютед для передачи modelValue в дочерний компонент
-const f = computed(() => props.modelValue);
+// Локальный объект для передачи данных в дочерний компонент
+const f = ref({ ...props.modelValue });
+
+// Следим за изменениями props.modelValue и синхронизируем с f
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    f.value = { ...newValue };
+  },
+  { deep: true }
+);
 
 // Следим за изменениями props.modelValue.serviceType
 watch(

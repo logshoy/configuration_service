@@ -1,7 +1,7 @@
 <template>
   <div>
 
-    <div class="_content_center">
+    <div class="_content_center main">
     <DrawerListElements/>
     <div class="text-h5 q-pa-xs">{{ $t('configuration') }}</div>
     <div>{{ $t('success') }}</div>
@@ -13,22 +13,27 @@
       placeholder="Введите текст для поиска"
       v-model="searchQuery"
     />
-    <ProductCard />
+    <ProductCard  />
+    <!-- {{ filteredListByNode }} -->
     <div v-if="isLoading">Загрузка...</div>
     <div v-else-if="error">Ошибка: {{ error }}</div>
     <div v-else class="q-pa-md">
       <!-- Контейнер для карточек -->
       <div class="row q-gutter-md">
         <!-- Динамическое создание карточек -->
+        <h3 v-if="!filteredListByNode"> Выбери что-то</h3>
         <q-card
-          v-for="item in filteredList"
+          v-for="item in filteredListByNode"
           :key="item.id"
           :class="['my-card', 'rounded-borders', { 'selected-card': selectedItemId == item.id   }]"
           clickable
           @click="selectItem(item.id)"
         >
           <q-card-section>
-            <div class="text-h6">ID: {{ item.id }}</div>
+            <div class="text-h6">{{ item.settings.configurationName }}</div>
+            <br>
+            <div class="text-subtitle2">ID: {{ item.id }}</div>
+            <br>
             <div class="text-subtitle2">Настройки: {{ item.settings }}</div>
           </q-card-section>
         </q-card>
@@ -42,11 +47,14 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
+import { useShopStore } from 'stores/shopStore';
 
 import ProductCard from 'components/ProductCard.vue';
 import DrawerRight from 'components/DrawerRight.vue';
 import DrawerListElements from 'components/DrawerListElements.vue';
 
+
+const shopStore = useShopStore();
 
 const selectedItemStore = useConfigurationStore();
 
@@ -62,7 +70,6 @@ onMounted(() => {
 });
 
 const selectItem = (item) => {
-
   selectedItemStore.setConfiguration(item); // Используем метод хранилища
   selectedItemId.value = item; // Обновляем ID выбранного элемента
 };
@@ -70,12 +77,25 @@ const selectItem = (item) => {
 // Получаем данные из хранилища
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
+// const configuration = computed(() => selectedItemStore.configuration);
+
+const configuration = computed(() => shopStore.branch);
+
 
 // Используем геттер filteredConfigurationList
-const filteredList = computed(() => {
-  const result = selectedItemStore.filteredConfigurationList(searchQuery.value);
+// const filteredList = computed(() => {
+//   const result = selectedItemStore.filteredConfigurationList(searchQuery.value);
+//   return result;
+// });
+
+// Используем геттер filteredConfigurationListByNode
+const filteredListByNode = computed(() => {
+  const result = selectedItemStore.filteredConfigurationListByNode(configuration.value);
+  console.log(shopStore.branch)
   return result;
 });
+
+
 </script>
 
 <style scoped>
@@ -118,4 +138,7 @@ const filteredList = computed(() => {
   flex-direction: column;
 }
 
+.main {
+  /* background-color: #e3f2fd; */
+}
 </style>

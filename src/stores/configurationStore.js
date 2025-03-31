@@ -50,12 +50,13 @@ export const useConfigurationStore = defineStore('configuration', {
 
     // Установить выбранный элемент
     setConfiguration(id) {
-      if(id != null) {
-        this.configuration = this.configuration = this.configurationList.find((item) => item.id === id)
+      if (id != null) {
+        this.configuration = this.configuration = this.configurationList.find(
+          (item) => item.id === id,
+        )
       } else {
         this.configuration = null
       }
-
     },
 
     // Создать новую конфигурацию
@@ -67,9 +68,11 @@ export const useConfigurationStore = defineStore('configuration', {
         ;('')
       }
 
-      console.log(settings)
+      // console.log(settings , id)
 
-      const newConfiguration = {
+      // settings.appId = id
+
+      let newConfiguration = {
         id,
         settings: JSON.stringify(settings),
       }
@@ -160,8 +163,28 @@ export const useConfigurationStore = defineStore('configuration', {
         return idMatch || settingsMatch
       })
     },
-    getConfiguration: (state) => (id) => {
-      return state.configurationList.find((item) => item.id === id)
+    // Геттер для получения отфильтрованного списка по типу
+    typeFilteredConfigurationList: (state) => (type) => {
+      if (!type) {
+        return state.configurationList.map((item) => ({
+          id: item.id,
+          configurationName: item.settings?.configurationName,
+        }))
+      }
+
+      return state.configurationList
+        .filter((item) => item.settings?.serviceType?.value === type)
+        .map((item) => ({
+          value: item.id,
+          label: item.settings?.configurationName,
+        }))
+    },
+    filteredConfigurationListByNode: (state) => (id) => {
+      console.log(id)
+
+      if (!id) return null
+
+      return state.configurationList.filter((item) => item.settings.node == id)
     },
   },
 })

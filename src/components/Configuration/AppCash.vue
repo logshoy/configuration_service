@@ -38,15 +38,69 @@
         </q-icon>
       </template>
     </q-input>
+    <q-expansion-item
+        expand-separator
+        icon="support_agent"
+        label="Агенты"
+      >
+    <q-select
+      filled
+      class="q-ma-md"
+      :model-value="modelValue.fiscalAgent"
+      :options="filteredList"
+      label="Агент ФР"
+      @update:model-value="updateModelValue('fiscalAgent', $event)"
+    />
+
+    <q-select
+      filled
+      class="q-ma-md"
+      :model-value="modelValue.agentPayment"
+      :options="filteredListAgentPayment"
+      label="Агент оплат"
+      @update:model-value="updateModelValue('agentPayment', $event)"
+    />
+
+    <q-select
+      filled
+      class="q-ma-md"
+      :model-value="modelValue.agentDevice"
+      :options="filteredListAgentDevice"
+      label="Агент оборудования"
+      @update:model-value="updateModelValue('agentDevice', $event)"
+    />
+    </q-expansion-item>
+
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useConfigurationStore } from 'stores/configurationStore';
+
+const selectedItemStore = useConfigurationStore();
+
 const props = defineProps({
   modelValue: {
     type: Object,
     required: true
   }
+});
+
+const filteredList = computed(() => {
+  const result = selectedItemStore.typeFilteredConfigurationList('agentFiscalization');
+  return result;
+});
+
+
+const filteredListAgentPayment = computed(() => {
+  const result = selectedItemStore.typeFilteredConfigurationList('agentPayment');
+  return result;
+});
+
+const filteredListAgentDevice = computed(() => {
+  const result = selectedItemStore.typeFilteredConfigurationList('agentDevice');
+  return result;
 });
 
 const emit = defineEmits(['update:modelValue']);

@@ -52,7 +52,6 @@ import { useConfigurationStore } from 'stores/configurationStore';
 import { useShopStore } from 'stores/shopStore';
 
 import CashSettings from './Configuration/AppCash.vue';
-// import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import MainService from 'components/Configuration/Service/MainService.vue';
 import GroupCash from './Configuration/GroupCash.vue';
 import ShopСompany from './Configuration/ShopСompany.vue';
@@ -67,7 +66,7 @@ const configurationService = ref(null);
 const settings = ref({});
 const isCreating = ref(true);
 
-const typeConfiguration = computed(() => selectedItemStore.typeCreateConfigutation);
+const сonfigurationType = computed(() => selectedItemStore.typeCreateConfigutation);
 const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible);
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
@@ -76,7 +75,7 @@ const treeData = computed(() => shopeStore.treeData);
 
 // Определяем, какой компонент настроек использовать
 const settingsComponent = computed(() => {
-  switch (typeConfiguration.value) {
+  switch (сonfigurationType.value) {
     case 'appCash':
       return CashSettings;
     case 'service':
@@ -92,9 +91,9 @@ const settingsComponent = computed(() => {
 
 // Инициализация настроек в зависимости от типа конфигурации
 const initializeSettings = () => {
-  switch (typeConfiguration.value) {
+  switch (сonfigurationType.value) {
     case 'appCash':
-      settings.value = { width: 800, height: 600, color: '#fffffff' };
+      settings.value = { width: 800, height: 600, color: '#ffffff', fiscalAgent: null };
       break;
     case 'service':
       settings.value = { fiscalRegistrators: [{ type: null, portName: '' }] };
@@ -111,7 +110,7 @@ const initializeSettings = () => {
 };
 
 // Следим за изменением типа конфигурации и инициализируем настройки
-watch(typeConfiguration, () => {
+watch(сonfigurationType, () => {
   initializeSettings();
 }, { immediate: true });
 
@@ -160,7 +159,7 @@ const cleanSettings = (settings) => {
     shop: ['language'],
   };
 
-  const fieldsToKeep = allowedFields[typeConfiguration.value] || [];
+  const fieldsToKeep = allowedFields[сonfigurationType.value] || [];
   const cleanedSettings = {};
 
   fieldsToKeep.forEach((field) => {
@@ -186,7 +185,8 @@ const createConfiguration = async () => {
     // Формируем объект configurationData
     const configurationData = {
       configurationName: configurationName.value,
-      typeConfiguration: typeConfiguration.value,
+      сonfigurationType: сonfigurationType.value,
+      node: configuration.value?.id,
       ...cleanedSettings, // Передаем только нужные настройки
     };
 
@@ -195,7 +195,9 @@ const createConfiguration = async () => {
       configurationData.serviceType = configurationService.value;
     }
 
-    switch (typeConfiguration.value) {
+    console.log (configurationData)
+
+    switch (сonfigurationType.value) {
       case 'appCash':
         shopeStore.addCashRegister(node.shopId, node.id, configurationName.value, configurationData);
         break;

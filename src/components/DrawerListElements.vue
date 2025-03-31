@@ -11,9 +11,11 @@
 
     <!-- Drawer с деревом -->
     <q-drawer
-      style="margin-left: 50px; background-color: aliceblue"
+      style="margin-left: 60px;
+      background-color: aliceblue;"
       show-if-above
       v-model="drawerOpen"
+      bordered
       @click="handleDrawerClick"
     >
       <q-scroll-area class="fit q-pa-md">
@@ -107,9 +109,10 @@ const treeData = computed(() => shopStore.treeData);
 
 // Выбранный элемент (синхронизирован с хранилищем)
 const selectedItemId = computed({
-  get: () => configurationStore.configuration?.id || null,
+  get: () => shopStore.branch || null,
   set: (value) => {
     configurationStore.setConfiguration(value);
+    shopStore.setBranch(value);
   }
 });
 
@@ -164,7 +167,7 @@ const handleDrawerClick = (event) => {
 }
 
 .drawer_right {
-  left: 330px;
+  left: 340px;
 }
 
 /* Стили для выделенных узлов */
@@ -179,5 +182,9 @@ const handleDrawerClick = (event) => {
   font-weight: bold; /* Жирный шрифт */
   padding: 4px 8px;
   border-radius: 4px;
+}
+
+:deep(.q-drawer) {
+  box-shadow: 12px 8px 5px #ff3300;
 }
 </style>
