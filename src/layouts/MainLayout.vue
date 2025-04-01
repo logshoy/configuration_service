@@ -20,15 +20,21 @@
         </q-drawer>
       </div>
       <q-page-container  style="width: 100%">
-      <q-header elevated>
-      <q-toolbar>
-        <q-toolbar-title>
-          Quasar App
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-header>
-          <router-view />
-    </q-page-container>
+                <q-header elevated>
+          <q-toolbar>
+            <q-toolbar-title>
+              Quasar App
+            </q-toolbar-title>
+          </q-toolbar>
+        </q-header>
+        <q-layout view="hHh lpR fFf">
+
+
+<q-page-container  style="width: 100%">
+        <router-view />
+</q-page-container>
+        </q-layout>
+      </q-page-container>
     </div>
   </q-layout>
 </template>

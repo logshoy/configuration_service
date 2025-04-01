@@ -11,8 +11,7 @@
 
     <!-- Drawer с деревом -->
     <q-drawer
-      style="margin-left: 60px;
-      background-color: aliceblue;"
+      style="background-color: aliceblue;"
       :width="315"
       show-if-above
       v-model="drawerOpen"
@@ -163,11 +162,11 @@ const handleDrawerClick = (event) => {
 }
 
 .drawer_left {
-  left: 55px;
+  left: 75px;
 }
 
 .drawer_right {
-  left: 340px;
+  left: 370px;
 }
 
 /* Стили для выделенных узлов */

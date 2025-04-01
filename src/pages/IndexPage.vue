@@ -1,6 +1,6 @@
 <template>
   <div >
-    <div class="_content_center main q-pa-md">
+    <div class="_content_center main">
     <DrawerListElements/>
     <div class="text-h5 q-pa-xs">{{ $t('configuration') }}</div>
     <q-input
@@ -136,7 +136,7 @@ const filteredListByNode = computed(() => {
 ._content_center {
   display: flex;
   width: 100%;
-  padding: 30px 25px 20px 80px;
+  padding: 30px 25px 20px 30px;
   flex: 1;
   flex-direction: column;
 }
