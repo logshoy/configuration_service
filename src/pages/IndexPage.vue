@@ -35,7 +35,7 @@
             <br>
             <div class="text-subtitle2">ID: {{ item.id }}</div>
             <br>
-            <div class="text-subtitle2">Настройки: {{ item.settings }}</div>
+            <!-- <div class="text-subtitle2">Настройки: {{ item.settings }}</div> -->
           </q-card-section>
         </q-card>
       </div>

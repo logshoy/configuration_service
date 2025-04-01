@@ -20,13 +20,6 @@
         </q-drawer>
       </div>
       <q-page-container  style="width: 100%">
-                <q-header elevated>
-          <q-toolbar>
-            <q-toolbar-title>
-              Quasar App
-            </q-toolbar-title>
-          </q-toolbar>
-        </q-header>
         <q-layout view="hHh lpR fFf">
 
 

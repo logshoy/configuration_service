@@ -13,4 +13,5 @@ export default {
   services: 'Services',
   exit: 'Exit',
   devices: 'Devices',
+  users: 'Users',
 }

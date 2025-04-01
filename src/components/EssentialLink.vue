@@ -38,7 +38,7 @@
         icon="settings"
         :label="$t('configuration')"
       >
-        <q-item clickable>
+        <q-item to="/" clickable>
           <span>{{ $t('cashboxs') }}</span>
         </q-item >
         <q-item clickable>
@@ -48,6 +48,20 @@
           <span>{{ $t('devices') }}</span>
         </q-item>
 
+
+      </q-expansion-item>
+
+      <q-expansion-item
+
+       :content-inset-level="0.5"
+
+        icon="person"
+        :label="$t('directories')"
+
+      >
+        <q-item to="/users" clickable>
+          {{ $t('users') }}
+        </q-item>
 
       </q-expansion-item>
     </q-list>

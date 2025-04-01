@@ -12,5 +12,6 @@ export default {
   cashboxs: 'Кассы',
   services: 'Сервисы',
   exit: 'Выход',
-  devices: 'Устройства'
+  devices: 'Устройства',
+  users: 'Пользователи',
 }
