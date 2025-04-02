@@ -2,12 +2,22 @@ const routes = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
-  },
-  {
-    path: '/users',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/UsersPage.vue') }],
+    children: [
+      {
+        path: '',
+        component: () => import('pages/IndexPage.vue'),
+        meta: {
+          title: 'configuration', // ключ перевода
+        },
+      },
+      {
+        path: '/users',
+        component: () => import('pages/UsersPage.vue'),
+        meta: {
+          title: 'users', // ключ перевода
+        },
+      },
+    ],
   },
   {
     path: '/auth',
@@ -22,5 +32,8 @@ const routes = [
     component: () => import('pages/ErrorNotFound.vue'),
   },
 ]
+
+
+
 
 export default routes

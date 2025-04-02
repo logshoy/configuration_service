@@ -90,13 +90,44 @@ const settingsComponent = computed(() => {
 });
 
 // Инициализация настроек в зависимости от типа конфигурации
+// const initializeSettings = () => {
+//   switch (сonfigurationType.value) {
+//     case 'appCash':
+//       settings.value = { width: 800, height: 600, color: '#ffffff', fiscalAgent: null };
+//       break;
+//     case 'service':
+//       settings.value = { fiscalRegistrators: [{ type: null, portName: '' }] };
+//       break;
+//     case 'cashGroup':
+//       settings.value = { keyboard: true, advance: false };
+//       break;
+//     case 'shop':
+//       settings.value = { language: { label: 'Русский', value: 'ru' } };
+//       break;
+//     default:
+//       settings.value = {};
+//   }
+// };
+
 const initializeSettings = () => {
+
   switch (сonfigurationType.value) {
     case 'appCash':
       settings.value = { width: 800, height: 600, color: '#ffffff', fiscalAgent: null };
       break;
     case 'service':
-      settings.value = { fiscalRegistrators: [{ type: null, portName: '' }] };
+      switch (configurationService.value?.value) {
+        case 'agentFiscalization':
+          console.log(configurationService.value?.value)
+          settings.value = { fiscalRegistrators: [{ type: null, portName: 'USB' }] };
+          break;
+          case 'serviceFiscalization':
+          settings.value = { settingCashToAgentFiscalization: [{ appCash: null, fiscalAgent: null }] };
+          break;
+        default:
+          settings.value = {};
+      }
+      console.log(settings.value)
       break;
     case 'cashGroup':
       settings.value = { keyboard: true, advance: false };
@@ -110,9 +141,9 @@ const initializeSettings = () => {
 };
 
 // Следим за изменением типа конфигурации и инициализируем настройки
-watch(сonfigurationType, () => {
+watch([сonfigurationType, configurationService], () => {
   initializeSettings();
-}, { immediate: true });
+}, { immediate: true, deep: true });
 
 // Закрытие формы с подтверждением
 const confirmClose = () => {
@@ -195,7 +226,6 @@ const createConfiguration = async () => {
       configurationData.serviceType = configurationService.value;
     }
 
-    console.log (configurationData)
 
     switch (сonfigurationType.value) {
       case 'appCash':

@@ -178,7 +178,7 @@ export const useConfigurationStore = defineStore('configuration', {
         return result.length ? result : null
       },
     // Геттер для получения отфильтрованного списка по типу
-    typeFilteredConfigurationList: (state) => (type) => {
+    typeFilteredConfigurationListService: (state) => (type) => {
       if (!type) {
         return state.configurationList.map((item) => ({
           id: item.id,
@@ -188,6 +188,23 @@ export const useConfigurationStore = defineStore('configuration', {
 
       return state.configurationList
         .filter((item) => item.settings?.serviceType?.value === type)
+        .map((item) => ({
+          value: item.id,
+          label: item.settings?.configurationName,
+        }))
+    },
+    typeFilteredConfigurationListServiceApp: (state) => (type) => {
+      if (!type) {
+        return state.configurationList.map((item) => ({
+          id: item.id,
+          configurationName: item.settings?.configurationName,
+        }))
+      }
+
+      return state.configurationList
+        .filter((item) => {
+          return item.settings?.сonfigurationType === type
+        })
         .map((item) => ({
           value: item.id,
           label: item.settings?.configurationName,

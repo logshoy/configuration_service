@@ -5,7 +5,8 @@ export const useDrawerStore = defineStore('drawer', {
     miniState: true,
     isLocked: false,
     drawerOpenRight: true, // Состояние блокировки
-    drawerOpenLeft: true, // Состояние блокировки
+    drawerOpenLeft: true,
+    search: null, // Состояние блокировки
   }),
   actions: {
     // Установка состояния miniState
@@ -26,6 +27,10 @@ export const useDrawerStore = defineStore('drawer', {
 
     setDrawerOpenLeft() {
       this.drawerOpenLeft = !this.drawerOpenLeft
+    },
+
+    setSearch(value) {
+      this.search = value
     },
   },
 })

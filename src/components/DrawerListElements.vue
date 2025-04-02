@@ -184,6 +184,6 @@ const handleDrawerClick = (event) => {
 }
 
 :deep(.q-drawer) {
-  box-shadow: 12px 8px 5px #ff3300;
+  box-shadow: 12px 8px 5px rgba(73, 62, 129, 0.078);
 }
 </style>

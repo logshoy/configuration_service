@@ -1,4 +1,8 @@
 <template>
+  {{ f }}
+  <br/>
+  <br/>
+  {{ fiscalSettings }}
   <div>
     <!-- Выбор типа сервиса -->
     <q-select
@@ -26,6 +30,10 @@
       v-if="localConfigurationService?.value === 'agentDevice'"
       v-model="f"
     />
+    <ServiceFiscalization
+      v-if="localConfigurationService?.value === 'serviceFiscalization'"
+      v-model="f"
+    />
   </div>
 </template>
 
@@ -34,17 +42,24 @@ import { ref, watch } from 'vue';
 import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import PaymentAgent from 'components/Configuration/Service/PaymentAgent.vue';
 import AgentDevice from 'components/Configuration/Service/AgentDevice.vue';
+import ServiceFiscalization from 'components/Configuration/Service/ServiceFiscalization.vue';
 
 const options = ref([
   { label: 'Агент оплат', value: 'agentPayment' },
   { label: 'Агент фискализации', value: 'agentFiscalization' },
   { label: 'Агент оборудования', value: 'agentDevice' },
+  { label: 'Сервис фискализации', value: 'serviceFiscalization' }
 ]);
 
 const props = defineProps({
   modelValue: {
     type: Object,
     required: true,
+  },
+   configurationService: {
+    type: Object,
+    required: false,
+    default: null
   },
   isCreating: {
     type: Boolean,

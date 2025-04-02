@@ -88,18 +88,18 @@ const props = defineProps({
 });
 
 const filteredList = computed(() => {
-  const result = selectedItemStore.typeFilteredConfigurationList('agentFiscalization');
+  const result = selectedItemStore.typeFilteredConfigurationListService('agentFiscalization');
   return result;
 });
 
 
 const filteredListAgentPayment = computed(() => {
-  const result = selectedItemStore.typeFilteredConfigurationList('agentPayment');
+  const result = selectedItemStore.typeFilteredConfigurationListService('agentPayment');
   return result;
 });
 
 const filteredListAgentDevice = computed(() => {
-  const result = selectedItemStore.typeFilteredConfigurationList('agentDevice');
+  const result = selectedItemStore.typeFilteredConfigurationListService('agentDevice');
   return result;
 });
 

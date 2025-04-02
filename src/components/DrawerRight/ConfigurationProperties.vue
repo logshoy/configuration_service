@@ -1,5 +1,6 @@
 <template>
   <div class="q-pa-md">
+    {{ localItem }}
     <q-form @submit.prevent="saveChanges">
       <div class="row items-center q-mb-md">
         <q-btn
