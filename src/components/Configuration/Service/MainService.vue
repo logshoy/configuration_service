@@ -1,44 +1,29 @@
+Не сработало исправь
+
 <template>
-  {{ f }}
-  <br/>
-  <br/>
-  {{ fiscalSettings }}
   <div>
-    <!-- Выбор типа сервиса -->
     <q-select
+      v-if="isCreating"
       filled
       class="q-ma-md"
       v-model="localConfigurationService"
       :options="options"
       label="Тип конфигурации"
-      v-if="isCreating"
+      @update:model-value="handleServiceChange"
     />
 
-    <!-- Компонент для фискального агента -->
-    <FiscalAgent
-      v-if="localConfigurationService?.value === 'agentFiscalization'"
-      v-model="f"
-    />
-
-    <!-- Компонент для платежного агента -->
-    <PaymentAgent
-      v-if="localConfigurationService?.value === 'agentPayment'"
-      v-model="f"
-    />
-
-    <AgentDevice
-      v-if="localConfigurationService?.value === 'agentDevice'"
-      v-model="f"
-    />
-    <ServiceFiscalization
-      v-if="localConfigurationService?.value === 'serviceFiscalization'"
-      v-model="f"
+    <component
+      :is="activeComponent"
+      v-if="activeComponent"
+      :modelValue="f"
+      @update:modelValue="handleModelUpdate"
+      :configurationService="localConfigurationService"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import PaymentAgent from 'components/Configuration/Service/PaymentAgent.vue';
 import AgentDevice from 'components/Configuration/Service/AgentDevice.vue';
@@ -56,9 +41,8 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-   configurationService: {
+  configurationService: {
     type: Object,
-    required: false,
     default: null
   },
   isCreating: {
@@ -69,51 +53,44 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'update:configurationService']);
 
-// Локальные настройки для каждого типа сервиса
-const fiscalSettings = ref(props.modelValue.fiscalRegistrators || {});
-const paymentSettings = ref(props.modelValue.paymentSettings || {});
+const serviceComponents = {
+  agentFiscalization: FiscalAgent,
+  agentPayment: PaymentAgent,
+  agentDevice: AgentDevice,
+  serviceFiscalization: ServiceFiscalization
+};
 
-// Локальное состояние для выбора типа сервиса
-const localConfigurationService = ref(props.modelValue.serviceType);
+const localConfigurationService = ref(props.modelValue.serviceType || props.configurationService);
+const f = ref(JSON.parse(JSON.stringify(props.modelValue)));
 
-// Локальный объект для передачи данных в дочерний компонент
-const f = ref({ ...props.modelValue });
-
-// Следим за изменениями props.modelValue и синхронизируем с f
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    f.value = { ...newValue };
-  },
-  { deep: true }
-);
-
-// Следим за изменениями props.modelValue.serviceType
-watch(
-  () => props.modelValue.serviceType,
-  (newValue) => {
-    if (localConfigurationService.value !== newValue) {
-      localConfigurationService.value = newValue;
-    }
-  }
-);
-
-// Отслеживаем изменения локальных настроек и отправляем их в родительский компонент
-watch(
-  [fiscalSettings, paymentSettings],
-  ([fiscal, payment]) => {
-    const updatedSettings = {
-      ...props.modelValue,
-      fiscalRegistrators: fiscal,
-      paymentSettings: payment,
-    };
-    emit('update:modelValue', updatedSettings);
-  },
-  { deep: true }
-);
-
-// Отслеживаем изменения выбора типа сервиса
-watch(localConfigurationService, (newValue) => {
-  emit('update:configurationService', newValue);
+const activeComponent = computed(() => {
+  return localConfigurationService.value?.value
+    ? serviceComponents[localConfigurationService.value.value]
+    : null;
 });
+
+// Обработчик изменения сервиса
+const handleServiceChange = (newValue) => {
+  localConfigurationService.value = newValue;
+  emit('update:configurationService', newValue);
+};
+
+// Обработчик изменения модели
+const handleModelUpdate = (newValue) => {
+  f.value = JSON.parse(JSON.stringify(newValue));
+  emit('update:modelValue', JSON.parse(JSON.stringify(newValue)));
+};
+
+// Однонаправленный поток данных - только реагируем на внешние изменения
+watch(() => props.modelValue, (newValue) => {
+  if (JSON.stringify(f.value) !== JSON.stringify(newValue)) {
+    f.value = JSON.parse(JSON.stringify(newValue));
+  }
+}, { deep: true });
+
+watch(() => props.configurationService, (newValue) => {
+  if (JSON.stringify(localConfigurationService.value) !== JSON.stringify(newValue)) {
+    localConfigurationService.value = JSON.parse(JSON.stringify(newValue));
+  }
+}, { deep: true });
 </script>
