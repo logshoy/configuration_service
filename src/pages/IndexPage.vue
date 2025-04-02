@@ -20,7 +20,7 @@
             <br>
             <div class="text-subtitle2">ID: {{ item.id }}</div>
             <br>
-            <div >{{ item.settings }}</div>
+            <!-- <div >{{ item.settings }}</div> -->
           </q-card-section>
         </q-card>
       </div>

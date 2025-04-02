@@ -1,24 +1,30 @@
 <template>
   <div>
-    <div v-for="(fiscal, index) in modelValue.settingCashToAgentFiscalization" :key="index" class="q-ma-md">
+     <q-checkbox
+      v-model="localUniqueCashMode"
+      label="Одна касса один агент"
+      class="q-mb-md"
+      @update:model-value="updateUniqueMode"
+    />
 
+    <div v-for="(CashToAgentFiscalization, index) in modelValue.settingCashToAgentFiscalization" :key="index" class="q-ma-md">
       <q-select
         class="q-mt-md"
         filled
-        :model-value="modelValue.fiscalAgent"
+        :model-value="CashToAgentFiscalization.appCash"
         :options="filteredListCash"
         label="Касса"
         @update:model-value="updateFiscal(index,'appCash', $event)"
       />
-
       <q-select
         class="q-mt-md"
         filled
-        :model-value="modelValue.fiscalAgent"
+        :model-value="CashToAgentFiscalization.fiscalAgent"
         :options="filteredListFiscalAgent"
         label="Агент ФР"
         @update:model-value="updateFiscal(index,'fiscalAgent', $event)"
       />
+
       <q-btn
         v-if="index === modelValue.settingCashToAgentFiscalization.length - 1"
         color="green"
@@ -40,23 +46,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import { useConfigurationStore } from 'stores/configurationStore';
 
 const selectedItemStore = useConfigurationStore();
-
-
-const filteredListFiscalAgent = computed(() => {
-  const result = selectedItemStore.typeFilteredConfigurationListService('agentFiscalization');
-  return result;
-});
-
-const filteredListCash = computed(() => {
-  const result = selectedItemStore.typeFilteredConfigurationListServiceApp('appCash');
-  return result;
-});
-
 
 const props = defineProps({
   modelValue: {
@@ -69,8 +63,33 @@ const props = defineProps({
   }
 });
 
-
 const emit = defineEmits(['update:modelValue']);
+
+// Локальная переменная для чекбокса
+const localUniqueCashMode = ref(props.modelValue.localUniqueCashMode || false);
+
+// Следим за изменениями в modelValue и обновляем локальное значение
+watch(() => props.modelValue.localUniqueCashMode, (newVal) => {
+  localUniqueCashMode.value = newVal;
+});
+
+// Обновляем modelValue при изменении чекбокса
+const updateUniqueMode = (value) => {
+  emit('update:modelValue', {
+    ...props.modelValue,
+    localUniqueCashMode: value
+  });
+};
+
+const filteredListFiscalAgent = computed(() => {
+  const result = selectedItemStore.typeFilteredConfigurationListService('agentFiscalization');
+  return result;
+});
+
+const filteredListCash = computed(() => {
+  const result = selectedItemStore.typeFilteredConfigurationListServiceApp('appCash');
+  return result;
+});
 
 const updateFiscal = (index, field, value) => {
   const updatedFiscals = [...props.modelValue.settingCashToAgentFiscalization];

@@ -78,8 +78,10 @@ import { ref, watch, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
 import { useQuasar } from 'quasar';
 
+import { validateServiceFiscalization  } from 'src/utils/validators.js';
+
 import AppCash from 'components/Configuration/AppCash.vue';
-// import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
+
 import MainService from 'components/Configuration/Service/MainService.vue';
 import GroupCash from 'components/Configuration/GroupCash.vue';
 import ShopСompany from 'components/Configuration/ShopСompany.vue';
@@ -137,13 +139,14 @@ const hasChanges = computed(() => {
 
 // Сохранение изменений
 const saveChanges = () => {
-  if (!localItem.value) {
-    console.error('Локальный элемент не определен');
-    return;
+  try {
+    validateServiceFiscalization(localItem.value.settings);
+    selectedItemStore.updateItem(localItem.value);
+    initialItem.value = JSON.parse(JSON.stringify(localItem.value));
+  } catch (err) {
+    console.error('Ошибка при сохранении изменений:', err);
+    alert(err.message);
   }
-
-  selectedItemStore.updateItem(localItem.value);
-  initialItem.value = JSON.parse(JSON.stringify(localItem.value));
 };
 
 // Копирование ID в буфер обмена

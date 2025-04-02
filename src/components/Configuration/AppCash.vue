@@ -88,7 +88,7 @@ const props = defineProps({
 });
 
 const filteredList = computed(() => {
-  const result = selectedItemStore.typeFilteredConfigurationListService('agentFiscalization');
+  const result = selectedItemStore.typeFilteredConfigurationListService('agentFiscalization', 'serviceFiscalization');
   return result;
 });
 

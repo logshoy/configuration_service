@@ -51,6 +51,8 @@ import { ref, computed, watch } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
 import { useShopStore } from 'stores/shopStore';
 
+import { validateServiceFiscalization } from 'src/utils/validators.js';
+
 import CashSettings from './Configuration/AppCash.vue';
 import MainService from 'components/Configuration/Service/MainService.vue';
 import GroupCash from './Configuration/GroupCash.vue';
@@ -122,7 +124,7 @@ const initializeSettings = () => {
           settings.value = { fiscalRegistrators: [{ type: null, portName: 'USB' }] };
           break;
           case 'serviceFiscalization':
-          settings.value = { settingCashToAgentFiscalization: [{ appCash: null, fiscalAgent: null }] };
+          settings.value = { settingCashToAgentFiscalization: [{ appCash: null, fiscalAgent: null }], localUniqueCashMode: true };
           break;
         default:
           settings.value = {};
@@ -181,23 +183,40 @@ const findNodeById = (nodes, id) => {
   return null;
 };
 
-// Очистка лишних полей из настроек
 const cleanSettings = (settings) => {
   const allowedFields = {
-    appCash: ['width', 'height', 'color'],
-    service: ['fiscalRegistrators'],
+    appCash: ['width', 'height', 'color', 'fiscalAgent'],
+    service: {
+      agentFiscalization: ['fiscalRegistrators'],
+      serviceFiscalization: ['settingCashToAgentFiscalization', 'localUniqueCashMode'],
+      default: []
+    },
     cashGroup: ['keyboard', 'advance'],
-    shop: ['language'],
+    shop: ['language']
   };
 
-  const fieldsToKeep = allowedFields[сonfigurationType.value] || [];
   const cleanedSettings = {};
+  const configType = сonfigurationType.value;
 
-  fieldsToKeep.forEach((field) => {
-    if (settings[field] !== undefined) {
-      cleanedSettings[field] = settings[field];
-    }
-  });
+  // Для типа 'service' учитываем подтип сервиса
+  if (configType === 'service') {
+    const serviceType = configurationService.value?.value;
+    const fields = allowedFields.service[serviceType] || allowedFields.service.default;
+
+    fields.forEach(field => {
+      if (settings[field] !== undefined) {
+        cleanedSettings[field] = settings[field];
+      }
+    });
+  }
+  // Для остальных типов
+  else if (allowedFields[configType]) {
+    allowedFields[configType].forEach(field => {
+      if (settings[field] !== undefined) {
+        cleanedSettings[field] = settings[field];
+      }
+    });
+  }
 
   return cleanedSettings;
 };
@@ -210,29 +229,34 @@ const createConfiguration = async () => {
       node = findNodeById(treeData.value, configuration.value.id);
     }
 
-    // Очищаем настройки от лишних полей
     const cleanedSettings = cleanSettings(settings.value);
-
-    // Формируем объект configurationData
     const configurationData = {
       configurationName: configurationName.value,
       сonfigurationType: сonfigurationType.value,
       node: configuration.value?.id,
-      ...cleanedSettings, // Передаем только нужные настройки
+      ...cleanedSettings,
     };
 
-    // Если serviceType задан, добавляем его в configurationData
     if (configurationService.value) {
       configurationData.serviceType = configurationService.value;
     }
-
 
     switch (сonfigurationType.value) {
       case 'appCash':
         shopeStore.addCashRegister(node.shopId, node.id, configurationName.value, configurationData);
         break;
       case 'service':
-        selectedItemStore.createConfiguration(configurationData);
+        switch (configurationService.value?.value) {
+          case 'agentFiscalization':
+            selectedItemStore.createConfiguration(configurationData);
+            break;
+          case 'serviceFiscalization':
+            validateServiceFiscalization(configurationData);
+            selectedItemStore.createConfiguration(configurationData);
+            break;
+          default:
+            selectedItemStore.createConfiguration(configurationData);
+        }
         break;
       case 'cashGroup':
         shopeStore.addCashGroup(configuration.value.id, configurationName.value, configurationData);
@@ -240,12 +264,15 @@ const createConfiguration = async () => {
       case 'shop':
         shopeStore.addShop(configurationName.value, configurationData);
         break;
+      default:
+        console.warn('Unknown configuration type:', сonfigurationType.value);
     }
 
     resetForm();
     selectedItemStore.disableCreateFormVisibility();
   } catch (err) {
     console.error('Ошибка при создании конфигурации:', err);
+    alert(err.message);
   }
 };
 </script>
