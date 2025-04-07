@@ -3,23 +3,19 @@ import { defineStore } from 'pinia'
 import { useConfigurationStore } from './configurationStore'
 import { v4 as uuidv4 } from 'uuid'
 
+// Ключ для localStorage
+const STORAGE_KEY = 'shopStoreData'
+
 export const useShopStore = defineStore('shop', {
-  state: () => ({
-    shops: [
-      {
-        id: '2f4728ce-e7fc-42b8-bfdf-0b76317b87e8',
-        name: 'Магазин №1',
-        cashGroups: [
-          {
-            id: '92289205-5c41-460d-a501-fa1acae0d0a1',
-            name: 'Группа 2',
-            cashRegisters: [{ id: '01adaf56-4fff-4a34-b7f7-3a10f91054cf', name: 'Касса 2' }],
-          },
-        ],
-      },
-    ],
-  }),
-  branch: null,
+  state: () => {
+    // Пытаемся загрузить shops из localStorage
+    const savedData = localStorage.getItem(STORAGE_KEY)
+    return {
+      shops: savedData ? JSON.parse(savedData).shops : [],
+      branch: null,
+    }
+  },
+
   getters: {
     treeData: (state) => {
       return state.shops.map((shop) => ({
@@ -42,54 +38,135 @@ export const useShopStore = defineStore('shop', {
       }))
     },
   },
+
   actions: {
-    setBranch(id) {
-      if (id != null) {
-        this.branch = id
-      } else {
-        this.branch = null
-      }
+    // Сохраняем текущее состояние в localStorage
+    persistState() {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          shops: this.shops,
+          branch: this.branch,
+        }),
+      )
     },
+
+    setBranch(id) {
+      this.branch = id !== null ? id : null
+      this.persistState()
+    },
+
     addShop(name, settings) {
       const configurationStore = useConfigurationStore()
-      const id = uuidv4()
       const newShop = {
-        id: id,
+        id: uuidv4(),
         name,
         cashGroups: [],
       }
       this.shops.push(newShop)
-      configurationStore.createConfiguration(settings, id)
+      configurationStore.createConfiguration(settings, newShop.id)
+      this.persistState()
     },
+
     addCashGroup(shopId, name, settings) {
       const configurationStore = useConfigurationStore()
-      const id = uuidv4()
       const shop = this.shops.find((s) => s.id === shopId)
+
       if (shop) {
         const newCashGroup = {
-          id: id,
+          id: uuidv4(),
           name,
           cashRegisters: [],
         }
         shop.cashGroups.push(newCashGroup)
+        configurationStore.createConfiguration(settings, newCashGroup.id)
+        this.persistState()
       }
-      configurationStore.createConfiguration(settings, id)
     },
+
     addCashRegister(shopId, cashGroupId, name, settings) {
       const configurationStore = useConfigurationStore()
-      const id = uuidv4()
       const shop = this.shops.find((s) => s.id === shopId)
+
       if (shop) {
         const cashGroup = shop.cashGroups.find((g) => g.id === cashGroupId)
         if (cashGroup) {
           const newCashRegister = {
-            id: id,
+            id: uuidv4(),
             name,
           }
           cashGroup.cashRegisters.push(newCashRegister)
+          configurationStore.createConfiguration(settings, newCashRegister.id)
+          this.persistState()
         }
       }
-      configurationStore.createConfiguration(settings, id)
+    },
+
+    // Очистка хранилища
+    clearStorage() {
+      this.shops = []
+      this.branch = null
+      localStorage.removeItem(STORAGE_KEY)
+    },
+
+    moveCashRegister(cashRegisterId, fromCashGroupId, toCashGroupId) {
+
+      console.log(12)
+
+      // Находим магазин, содержащий исходную группу касс
+      const shop = this.shops.find((shop) =>
+        shop.cashGroups.some((group) => group.id === fromCashGroupId),
+      )
+
+      if (!shop) return false
+
+      // Находим исходную и целевую группы касс
+      const fromGroup = shop.cashGroups.find((group) => group.id === fromCashGroupId)
+      const toGroup = shop.cashGroups.find((group) => group.id === toCashGroupId)
+
+      if (!fromGroup || !toGroup) return false
+
+      // Находим кассу для перемещения
+      const cashRegisterIndex = fromGroup.cashRegisters.findIndex((cr) => cr.id === cashRegisterId)
+
+      if (cashRegisterIndex === -1) return false
+
+      // Удаляем кассу из исходной группы
+      const [cashRegister] = fromGroup.cashRegisters.splice(cashRegisterIndex, 1)
+
+      // Добавляем кассу в целевую группу
+      toGroup.cashRegisters.push(cashRegister)
+
+      this.persistState()
+      return true
+    },
+
+    getCashRegisterById(id) {
+      for (const shop of this.shops) {
+        for (const group of shop.cashGroups) {
+          const found = group.cashRegisters.find((cr) => cr.id === id)
+          if (found) return found
+        }
+      }
+      return null
+    },
+
+    addCashRegisterCopy(groupId, cashData) {
+      const group = this.findCashGroupById(groupId)
+      if (group) {
+        group.cashRegisters.push(cashData)
+        this.persistState()
+        return true
+      }
+      return false
+    },
+
+    findCashGroupById(groupId) {
+      for (const shop of this.shops) {
+        const group = shop.cashGroups.find((g) => g.id === groupId)
+        if (group) return group
+      }
+      return null
     },
   },
 })

@@ -213,5 +213,9 @@ export const useConfigurationStore = defineStore('configuration', {
           label: item.settings?.configurationName,
         }))
     },
+
+    getConfiguration: (state) => (id) => {
+      return state.configurationList.find((item) => item.id === id) || null
+    },
   },
 })
