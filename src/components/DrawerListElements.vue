@@ -20,10 +20,9 @@
     >
       <q-scroll-area class="fit q-pa-md">
         <!-- Группа кнопок управления -->
-        <div class="row q-mb-md no-wrap"             ref="buttonRef">
+        <div class="row q-mb-md no-wrap" ref="buttonRef">
           <!-- Кнопка добавления -->
           <q-btn
-
             color="green"
             icon="add"
             dense
@@ -38,7 +37,7 @@
             icon="drive_file_move"
             dense
             class="q-ml-sm"
-            @click="openMoveDialogForSelected"
+            @click="openMoveDialog"
             :disable="!canMoveSelected"
           >
             <q-tooltip>Переместить выбранный элемент</q-tooltip>
@@ -50,7 +49,7 @@
             icon="content_copy"
             dense
             class="q-ml-sm"
-            @click="openCopyDialogForSelected"
+            @click="openCopyDialog"
             :disable="!canCopySelected"
           >
             <q-tooltip>Копировать кассу</q-tooltip>
@@ -83,103 +82,31 @@
       </q-scroll-area>
     </q-drawer>
 
-    <!-- Модальное окно перемещения -->
-    <q-dialog v-model="moveDialogVisible" persistent>
-      <q-card style="min-width: 400px">
-        <q-card-section class="row items-center">
-          <q-icon name="drive_file_move" size="md" class="q-mr-sm" />
-          <span class="text-h6">Перемещение устройства</span>
-        </q-card-section>
+    <!-- Компонент перемещения -->
+    <MoveDialog
+      v-model="moveDialogVisible"
+      :device="moveDevice"
+      @confirm="handleMoveConfirm"
+    />
 
-        <q-card-section>
-          <div class="text-body1 q-mb-sm">
-            Вы хотите переместить: <strong>{{ moveData.deviceName }}</strong>
-          </div>
-          <div class="text-caption q-mb-md">
-            Code: {{ moveData.deviceCode }} | ID: {{ moveData.deviceId }}
-          </div>
-
-          <q-separator class="q-mb-md" />
-
-          <div class="text-subtitle2 q-mb-sm">Куда переместить?</div>
-          <q-option-group
-            v-model="moveData.targetGroupId"
-            :options="availableGroups"
-            type="radio"
-            color="primary"
-          />
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Отмена" color="grey" v-close-popup />
-          <q-btn
-            label="Переместить"
-            color="primary"
-            :loading="isMoving"
-            @click="confirmMove"
-            :disable="!moveData.targetGroupId"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- Модальное окно копирования -->
-    <q-dialog v-model="copyDialogVisible" persistent>
-      <q-card style="min-width: 400px">
-        <q-card-section class="row items-center">
-          <q-icon name="content_copy" size="md" class="q-mr-sm" />
-          <span class="text-h6">Копирование кассы</span>
-        </q-card-section>
-
-        <q-card-section>
-          <div class="text-body1 q-mb-sm">
-            Копируем кассу: <strong>{{ copyData.sourceName }}</strong>
-          </div>
-          <div class="text-caption q-mb-md">
-            Code: {{ copyData.sourceCode }} | ID: {{ copyData.sourceId }}
-          </div>
-
-          <q-separator class="q-mb-md" />
-
-          <q-input
-            v-model="copyData.newName"
-            label="Название копии"
-            outlined
-            class="q-mb-md"
-            :rules="[val => !!val || 'Обязательное поле']"
-          />
-
-          <div class="text-subtitle2 q-mb-sm">Куда скопировать?</div>
-          <q-option-group
-            v-model="copyData.targetGroupId"
-            :options="availableCopyGroups"
-            type="radio"
-            color="primary"
-          />
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Отмена" color="grey" v-close-popup />
-          <q-btn
-            label="Копировать"
-            color="primary"
-            :loading="isCopying"
-            @click="confirmCopy"
-            :disable="!copyData.targetGroupId || !copyData.newName"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <!-- Компонент копирования -->
+    <CopyDialog
+      v-model="copyDialogVisible"
+      :source="copySource"
+      @confirm="handleCopyConfirm"
+    />
   </div>
 </template>
 
-
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick  } from 'vue';
 import { useShopStore } from 'stores/shopStore';
 import { useConfigurationStore } from 'stores/configurationStore';
 import { useDrawerStore } from 'stores/drawerStore';
-import { v4 as uuidv4 } from 'uuid';
+
+
+import CopyDialog from '/src/components/Dialog/CopyDialog.vue';
+import MoveDialog from '/src/components/Dialog/MoveDialog.vue';
 
 const shopStore = useShopStore();
 const configurationStore = useConfigurationStore();
@@ -217,133 +144,93 @@ const canCopySelected = computed(() => {
 
 // Логика перемещения кассы
 const moveDialogVisible = ref(false);
-const isMoving = ref(false);
-const moveData = ref({
-  deviceId: null,
-  deviceName: '',
-  deviceCode: '',
-  sourceGroupId: null,
-  targetGroupId: null
-});
+const moveDevice = ref(null);
 
-const availableGroups = computed(() => {
-  if (!moveData.value.sourceGroupId) return [];
-
-  return shopStore.shops.flatMap(shop =>
-    shop.cashGroups
-      .filter(group => group.id !== moveData.value.sourceGroupId)
-      .map(group => ({
-        label: `${shop.name} > ${group.name}`,
-        value: group.id
-      }))
-  );
-});
-
-const openMoveDialogForSelected = () => {
+const openMoveDialog = () => {
   if (!selectedItem.value) return;
-  openMoveDialog(selectedItem.value);
-};
 
-const openMoveDialog = (node) => {
-  moveData.value = {
-    deviceId: node.id,
-    deviceName: node.label,
-    deviceCode: `CR-${node.id.slice(0, 4).toUpperCase()}`,
-    sourceGroupId: node.cashGroupId,
-    targetGroupId: null
+  moveDevice.value = {
+    id: selectedItem.value.id,
+    name: selectedItem.value.label,
+    groupId: selectedItem.value.cashGroupId
   };
+
   moveDialogVisible.value = true;
 };
 
-const confirmMove = async () => {
+const handleMoveConfirm = async (targetGroupId) => {
   try {
-    isMoving.value = true;
-    console.log('ss')
+    if (!selectedItem.value) {
+      console.error('Не выбрана касса для перемещения');
+      return;
+    }
+
     const success = await shopStore.moveCashRegister(
-      moveData.value.deviceId,
-      moveData.value.targetGroupId
+      selectedItem.value.id,
+      targetGroupId
     );
 
     if (success) {
+      // Принудительно обновляем выбранный элемент
+      const newSelectedId = selectedItem.value.id;
+      shopStore.setBranch(null); // Сбрасываем выбор
+      nextTick(() => {
+        shopStore.setBranch(newSelectedId); // Восстанавливаем выбор
+      });
+
       moveDialogVisible.value = false;
+      console.log('Перемещение завершено успешно');
+    } else {
+      console.error('Не удалось переместить кассу');
     }
-  } finally {
-    isMoving.value = false;
+  } catch (error) {
+    console.error('Ошибка при перемещении кассы:', error);
   }
 };
 
 // Логика копирования кассы
 const copyDialogVisible = ref(false);
-const isCopying = ref(false);
-const copyData = ref({
-  sourceId: null,
-  sourceName: '',
-  sourceCode: '',
-  sourceGroupId: null,
-  targetGroupId: null,
-  newName: ''
-});
+const copySource = ref(null);
 
-const availableCopyGroups = computed(() => {
-  return shopStore.shops.flatMap(shop =>
-    shop.cashGroups.map(group => ({
-      label: `${shop.name} > ${group.name}`,
-      value: group.id
-    }))
-  );
-});
-
-const openCopyDialogForSelected = () => {
+const openCopyDialog = () => {
   if (!selectedItem.value) return;
-  openCopyDialog(selectedItem.value);
-};
 
-const openCopyDialog = (node) => {
-  copyData.value = {
-    sourceId: node.id,
-    sourceName: node.label,
-    sourceCode: `CR-${node.id.slice(0, 4).toUpperCase()}`,
-    sourceGroupId: node.cashGroupId,
-    targetGroupId: node.cashGroupId, // По умолчанию текущая группа
-    newName: `${node.label} (копия)`
+  copySource.value = {
+    id: selectedItem.value.id,
+    name: selectedItem.value.label,
+    code: `CR-${selectedItem.value.id.slice(0, 4).toUpperCase()}`,
+    groupId: selectedItem.value.cashGroupId
   };
+
   copyDialogVisible.value = true;
 };
 
-const confirmCopy = async () => {
+const handleCopyConfirm = async ({ targetGroupId, newName }) => {
   try {
-    isCopying.value = true;
-
-    const sourceCash = shopStore.getCashRegisterById(copyData.value.sourceId);
+    const sourceCash = shopStore.getCashRegisterById(copySource.value.id);
     if (!sourceCash) return;
 
     const originalSettings = configurationStore.getConfiguration(sourceCash.id);
-    const newId = uuidv4();
 
-    // Клонируем настройки и обновляем нужные поля
-    const newSettings = JSON.parse(JSON.stringify(originalSettings));
-    newSettings.appId = newId; // Заменяем appId, если он у тебя называется иначе — поправь
-
-    const newCash = {
-      id: newId,
-      name: copyData.value.newName,
+    // Подготавливаем данные для копирования
+    const cashData = {
       ...sourceCash,
+      name: newName,
+      settings: originalSettings // Передаем настройки вместе с данными кассы
     };
 
     const success = await shopStore.addCashRegisterCopy(
-      copyData.value.targetGroupId,
-      newCash
+      targetGroupId,
+      cashData
     );
 
     if (success) {
-      await configurationStore.createConfiguration(newSettings, newId);
       copyDialogVisible.value = false;
     }
-  } finally {
-    isCopying.value = false;
+  } catch (error) {
+    console.error('Ошибка при копировании кассы:', error);
   }
 };
-
 
 // Остальные методы
 const enableCreateForm = () => {

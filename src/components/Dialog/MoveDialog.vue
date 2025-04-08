@@ -1,5 +1,5 @@
 <template>
-  <q-dialog :model-value="modelValue" @update:model-value="val => $emit('update:modelValue', val)">
+  <q-dialog :model-value="modelValue" @update:model-value="val => $emit('update:modelValue', val)" persistent>
     <q-card style="min-width: 400px">
       <q-card-section class="row items-center">
         <q-icon name="drive_file_move" size="md" class="q-mr-sm" />
@@ -18,7 +18,7 @@
 
         <div class="text-subtitle2 q-mb-sm">Куда переместить?</div>
         <q-option-group
-          v-model="selectedGroup"
+          v-model="targetGroupId"
           :options="availableGroups"
           type="radio"
           color="primary"
@@ -26,18 +26,13 @@
       </q-card-section>
 
       <q-card-actions align="right">
-        <q-btn
-          flat
-          label="Отмена"
-          color="grey"
-          @click="$emit('update:modelValue', false)"
-        />
+        <q-btn flat label="Отмена" color="grey" @click="close" />
         <q-btn
           label="Переместить"
           color="primary"
-          :loading="loading"
+          :loading="isLoading"
           @click="handleConfirm"
-          :disable="!selectedGroup"
+          :disable="!targetGroupId"
         />
       </q-card-actions>
     </q-card>
@@ -45,25 +40,51 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed } from 'vue';
+import { useShopStore } from 'stores/shopStore';
+
+const shopStore = useShopStore();
 
 const props = defineProps({
   modelValue: Boolean,
-  device: Object,
-  availableGroups: Array,
-  loading: Boolean
-})
+  device: {
+    type: Object,
+    required: true
+  }
+});
 
-const emit = defineEmits(['update:modelValue', 'confirm'])
+const emit = defineEmits(['update:modelValue', 'confirm']);
 
-const selectedGroup = ref(null)
+const isLoading = ref(false);
+const targetGroupId = ref(null);
 
-watch(() => props.modelValue, (val) => {
-  if (!val) selectedGroup.value = null
-})
+const availableGroups = computed(() => {
+  if (!props.device?.groupId) return [];
 
-const handleConfirm = () => {
-  emit('confirm', selectedGroup.value)
-  emit('update:modelValue', false)
-}
+  return shopStore.shops.flatMap(shop =>
+    shop.cashGroups
+      .filter(group => group.id !== props.device.groupId)
+      .map(group => ({
+        label: `${shop.name} > ${group.name}`,
+        value: group.id
+      }))
+  );
+});
+
+const close = () => {
+  emit('update:modelValue', false);
+  targetGroupId.value = null;
+};
+
+const handleConfirm = async () => {
+  if (!targetGroupId.value) return;
+
+  isLoading.value = true;
+  try {
+    emit('confirm', targetGroupId.value);
+    close();
+  } finally {
+    isLoading.value = false;
+  }
+};
 </script>

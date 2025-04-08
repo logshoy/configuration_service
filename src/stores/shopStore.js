@@ -109,38 +109,85 @@ export const useShopStore = defineStore('shop', {
       localStorage.removeItem(STORAGE_KEY)
     },
 
-    moveCashRegister(cashRegisterId, fromCashGroupId, toCashGroupId) {
+    moveCashRegister(cashRegisterId, targetGroupId) {
+      // 1. Находим исходную группу и магазин
+      let sourceShop = null;
+      let sourceGroup = null;
 
-      console.log(12)
+      for (const shop of this.shops) {
+        for (const group of shop.cashGroups) {
+          const registerExists = group.cashRegisters.some(cr => cr.id === cashRegisterId);
+          if (registerExists) {
+            sourceShop = shop;
+            sourceGroup = group;
+            break;
+          }
+        }
+        if (sourceGroup) break;
+      }
 
-      // Находим магазин, содержащий исходную группу касс
-      const shop = this.shops.find((shop) =>
-        shop.cashGroups.some((group) => group.id === fromCashGroupId),
-      )
+      if (!sourceShop || !sourceGroup) {
+        console.error('Исходная группа не найдена');
+        return false;
+      }
 
-      if (!shop) return false
+      // 2. Находим целевую группу (в любом магазине)
+      let targetShop = null;
+      let targetGroup = null;
 
-      // Находим исходную и целевую группы касс
-      const fromGroup = shop.cashGroups.find((group) => group.id === fromCashGroupId)
-      const toGroup = shop.cashGroups.find((group) => group.id === toCashGroupId)
+      for (const shop of this.shops) {
+        targetGroup = shop.cashGroups.find(group => group.id === targetGroupId);
+        if (targetGroup) {
+          targetShop = shop;
+          break;
+        }
+      }
 
-      if (!fromGroup || !toGroup) return false
+      if (!targetGroup) {
+        console.error('Целевая группа не найдена');
+        return false;
+      }
 
-      // Находим кассу для перемещения
-      const cashRegisterIndex = fromGroup.cashRegisters.findIndex((cr) => cr.id === cashRegisterId)
+      // 3. Находим и перемещаем кассу
+      const registerIndex = sourceGroup.cashRegisters.findIndex(cr => cr.id === cashRegisterId);
+      if (registerIndex === -1) {
+        console.error('Касса не найдена в исходной группе');
+        return false;
+      }
 
-      if (cashRegisterIndex === -1) return false
+      const [movedRegister] = sourceGroup.cashRegisters.splice(registerIndex, 1);
 
-      // Удаляем кассу из исходной группы
-      const [cashRegister] = fromGroup.cashRegisters.splice(cashRegisterIndex, 1)
+      // Обновляем ссылки у кассы
+      movedRegister.shopId = targetShop.id;
+      movedRegister.cashGroupId = targetGroup.id;
 
-      // Добавляем кассу в целевую группу
-      toGroup.cashRegisters.push(cashRegister)
+      targetGroup.cashRegisters.push(movedRegister);
 
-      this.persistState()
-      return true
+      // 4. Обновляем конфигурацию кассы
+      const configurationStore = useConfigurationStore();
+      const cashRegisterConfig = configurationStore.getConfiguration(cashRegisterId);
+
+      if (cashRegisterConfig) {
+        // Создаем обновленную конфигурацию
+        const updatedConfig = {
+          ...cashRegisterConfig,
+          settings: {
+            ...cashRegisterConfig.settings,
+            node: targetGroup.id // Обновляем node в настройках
+          }
+        };
+
+        // Вызываем updateItem для обновления конфигурации
+        configurationStore.updateItem(updatedConfig);
+      }
+
+      this.persistState();
+      console.log('Успешно перемещено', {
+        from: { shopId: sourceShop.id, groupId: sourceGroup.id },
+        to: { shopId: targetShop.id, groupId: targetGroup.id }
+      });
+      return true;
     },
-
     getCashRegisterById(id) {
       for (const shop of this.shops) {
         for (const group of shop.cashGroups) {
@@ -152,9 +199,33 @@ export const useShopStore = defineStore('shop', {
     },
 
     addCashRegisterCopy(groupId, cashData) {
+      const configurationStore = useConfigurationStore()
       const group = this.findCashGroupById(groupId)
+
       if (group) {
-        group.cashRegisters.push(cashData)
+        // Генерируем новый ID один раз
+        const newId = uuidv4()
+
+        // Создаем копию кассы с новым ID
+        const newCashRegister = {
+          ...cashData,
+          id: newId,
+        }
+
+        group.cashRegisters.push(newCashRegister)
+
+        // Создаем конфигурацию с тем же ID
+
+        console.log(cashData)
+        cashData.settings.settings.configurationName = cashData.name
+
+        configurationStore.createConfiguration(
+          {
+            ...cashData.settings.settings,
+          },
+          newId,
+        )
+
         this.persistState()
         return true
       }
