@@ -111,61 +111,61 @@ export const useShopStore = defineStore('shop', {
 
     moveCashRegister(cashRegisterId, targetGroupId) {
       // 1. Находим исходную группу и магазин
-      let sourceShop = null;
-      let sourceGroup = null;
+      let sourceShop = null
+      let sourceGroup = null
 
       for (const shop of this.shops) {
         for (const group of shop.cashGroups) {
-          const registerExists = group.cashRegisters.some(cr => cr.id === cashRegisterId);
+          const registerExists = group.cashRegisters.some((cr) => cr.id === cashRegisterId)
           if (registerExists) {
-            sourceShop = shop;
-            sourceGroup = group;
-            break;
+            sourceShop = shop
+            sourceGroup = group
+            break
           }
         }
-        if (sourceGroup) break;
+        if (sourceGroup) break
       }
 
       if (!sourceShop || !sourceGroup) {
-        console.error('Исходная группа не найдена');
-        return false;
+        console.error('Исходная группа не найдена')
+        return false
       }
 
       // 2. Находим целевую группу (в любом магазине)
-      let targetShop = null;
-      let targetGroup = null;
+      let targetShop = null
+      let targetGroup = null
 
       for (const shop of this.shops) {
-        targetGroup = shop.cashGroups.find(group => group.id === targetGroupId);
+        targetGroup = shop.cashGroups.find((group) => group.id === targetGroupId)
         if (targetGroup) {
-          targetShop = shop;
-          break;
+          targetShop = shop
+          break
         }
       }
 
       if (!targetGroup) {
-        console.error('Целевая группа не найдена');
-        return false;
+        console.error('Целевая группа не найдена')
+        return false
       }
 
       // 3. Находим и перемещаем кассу
-      const registerIndex = sourceGroup.cashRegisters.findIndex(cr => cr.id === cashRegisterId);
+      const registerIndex = sourceGroup.cashRegisters.findIndex((cr) => cr.id === cashRegisterId)
       if (registerIndex === -1) {
-        console.error('Касса не найдена в исходной группе');
-        return false;
+        console.error('Касса не найдена в исходной группе')
+        return false
       }
 
-      const [movedRegister] = sourceGroup.cashRegisters.splice(registerIndex, 1);
+      const [movedRegister] = sourceGroup.cashRegisters.splice(registerIndex, 1)
 
       // Обновляем ссылки у кассы
-      movedRegister.shopId = targetShop.id;
-      movedRegister.cashGroupId = targetGroup.id;
+      movedRegister.shopId = targetShop.id
+      movedRegister.cashGroupId = targetGroup.id
 
-      targetGroup.cashRegisters.push(movedRegister);
+      targetGroup.cashRegisters.push(movedRegister)
 
       // 4. Обновляем конфигурацию кассы
-      const configurationStore = useConfigurationStore();
-      const cashRegisterConfig = configurationStore.getConfiguration(cashRegisterId);
+      const configurationStore = useConfigurationStore()
+      const cashRegisterConfig = configurationStore.getConfiguration(cashRegisterId)
 
       if (cashRegisterConfig) {
         // Создаем обновленную конфигурацию
@@ -173,20 +173,20 @@ export const useShopStore = defineStore('shop', {
           ...cashRegisterConfig,
           settings: {
             ...cashRegisterConfig.settings,
-            node: targetGroup.id // Обновляем node в настройках
-          }
-        };
+            node: targetGroup.id, // Обновляем node в настройках
+          },
+        }
 
         // Вызываем updateItem для обновления конфигурации
-        configurationStore.updateItem(updatedConfig);
+        configurationStore.updateItem(updatedConfig)
       }
 
-      this.persistState();
+      this.persistState()
       console.log('Успешно перемещено', {
         from: { shopId: sourceShop.id, groupId: sourceGroup.id },
-        to: { shopId: targetShop.id, groupId: targetGroup.id }
-      });
-      return true;
+        to: { shopId: targetShop.id, groupId: targetGroup.id },
+      })
+      return true
     },
     getCashRegisterById(id) {
       for (const shop of this.shops) {
@@ -198,38 +198,41 @@ export const useShopStore = defineStore('shop', {
       return null
     },
 
-    addCashRegisterCopy(groupId, cashData) {
+    addCashRegisterCopy(targetGroupId, cashData, newName) {
       const configurationStore = useConfigurationStore()
-      const group = this.findCashGroupById(groupId)
+      const targetGroup = this.findCashGroupById(targetGroupId)
 
-      if (group) {
-        // Генерируем новый ID один раз
-        const newId = uuidv4()
-
-        // Создаем копию кассы с новым ID
-        const newCashRegister = {
-          ...cashData,
-          id: newId,
-        }
-
-        group.cashRegisters.push(newCashRegister)
-
-        // Создаем конфигурацию с тем же ID
-
-        console.log(cashData)
-        cashData.settings.settings.configurationName = cashData.name
-
-        configurationStore.createConfiguration(
-          {
-            ...cashData.settings.settings,
-          },
-          newId,
-        )
-
-        this.persistState()
-        return true
+      if (!targetGroup) {
+        console.error('Целевая группа не найдена')
+        return false
       }
-      return false
+
+      // Создаем новый ID для копии
+      const newId = uuidv4()
+
+      // Создаем копию кассы с новым ID и именем
+      const newCashRegister = {
+        ...cashData,
+        id: newId,
+        name: newName, // Используем переданное новое имя
+        shopId: targetGroup.shopId, // Обновляем shopId на целевой магазин
+        cashGroupId: targetGroupId, // Обновляем cashGroupId на целевую группу
+      }
+
+      // Добавляем кассу в целевую группу
+      targetGroup.cashRegisters.push(newCashRegister)
+
+      // Создаем новую конфигурацию для копии
+      const newSettings = {
+        ...cashData.settings.settings,
+        configurationName: newName, // Устанавливаем новое имя
+        node: targetGroupId, // Обновляем привязку к новой группе
+      }
+
+      configurationStore.createConfiguration(newSettings, newId)
+
+      this.persistState()
+      return true
     },
 
     findCashGroupById(groupId) {
@@ -238,6 +241,133 @@ export const useShopStore = defineStore('shop', {
         if (group) return group
       }
       return null
+    },
+
+    updateNodeName(nodeId, newName) {
+      // Ищем магазин
+      const shop = this.shops.find((s) => s.id === nodeId)
+      if (shop) {
+        shop.name = newName
+        this.persistState()
+        return 'shop'
+      }
+
+      // Ищем группу касс
+      for (const shop of this.shops) {
+        const group = shop.cashGroups.find((g) => g.id === nodeId)
+        if (group) {
+          group.name = newName
+          this.persistState()
+          return 'cashGroup'
+        }
+      }
+
+      // Ищем кассу
+      for (const shop of this.shops) {
+        for (const group of shop.cashGroups) {
+          const register = group.cashRegisters.find((cr) => cr.id === nodeId)
+          if (register) {
+            register.name = newName
+            this.persistState()
+            return 'cashRegister'
+          }
+        }
+      }
+
+      return null
+    },
+
+    /**
+     * Получает тип узла по ID
+     * @param {string} nodeId - ID элемента
+     * @returns {string|null} - Тип узла ('shop', 'cashGroup', 'cashRegister') или null если не найден
+     */
+    getNodeType(nodeId) {
+      if (this.shops.some((s) => s.id === nodeId)) return 'shop'
+
+      for (const shop of this.shops) {
+        if (shop.cashGroups.some((g) => g.id === nodeId)) return 'cashGroup'
+      }
+
+      for (const shop of this.shops) {
+        for (const group of shop.cashGroups) {
+          if (group.cashRegisters.some((cr) => cr.id === nodeId)) return 'cashRegister'
+        }
+      }
+
+      return null
+    },
+
+    deleteNodeIfEmpty(nodeId) {
+      // 1. Ищем узел во всей структуре
+      let nodeToDelete = null
+      let parentArray = null
+      let index = -1
+      let canDelete = false
+
+      // Проверяем магазины
+      index = this.shops.findIndex((shop) => shop.id === nodeId)
+      if (index !== -1) {
+        const shop = this.shops[index]
+        canDelete = shop.cashGroups.length === 0
+        if (canDelete) {
+          nodeToDelete = shop
+          parentArray = this.shops
+        }
+      }
+
+      // Если не нашли в магазинах, проверяем группы касс
+      if (!nodeToDelete) {
+        for (const shop of this.shops) {
+          index = shop.cashGroups.findIndex((group) => group.id === nodeId)
+          if (index !== -1) {
+            const group = shop.cashGroups[index]
+            canDelete = group.cashRegisters.length === 0
+            if (canDelete) {
+              nodeToDelete = group
+              parentArray = shop.cashGroups
+            }
+            break
+          }
+        }
+      }
+
+      // Если не нашли в группах, проверяем кассы
+      if (!nodeToDelete) {
+        for (const shop of this.shops) {
+          for (const group of shop.cashGroups) {
+            index = group.cashRegisters.findIndex((register) => register.id === nodeId)
+            if (index !== -1) {
+              // Кассы всегда можно удалить (у них нет вложенности)
+              nodeToDelete = group.cashRegisters[index]
+              parentArray = group.cashRegisters
+              canDelete = true
+              break
+            }
+          }
+          if (nodeToDelete) break
+        }
+      }
+
+      // 2. Если узел найден и можно удалить
+      if (nodeToDelete && canDelete) {
+        parentArray.splice(index, 1)
+        this.persistState()
+        return true
+      }
+
+      // 3. Обработка случаев когда нельзя удалить
+      if (nodeToDelete && !canDelete) {
+        const nodeType = this.getNodeType(nodeId)
+        console.error(
+          `Нельзя удалить ${nodeType} "${nodeToDelete.name}" - содержит вложенные элементы`,
+        )
+        return false
+      }
+
+      // 4. Если узел не найден
+      console.error(`Узел с ID ${nodeId} не найден`)
+      return false
     },
   },
 })

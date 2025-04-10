@@ -20,8 +20,9 @@
     >
       <q-scroll-area class="fit q-pa-md">
         <!-- Группа кнопок управления -->
-        <div class="row q-mb-md no-wrap" ref="buttonRef">
+        <div class="row q-mb-md no-wrap" ref="buttonsContainer" >
           <!-- Кнопка добавления -->
+          <div >
           <q-btn
             color="green"
             icon="add"
@@ -34,6 +35,7 @@
           <!-- Кнопка перемещения -->
           <q-btn
             color="orange"
+
             icon="drive_file_move"
             dense
             class="q-ml-sm"
@@ -45,6 +47,7 @@
 
           <!-- Кнопка копирования -->
           <q-btn
+
             color="teal"
             icon="content_copy"
             dense
@@ -53,7 +56,21 @@
             :disable="!canCopySelected"
           >
             <q-tooltip>Копировать кассу</q-tooltip>
+
           </q-btn>
+
+          <q-btn
+              color="purple"
+              :icon="showAll ? 'visibility_off' : 'visibility'"
+              dense
+              class="q-ml-sm"
+              @click="showAllConfigurations"
+            >
+              <q-tooltip>
+                {{ showAll ? 'Скрыть все конфигурации' : 'Показать все конфигурации' }}
+              </q-tooltip>
+            </q-btn>
+          </div>
         </div>
 
         <!-- Дерево элементов -->
@@ -113,7 +130,8 @@ const configurationStore = useConfigurationStore();
 const drawerStore = useDrawerStore();
 
 const treeRef = ref(null);
-const buttonRef = ref(null);
+
+const buttonsContainer = ref(null);
 
 // Состояние drawer
 const drawerOpen = computed(() => drawerStore.drawerOpenLeft);
@@ -138,9 +156,12 @@ const canMoveSelected = computed(() => {
   return selectedItem.value?.type === 'cashRegister';
 });
 
+
 const canCopySelected = computed(() => {
   return selectedItem.value?.type === 'cashRegister';
 });
+
+const showAll = computed(() => configurationStore.showAll);
 
 // Логика перемещения кассы
 const moveDialogVisible = ref(false);
@@ -215,20 +236,23 @@ const handleCopyConfirm = async ({ targetGroupId, newName }) => {
     // Подготавливаем данные для копирования
     const cashData = {
       ...sourceCash,
-      name: newName,
-      settings: originalSettings // Передаем настройки вместе с данными кассы
+      settings: originalSettings
     };
 
+    // Вызываем обновленный метод с новым именем
     const success = await shopStore.addCashRegisterCopy(
       targetGroupId,
-      cashData
+      cashData,
+      newName // Передаем новое имя
     );
 
     if (success) {
       copyDialogVisible.value = false;
+      // Можно добавить уведомление об успешном копировании
     }
   } catch (error) {
     console.error('Ошибка при копировании кассы:', error);
+    // Можно добавить уведомление об ошибке
   }
 };
 
@@ -265,15 +289,19 @@ const getIcon = (node) => {
 };
 
 const handleDrawerClick = (event) => {
-  if (
-    treeRef.value?.$el &&
-    !treeRef.value.$el.contains(event.target) &&
-    buttonRef.value?.$el &&
-    !buttonRef.value.$el.contains(event.target)
-  ) {
+  // Проверяем, что клик был не по кнопке и не по дереву
+  const isButton = event.target.closest('.q-btn') !== null;
+  const isTree = treeRef.value?.$el?.contains(event.target);
+
+  if (!isButton && !isTree) {
     shopStore.setBranch(null);
   }
 };
+
+const showAllConfigurations = () => {
+  configurationStore.toggleViewMode()
+}
+
 </script>
 
 <style scoped>

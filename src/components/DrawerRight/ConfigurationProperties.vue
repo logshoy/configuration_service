@@ -76,6 +76,9 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
+
+import { useShopStore } from 'stores/shopStore';
+
 import { useQuasar } from 'quasar';
 
 import { validateServiceFiscalization  } from 'src/utils/validators.js';
@@ -90,6 +93,8 @@ import ShopСompany from 'components/Configuration/ShopСompany.vue';
 const $q = useQuasar();
 
 const selectedItemStore = useConfigurationStore();
+const shopStore = useShopStore();
+
 const selectedItem = computed(() => selectedItemStore.configuration);
 
 const localItem = ref(null);
@@ -141,7 +146,22 @@ const hasChanges = computed(() => {
 const saveChanges = () => {
   try {
     validateServiceFiscalization(localItem.value.settings);
+
+    // 1. Обновляем конфигурацию в хранилище
     selectedItemStore.updateItem(localItem.value);
+
+    // 2. Если изменилось имя, обновляем его в shopStore
+    if (localItem.value.settings.configurationName !== initialItem.value.settings.configurationName) {
+
+      // Вариант 1: Просто обновляем имя, тип определяется автоматически
+      shopStore.updateNodeName(
+        localItem.value.id,
+        localItem.value.settings.configurationName
+      );
+
+    }
+
+    // 3. Сохраняем текущее состояние как исходное
     initialItem.value = JSON.parse(JSON.stringify(localItem.value));
   } catch (err) {
     console.error('Ошибка при сохранении изменений:', err);
@@ -219,17 +239,29 @@ const deleteItem = async () => {
   }
 
   try {
-    await selectedItemStore.deleteItem(localItem.value.id);
-    $q.notify({
-      type: 'positive',
-      message: 'Элемент успешно удален',
-    });
+    const shopStore = useShopStore();
+    const success = shopStore.deleteNodeIfEmpty(localItem.value.id);
+
+    if (success) {
+      // Дополнительно удаляем конфигурацию из configurationStore
+      await selectedItemStore.deleteItem(localItem.value.id);
+
+      $q.notify({
+        type: 'positive',
+        message: 'Элемент успешно удален',
+      });
+    } else {
+      $q.notify({
+        type: 'warning',
+        message: 'Нельзя удалить элемент - он содержит вложенные объекты',
+      });
+    }
   } catch (error) {
     $q.notify({
       type: 'negative',
       message: 'Не удалось удалить элемент',
     });
-    console.log(error);
+    console.error(error);
   }
 };
 </script>

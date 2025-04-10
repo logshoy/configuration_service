@@ -13,6 +13,7 @@ export const useConfigurationStore = defineStore('configuration', {
     configuration: null, // Выбранная конфигурация
     isCreateFormVisible: false, // Видимость формы создания
     typeCreateConfigutation: '',
+    showAllConfiguration: false,
   }),
   actions: {
     // Общая функция для обработки запросов
@@ -142,12 +143,16 @@ export const useConfigurationStore = defineStore('configuration', {
     enableCreateFormVisibility(type) {
       this.isCreateFormVisible = true
       this.typeCreateConfigutation = type
-      console.log(this.typeCreateConfigutation)
     },
 
     // Скрыть форму создания
     disableCreateFormVisibility() {
       this.isCreateFormVisible = false
+    },
+    toggleViewMode() {
+
+      this.showAll = !this.showAll
+            console.log()
     },
   },
   getters: {
@@ -155,17 +160,19 @@ export const useConfigurationStore = defineStore('configuration', {
     filteredConfigurationList:
       (state) =>
       ({ query = null, nodeId = null }) => {
-        // Если nodeId не передан → возвращаем null
-        if (nodeId === null || nodeId === undefined) {
-          return null
-        }
-
         let result = [...state.configurationList]
 
-        // Фильтрация по nodeId (обязательное условие)
-        result = result.filter((item) => item.settings.node == nodeId)
+        // Если не включен режим "показать все"
+        if (!state.showAll) {
+          // Если nodeId не передан → возвращаем null
+          if (nodeId === null || nodeId === undefined) {
+            return null
+          }
+          // Фильтрация по nodeId
+          result = result.filter((item) => item.settings.node == nodeId)
+        }
 
-        // Дополнительная фильтрация по query (если указан)
+        // Фильтрация по query (работает в обоих режимах)
         if (query !== null && query.trim() !== '') {
           const searchTerm = query.toLowerCase()
           result = result.filter((item) => {

@@ -4,8 +4,8 @@
     <div v-if="isLoading">Загрузка...</div>
     <div v-else-if="error">Ошибка: {{ error }}</div>
     <div v-else class="q-pa-md">
-      <div class="flex justify-center items center">
-        <h3 v-if="!filteredListByNode"> Выбери что-то</h3>
+      <div v-if="!filteredListByNode" class="flex justify-center items center">
+        <h3 > Выбери что-то</h3>
       </div>
       <div v-if="filteredListByNode" class="row q-gutter-md">
         <q-card
