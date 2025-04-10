@@ -4,10 +4,18 @@
     <div v-if="isLoading">Загрузка...</div>
     <div v-else-if="error">Ошибка: {{ error }}</div>
     <div v-else class="q-pa-md">
-      <div v-if="!filteredListByNode" class="flex justify-center items center">
-        <h3 > Выбери что-то</h3>
+      <!-- Сообщение, если ничего не выбрано -->
+      <div v-if="!branch" class="flex flex-center column" style="min-height: 200px;">
+        <h3 class="q-mb-sm">Выбери что-то</h3>
       </div>
-      <div v-if="filteredListByNode" class="row q-gutter-md">
+
+      <!-- Сообщение, если нет конфигураций -->
+      <div v-else-if="hasNoConfigurations" class="flex flex-center column" style="min-height: 200px;">
+        <h3 class="q-mb-sm">{{ noConfigurationsMessage }}</h3>
+      </div>
+
+      <!-- Отображение карточек, если есть результаты -->
+      <div v-else class="row q-gutter-md">
         <q-card
           v-for="item in filteredListByNode"
           :key="item.id"
@@ -20,7 +28,6 @@
             <br>
             <div class="text-subtitle2">ID: {{ item.id }}</div>
             <br>
-            <!-- <div >{{ item.settings }}</div> -->
           </q-card-section>
         </q-card>
       </div>
@@ -29,11 +36,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted} from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
 import { useShopStore } from 'stores/shopStore';
 import { useDrawerStore } from 'stores/drawerStore';
-
 import ProductCard from 'components/ProductCard.vue';
 
 const selectedItemStore = useConfigurationStore();
@@ -42,10 +48,14 @@ const selectedItemId = ref(null);
 const shopStore = useShopStore();
 const drawerStore = useDrawerStore();
 
-
 const branch = computed(() => shopStore.branch);
-
 const search = computed(() => drawerStore.search);
+
+// Добавляем watch для отслеживания изменений search
+watch(search, () => {
+  // При изменении поискового запроса сбрасываем выбранный элемент
+  selectedItemId.value = null;
+});
 
 const selectItem = (item) => {
   selectedItemStore.setConfiguration(item);
@@ -57,10 +67,26 @@ onMounted(() => {
 });
 
 const filteredListByNode = computed(() => {
-  return selectedItemStore.filteredConfigurationList({
+  const result = selectedItemStore.filteredConfigurationList({
     query: search.value,
     nodeId: branch.value
   });
+  // Всегда возвращаем массив (пустой, если нет результатов)
+  return result || [];
+});
+
+// Вычисляемые свойства для управления состоянием
+const isLoading = computed(() => selectedItemStore.isLoading);
+const error = computed(() => selectedItemStore.error);
+
+const hasNoConfigurations = computed(() => {
+  return branch.value && filteredListByNode.value.length === 0;
+});
+
+const noConfigurationsMessage = computed(() => {
+  return search.value
+    ? 'Ничего не найдено 😞'
+    : 'Нет конфигураций для выбранного узла';
 });
 
 </script>
@@ -77,5 +103,11 @@ const filteredListByNode = computed(() => {
   border: 2px solid #1976d2;
   background-color: #e3f2fd;
   transform: scale(1.05);
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

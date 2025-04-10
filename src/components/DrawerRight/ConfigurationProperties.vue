@@ -106,7 +106,7 @@ const showCopiedNotification = ref(false);
 const settingsComponent = computed(() => {
   if (!localItem.value) return null;
 
-  switch (localItem.value.settings.сonfigurationType) {
+  switch (localItem.value.settings.configurationType) {
     case 'appCash':
       return AppCash;
     case 'service':
@@ -153,7 +153,6 @@ const saveChanges = () => {
     // 2. Если изменилось имя, обновляем его в shopStore
     if (localItem.value.settings.configurationName !== initialItem.value.settings.configurationName) {
 
-      // Вариант 1: Просто обновляем имя, тип определяется автоматически
       shopStore.updateNodeName(
         localItem.value.id,
         localItem.value.settings.configurationName

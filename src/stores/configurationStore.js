@@ -43,18 +43,13 @@ export const useConfigurationStore = defineStore('configuration', {
     // Загрузка списка конфигураций
     async fetchConfigurationList() {
       const data = await this._fetchData(API_BASE_URL)
-      this.configurationList = data.map((config) => ({
-        ...config,
-        settings: JSON.parse(config.settings), // Парсим settings
-      }))
+      this.configurationList = data // Предполагаем, что сервер возвращает уже готовые объекты
     },
 
     // Установить выбранный элемент
     setConfiguration(id) {
       if (id != null) {
-        this.configuration = this.configuration = this.configurationList.find(
-          (item) => item.id === id,
-        )
+        this.configuration = this.configurationList.find((item) => item.id === id)
       } else {
         this.configuration = null
       }
@@ -62,20 +57,13 @@ export const useConfigurationStore = defineStore('configuration', {
 
     // Создать новую конфигурацию
     async createConfiguration(settings, id = null) {
-      console.log('до', id)
       if (!id) {
         id = uuidv4()
-      } else {
-        ;('')
       }
-
-      // console.log(settings , id)
-
-      // settings.appId = id
 
       let newConfiguration = {
         id,
-        settings: JSON.stringify(settings),
+        settings, // Отправляем объект напрямую, без преобразования в строку
       }
 
       const data = await this._fetchData(API_BASE_URL, {
@@ -83,7 +71,7 @@ export const useConfigurationStore = defineStore('configuration', {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(newConfiguration),
+        body: JSON.stringify(newConfiguration), // Здесь все равно нужно преобразование для отправки
       })
 
       const configurationPinia = {
@@ -102,13 +90,12 @@ export const useConfigurationStore = defineStore('configuration', {
         return
       }
 
-      const settingsString = JSON.stringify(updatedItem.settings)
       const data = await this._fetchData(`${API_BASE_URL}/${updatedItem.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ settings: settingsString }),
+        body: JSON.stringify({ settings: updatedItem.settings }), // Преобразование только для отправки
       })
 
       // Обновляем элемент в списке
@@ -149,10 +136,10 @@ export const useConfigurationStore = defineStore('configuration', {
     disableCreateFormVisibility() {
       this.isCreateFormVisible = false
     },
-    toggleViewMode() {
 
+    toggleViewMode() {
       this.showAll = !this.showAll
-            console.log()
+      console.log()
     },
   },
   getters: {
@@ -184,6 +171,7 @@ export const useConfigurationStore = defineStore('configuration', {
 
         return result.length ? result : null
       },
+
     // Геттер для получения отфильтрованного списка по типу
     typeFilteredConfigurationListService:
       (state) =>
@@ -203,6 +191,7 @@ export const useConfigurationStore = defineStore('configuration', {
             label: item.settings?.configurationName,
           }))
       },
+
     typeFilteredConfigurationListServiceApp: (state) => (type) => {
       if (!type) {
         return state.configurationList.map((item) => ({
@@ -213,7 +202,7 @@ export const useConfigurationStore = defineStore('configuration', {
 
       return state.configurationList
         .filter((item) => {
-          return item.settings?.сonfigurationType === type
+          return item.settings?.configurationType === type
         })
         .map((item) => ({
           value: item.id,

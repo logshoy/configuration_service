@@ -31,7 +31,9 @@
                 type="search"
                 placeholder="Введите текст для поиска"
                 :model-value="searchQuery"
-                @update:model-value="setSearchQuery"
+                @update:model-value="handleSearchInput"
+                clearable
+                @clear="clearSearch"
               />
               <slot name="content">
                 <!-- Default content if no slot is provided -->
@@ -50,7 +52,7 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia'
-
+import { debounce } from 'quasar'
 
 import { useDrawerStore } from 'stores/drawerStore';
 import { useConfigurationStore } from 'stores/configurationStore';
@@ -62,29 +64,27 @@ import DrawerListElements from 'components/DrawerListElements.vue';
 import DrawerRight from 'components/DrawerRight.vue';
 
 const route = useRoute();
-
 const leftDrawerOpen = ref(false);
-const searchQuery = ref('');
 
 const drawerStore = useDrawerStore();
-
 const selectedItemStore = useConfigurationStore();
 const headerStore = useHeaderStore()
 
-
 const { title: headerTitle } = storeToRefs(headerStore)
+const { search: storeSearch } = storeToRefs(drawerStore)
 
+// Локальная копия для быстрого отображения в input
+const searchQuery = ref(storeSearch.value || '');
 
 // Computed properties
 const shouldMiniState = computed(() => {
   return drawerStore.miniState && !drawerStore.isLocked;
 });
 
-
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
 
-
+// Обработчики
 const handleDrawerEnter = () => {
   if (!drawerStore.isLocked) {
     drawerStore.setMiniState(false);
@@ -97,14 +97,28 @@ const handleDrawerLeave = () => {
   }
 };
 
-const setSearchQuery = (value) => {
-  drawerStore.setSearch(value)
-}
+// Оптимизированный обработчик ввода с debounce
+const handleSearchInput = debounce((value) => {
+  searchQuery.value = value;
+  drawerStore.setSearch(value);
+}, 300);
 
+// Очистка поиска
+const clearSearch = () => {
+  searchQuery.value = '';
+  drawerStore.setSearch('');
+};
+
+// Синхронизация при изменении route
 watch(() => route.path, () => {
-  drawerStore.setSearch();
+  searchQuery.value = '';
+  drawerStore.setSearch('');
 });
 
+// Следим за изменениями в хранилище (на случай внешних изменений)
+watch(storeSearch, (newVal) => {
+  searchQuery.value = newVal;
+});
 
 // Expose values to slots
 defineExpose({

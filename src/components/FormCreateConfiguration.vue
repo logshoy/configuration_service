@@ -68,7 +68,7 @@ const configurationService = ref(null);
 const settings = ref({});
 const isCreating = ref(true);
 
-const сonfigurationType = computed(() => selectedItemStore.typeCreateConfigutation);
+const configurationType = computed(() => selectedItemStore.typeCreateConfigutation);
 const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible);
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
@@ -77,7 +77,7 @@ const treeData = computed(() => shopeStore.treeData);
 
 // Определяем, какой компонент настроек использовать
 const settingsComponent = computed(() => {
-  switch (сonfigurationType.value) {
+  switch (configurationType.value) {
     case 'appCash':
       return CashSettings;
     case 'service':
@@ -91,36 +91,16 @@ const settingsComponent = computed(() => {
   }
 });
 
-// Инициализация настроек в зависимости от типа конфигурации
-// const initializeSettings = () => {
-//   switch (сonfigurationType.value) {
-//     case 'appCash':
-//       settings.value = { width: 800, height: 600, color: '#ffffff', fiscalAgent: null };
-//       break;
-//     case 'service':
-//       settings.value = { fiscalRegistrators: [{ type: null, portName: '' }] };
-//       break;
-//     case 'cashGroup':
-//       settings.value = { keyboard: true, advance: false };
-//       break;
-//     case 'shop':
-//       settings.value = { language: { label: 'Русский', value: 'ru' } };
-//       break;
-//     default:
-//       settings.value = {};
-//   }
-// };
 
 const initializeSettings = () => {
 
-  switch (сonfigurationType.value) {
+  switch (configurationType.value) {
     case 'appCash':
       settings.value = { width: 800, height: 600, color: '#ffffff', fiscalAgent: null };
       break;
     case 'service':
       switch (configurationService.value?.value) {
         case 'agentFiscalization':
-          console.log(configurationService.value?.value)
           settings.value = { fiscalRegistrators: [{ type: null, portName: 'USB' }] };
           break;
           case 'serviceFiscalization':
@@ -129,7 +109,7 @@ const initializeSettings = () => {
         default:
           settings.value = {};
       }
-      console.log(settings.value)
+
       break;
     case 'cashGroup':
       settings.value = { keyboard: true, advance: false };
@@ -143,7 +123,7 @@ const initializeSettings = () => {
 };
 
 // Следим за изменением типа конфигурации и инициализируем настройки
-watch([сonfigurationType, configurationService], () => {
+watch([configurationType, configurationService], () => {
   initializeSettings();
 }, { immediate: true, deep: true });
 
@@ -196,7 +176,7 @@ const cleanSettings = (settings) => {
   };
 
   const cleanedSettings = {};
-  const configType = сonfigurationType.value;
+  const configType = configurationType.value;
 
   // Для типа 'service' учитываем подтип сервиса
   if (configType === 'service') {
@@ -228,11 +208,11 @@ const createConfiguration = async () => {
     if (configuration.value) {
       node = findNodeById(treeData.value, configuration.value.id);
     }
-
+    console.log(settings.value)
     const cleanedSettings = cleanSettings(settings.value);
     const configurationData = {
       configurationName: configurationName.value,
-      сonfigurationType: сonfigurationType.value,
+      configurationType: configurationType.value,
       node: configuration.value?.id,
       ...cleanedSettings,
     };
@@ -241,7 +221,7 @@ const createConfiguration = async () => {
       configurationData.serviceType = configurationService.value;
     }
 
-    switch (сonfigurationType.value) {
+    switch (configurationType.value) {
       case 'appCash':
         shopeStore.addCashRegister(node.shopId, node.id, configurationName.value, configurationData);
         break;
@@ -265,7 +245,7 @@ const createConfiguration = async () => {
         shopeStore.addShop(configurationName.value, configurationData);
         break;
       default:
-        console.warn('Unknown configuration type:', сonfigurationType.value);
+        console.warn('Unknown configuration type:', configurationType.value);
     }
 
     resetForm();
