@@ -4,50 +4,42 @@
     <q-select
       filled
       class="q-ma-md"
-      :model-value="modelValue.language"
-      :options="optionsLanguage"
+      :model-value="mergedValues.language"
+      :options="languageOptions"
       label="Выберите язык"
-      @update:model-value="updateModelValue('language', $event)"
+      @update:model-value="updateLanguage"
+      emit-value
+      map-options
     />
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-
-const optionsLanguage = ref([
-  {
-    label: 'Русский',
-    value: 'ru',
-  },
-  {
-    label: 'English',
-    value: 'en',
-  }
-]);
+import { computed } from 'vue'
+import { mergesettingsConfigShopDefaults, settingsConfigShop } from '/src/utils/config/settingsConfigShop.js'
 
 const props = defineProps({
   modelValue: {
     type: Object,
     required: true
   }
-});
+})
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue'])
 
-// Обновляем значение в modelValue
-const updateModelValue = (key, value) => {
-  const updatedModelValue = { ...props.modelValue, [key]: value };
-  emit('update:modelValue', updatedModelValue);
-};
+// Получаем опции из конфига
+const languageOptions = settingsConfigShop.language.options
 
-// Следим за изменениями modelValue.language
-watch(
-  () => props.modelValue.language,
-  (newValue) => {
-    if (newValue !== props.modelValue.language) {
-      updateModelValue('language', newValue);
-    }
-  }
-);
+// Применяем дефолтные значения
+const mergedValues = computed(() => {
+  return mergesettingsConfigShopDefaults(props.modelValue)
+})
+
+// Обновляем значение
+const updateLanguage = (value) => {
+  emit('update:modelValue', {
+    ...props.modelValue,
+    language: value
+  })
+}
 </script>

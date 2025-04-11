@@ -47,7 +47,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
 import { useShopStore } from 'stores/shopStore';
 
@@ -92,41 +92,6 @@ const settingsComponent = computed(() => {
 });
 
 
-const initializeSettings = () => {
-
-  switch (configurationType.value) {
-    case 'appCash':
-      settings.value = { width: 800, height: 600, color: '#ffffff', fiscalAgent: null };
-      break;
-    case 'service':
-      switch (configurationService.value?.value) {
-        case 'agentFiscalization':
-          settings.value = { fiscalRegistrators: [{ type: null, portName: 'USB' }] };
-          break;
-          case 'serviceFiscalization':
-          settings.value = { settingCashToAgentFiscalization: [{ appCash: null, fiscalAgent: null }], localUniqueCashMode: true };
-          break;
-        default:
-          settings.value = {};
-      }
-
-      break;
-    case 'cashGroup':
-      settings.value = { keyboard: true, advance: false };
-      break;
-    case 'shop':
-      settings.value = { language: { label: 'Русский', value: 'ru' } };
-      break;
-    default:
-      settings.value = {};
-  }
-};
-
-// Следим за изменением типа конфигурации и инициализируем настройки
-watch([configurationType, configurationService], () => {
-  initializeSettings();
-}, { immediate: true, deep: true });
-
 // Закрытие формы с подтверждением
 const confirmClose = () => {
   selectedItemStore.disableCreateFormVisibility();
@@ -148,7 +113,6 @@ const closeForm = () => {
 // Сброс формы
 const resetForm = () => {
   configurationName.value = null;
-  initializeSettings();
 };
 
 // Поиск узла по ID
@@ -163,43 +127,43 @@ const findNodeById = (nodes, id) => {
   return null;
 };
 
-const cleanSettings = (settings) => {
-  const allowedFields = {
-    appCash: ['width', 'height', 'color', 'fiscalAgent'],
-    service: {
-      agentFiscalization: ['fiscalRegistrators'],
-      serviceFiscalization: ['settingCashToAgentFiscalization', 'localUniqueCashMode'],
-      default: []
-    },
-    cashGroup: ['keyboard', 'advance'],
-    shop: ['language']
-  };
+// const cleanSettings = (settings) => {
+//   const allowedFields = {
+//     appCash: ['width', 'height', 'color', 'fiscalAgent'],
+//     service: {
+//       agentFiscalization: ['fiscalRegistrators'],
+//       serviceFiscalization: ['settingCashToAgentFiscalization', 'localUniqueCashMode'],
+//       default: []
+//     },
+//     cashGroup: ['keyboard', 'advance'],
+//     shop: ['language']
+//   };
 
-  const cleanedSettings = {};
-  const configType = configurationType.value;
+//   const cleanedSettings = {};
+//   const configType = configurationType.value;
 
-  // Для типа 'service' учитываем подтип сервиса
-  if (configType === 'service') {
-    const serviceType = configurationService.value?.value;
-    const fields = allowedFields.service[serviceType] || allowedFields.service.default;
+//   // Для типа 'service' учитываем подтип сервиса
+//   if (configType === 'service') {
+//     const serviceType = configurationService.value?.value;
+//     const fields = allowedFields.service[serviceType] || allowedFields.service.default;
 
-    fields.forEach(field => {
-      if (settings[field] !== undefined) {
-        cleanedSettings[field] = settings[field];
-      }
-    });
-  }
-  // Для остальных типов
-  else if (allowedFields[configType]) {
-    allowedFields[configType].forEach(field => {
-      if (settings[field] !== undefined) {
-        cleanedSettings[field] = settings[field];
-      }
-    });
-  }
+//     fields.forEach(field => {
+//       if (settings[field] !== undefined) {
+//         cleanedSettings[field] = settings[field];
+//       }
+//     });
+//   }
+//   // Для остальных типов
+//   else if (allowedFields[configType]) {
+//     allowedFields[configType].forEach(field => {
+//       if (settings[field] !== undefined) {
+//         cleanedSettings[field] = settings[field];
+//       }
+//     });
+//   }
 
-  return cleanedSettings;
-};
+//   return cleanedSettings;
+// };
 
 // Создание конфигурации
 const createConfiguration = async () => {
@@ -209,12 +173,13 @@ const createConfiguration = async () => {
       node = findNodeById(treeData.value, configuration.value.id);
     }
     console.log(settings.value)
-    const cleanedSettings = cleanSettings(settings.value);
+    // const cleanedSettings = cleanSettings(settings.value);
     const configurationData = {
       configurationName: configurationName.value,
       configurationType: configurationType.value,
       node: configuration.value?.id,
-      ...cleanedSettings,
+      ...settings.value,
+      // ...cleanedSettings,
     };
 
     if (configurationService.value) {

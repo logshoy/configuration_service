@@ -1,56 +1,65 @@
 <template>
   <div>
-     <q-checkbox
-      v-model="localUniqueCashMode"
+    <q-checkbox
+      v-model="mergedValues.localUniqueCashMode"
       label="Одна касса один агент"
       class="q-mb-md"
-      @update:model-value="updateUniqueMode"
+      @update:model-value="updateField('localUniqueCashMode', $event)"
     />
 
-    <div v-for="(CashToAgentFiscalization, index) in modelValue.settingCashToAgentFiscalization" :key="index" class="q-ma-md">
+    <div
+      v-for="(pair, index) in mergedValues.settingCashToAgentFiscalization"
+      :key="index"
+      class="q-ma-md"
+    >
       <q-select
         class="q-mt-md"
         filled
-        :model-value="CashToAgentFiscalization.appCash"
+        :model-value="pair.appCash"
         :options="filteredListCash"
         label="Касса"
-        @update:model-value="updateFiscal(index,'appCash', $event)"
+        @update:model-value="updateCashAgentPair(index, 'appCash', $event)"
+        emit-value
+        map-options
       />
+
       <q-select
         class="q-mt-md"
         filled
-        :model-value="CashToAgentFiscalization.fiscalAgent"
+        :model-value="pair.fiscalAgent"
         :options="filteredListFiscalAgent"
         label="Агент ФР"
-        @update:model-value="updateFiscal(index,'fiscalAgent', $event)"
+        @update:model-value="updateCashAgentPair(index, 'fiscalAgent', $event)"
+        emit-value
+        map-options
       />
 
-      <q-btn
-        v-if="index === modelValue.settingCashToAgentFiscalization.length - 1"
-        color="green"
-        class="q-mt-md"
-        @click="addCashToAgentFiscalization"
-      >
-        Добавить
-      </q-btn>
-      <q-btn
-        v-if="modelValue.settingCashToAgentFiscalization.length > 1"
-        color="red"
-        class="q-mt-md q-ml-md"
-        @click="removeCashToAgentFiscalization(index)"
-      >
-        Удалить
-      </q-btn>
+      <div class="row q-mt-md">
+        <q-btn
+          v-if="index === mergedValues.settingCashToAgentFiscalization.length - 1"
+          color="green"
+          @click="handleAddPair"
+          label="Добавить"
+        />
+        <q-btn
+          v-if="mergedValues.settingCashToAgentFiscalization.length > 1"
+          color="red"
+          class="q-ml-md"
+          @click="handleRemovePair(index)"
+          label="Удалить"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue';
-
-import { useConfigurationStore } from 'stores/configurationStore';
-
-const selectedItemStore = useConfigurationStore();
+import { computed } from 'vue'
+import { useConfigurationStore } from 'stores/configurationStore'
+import {
+  mergeSettingsConfigServiceFiscalDefaults,
+  useCashAgentHelpers
+} from '/src/utils/config/settingsConfigServiceFiscal.js'
 
 const props = defineProps({
   modelValue: {
@@ -61,49 +70,42 @@ const props = defineProps({
     type: Object,
     required: true
   }
-});
+})
 
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue'])
+const selectedItemStore = useConfigurationStore()
+const { addPair, removePair } = useCashAgentHelpers()
 
-// Локальная переменная для чекбокса
-const localUniqueCashMode = ref(props.modelValue.localUniqueCashMode || false);
+// Применяем дефолтные значения
+const mergedValues = computed(() => mergeSettingsConfigServiceFiscalDefaults(props.modelValue))
 
-// Следим за изменениями в modelValue и обновляем локальное значение
-watch(() => props.modelValue.localUniqueCashMode, (newVal) => {
-  localUniqueCashMode.value = newVal;
-});
+// Получаем списки для выбора
+const filteredListFiscalAgent = computed(() =>
+  selectedItemStore.typeFilteredConfigurationListService('agentFiscalization')
+)
 
-// Обновляем modelValue при изменении чекбокса
-const updateUniqueMode = (value) => {
-  emit('update:modelValue', {
-    ...props.modelValue,
-    localUniqueCashMode: value
-  });
-};
+const filteredListCash = computed(() =>
+  selectedItemStore.typeFilteredConfigurationListServiceApp('appCash')
+)
 
-const filteredListFiscalAgent = computed(() => {
-  const result = selectedItemStore.typeFilteredConfigurationListService('agentFiscalization');
-  return result;
-});
+// Обновление значений
+const updateField = (key, value) => {
+  emit('update:modelValue', { ...props.modelValue, [key]: value })
+}
 
-const filteredListCash = computed(() => {
-  const result = selectedItemStore.typeFilteredConfigurationListServiceApp('appCash');
-  return result;
-});
+const updateCashAgentPair = (index, field, value) => {
+  const updated = [...mergedValues.value.settingCashToAgentFiscalization]
+  updated[index][field] = value
+  updateField('settingCashToAgentFiscalization', updated)
+}
 
-const updateFiscal = (index, field, value) => {
-  const updatedFiscals = [...props.modelValue.settingCashToAgentFiscalization];
-  updatedFiscals[index][field] = value;
-  emit('update:modelValue', { ...props.modelValue, settingCashToAgentFiscalization: updatedFiscals });
-};
+const handleAddPair = () => {
+  const updated = addPair(mergedValues.value.settingCashToAgentFiscalization)
+  updateField('settingCashToAgentFiscalization', updated)
+}
 
-const addCashToAgentFiscalization = () => {
-  const updatedFiscals = [...props.modelValue.settingCashToAgentFiscalization, { id:null, type: null, portName: '' }];
-  emit('update:modelValue', { ...props.modelValue, settingCashToAgentFiscalization: updatedFiscals });
-};
-
-const removeCashToAgentFiscalization = (index) => {
-  const updatedFiscals = props.modelValue.settingCashToAgentFiscalization.filter((_, i) => i !== index);
-  emit('update:modelValue', { ...props.modelValue, settingCashToAgentFiscalization: updatedFiscals });
-};
+const handleRemovePair = (index) => {
+  const updated = removePair(mergedValues.value.settingCashToAgentFiscalization, index)
+  updateField('settingCashToAgentFiscalization', updated)
+}
 </script>
