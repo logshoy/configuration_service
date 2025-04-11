@@ -23,6 +23,7 @@
         :configurationService="configurationService"
         @update:configurationService="configurationService = $event"
         :isCreating="isCreating"
+        :emit-always="true"
       />
 
       <!-- Модальное окно подтверждения -->

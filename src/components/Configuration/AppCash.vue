@@ -84,29 +84,35 @@
 </template>
 
 
-
 <script setup>
 import { computed } from 'vue'
 import { useConfigurationStore } from 'stores/configurationStore'
 import { mergeSizeColorDefaults, settingsConfigAppCash } from '/src/utils/config/settingsConfigAppCash.js'
 
 const selectedItemStore = useConfigurationStore()
-
 const sizeColorSettingsConfig = settingsConfigAppCash
 
 const props = defineProps({
   modelValue: {
     type: Object,
     required: true
+  },
+  emitAlways: {
+    type: Boolean,
+    default: false
   }
 })
 
+
 const emit = defineEmits(['update:modelValue'])
 
-// Применяем дефолтные значения
 const mergedValues = computed(() => mergeSizeColorDefaults(props.modelValue))
 
-// Получаем списки агентов
+if (props.emitAlways) { // Условный эмит
+  emit('update:modelValue', mergedValues.value)
+}
+
+// Получаем списки агентов (восстановленная часть)
 const filteredList = computed(() =>
   selectedItemStore.typeFilteredConfigurationListService('agentFiscalization', 'serviceFiscalization')
 )
@@ -119,37 +125,43 @@ const filteredListAgentDevice = computed(() =>
   selectedItemStore.typeFilteredConfigurationListService('agentDevice')
 )
 
-// Универсальный метод обновления
 const updateModel = (newValues) => {
-  // Получаем полный объект с дефолтами
   const fullDefaults = mergeSizeColorDefaults({})
+  const currentModel = props.modelValue || {}
 
-  // Сливаем текущие значения, новые значения и дефолты
   const updated = {
     ...fullDefaults,
-    ...props.modelValue,
+    ...currentModel,
     ...newValues,
     agents: {
       ...fullDefaults.agents,
-      ...props.modelValue?.agents,
-      ...newValues.agents
+      ...currentModel.agents,
+      ...(newValues.agents || {})
     }
   }
+
+  const currentWithDefaults = mergeSizeColorDefaults(currentModel)
+  if (isEqual(currentWithDefaults, updated)) return
 
   emit('update:modelValue', updated)
 }
 
-// Обновляем простые поля
+const isEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b)
+
 const updateField = (key, value) => {
-  updateModel({ [key]: value })
+  let processedValue = value
+
+  if (['width', 'height'].includes(key)) {
+    processedValue = Number(value)
+    if (isNaN(processedValue)) return
+  }
+
+  if (mergedValues.value[key] === processedValue) return
+  updateModel({ [key]: processedValue })
 }
 
-// Обновляем вложенные поля агентов
 const updateAgentField = (key, value) => {
-  updateModel({
-    agents: {
-      [key]: value
-    }
-  })
+  if (mergedValues.value.agents[key] === value) return
+  updateModel({ agents: { [key]: value } })
 }
 </script>

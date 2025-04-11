@@ -1,38 +1,38 @@
 export const validateServiceFiscalization = (configurationData) => {
-  console.log('Validating configuration:', configurationData)
+  console.log('[VALIDATION] Проверка конфигурации:', configurationData)
 
-  // Проверка уникальности appCash.id требуется только при localUniqueCashMode === true
-  if (configurationData.localUniqueCashMode === true) {
-    console.log('Проверка уникальности касс активирована (localUniqueCashMode === true)')
-
-    if (configurationData.settingCashToAgentFiscalization) {
-      const appCashIds = new Set()
-      const hasDuplicates = configurationData.settingCashToAgentFiscalization.some((item) => {
-        if (!item.appCash?.value) {
-          console.warn('Обнаружен элемент без appCash.value', item)
-          return false
-        }
-
-        if (appCashIds.has(item.appCash.value)) {
-          console.error('Найден дубликат кассы:', item.appCash.value)
-          return true
-        }
-
-        appCashIds.add(item.appCash.value)
-        return false
-      })
-
-      if (hasDuplicates) {
-        throw new Error(
-          'Кассы в настройках фискализации должны быть уникальными при включенном режиме localUniqueCashMode',
-        )
-      }
-    } else {
-      console.warn('settingCashToAgentFiscalization отсутствует, проверка уникальности невозможна')
-    }
-  } else {
-    console.log('Проверка уникальности касс пропущена (localUniqueCashMode !== true)')
+  if (configurationData.localUniqueCashMode !== true) {
+    console.log('[VALIDATION] Проверка уникальности отключена (localUniqueCashMode ≠ true)')
+    return true
   }
 
+  if (!configurationData.settingCashToAgentFiscalization) {
+    console.warn('[VALIDATION] settingCashToAgentFiscalization отсутствует')
+    return true
+  }
+
+  const entries = configurationData.settingCashToAgentFiscalization
+  const uniqueCashIds = new Set()
+
+  for (const item of entries) {
+    // Извлекаем ID кассы (поддержка форматов: строка или {value: string})
+    const appCashId = item.appCash?.value ?? item.appCash
+
+    if (!appCashId) {
+      console.warn('[VALIDATION] Пропуск элемента без appCash:', item)
+      continue
+    }
+
+    console.log('[VALIDATION] Проверка кассы:', appCashId)
+
+    if (uniqueCashIds.has(appCashId)) {
+      console.error('[VALIDATION] Найден дубликат кассы:', appCashId)
+      throw new Error('Касса может быть добавлена только один раз (localUniqueCashMode = true)')
+    }
+
+    uniqueCashIds.add(appCashId)
+  }
+
+  console.log('[VALIDATION] Дубликатов касс не найдено')
   return true
 }

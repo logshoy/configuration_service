@@ -22,6 +22,10 @@ const props = defineProps({
   modelValue: {
     type: Object,
     required: true
+  },
+  emitAlways: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -34,6 +38,10 @@ const languageOptions = settingsConfigShop.language.options
 const mergedValues = computed(() => {
   return mergesettingsConfigShopDefaults(props.modelValue)
 })
+
+if (props.emitAlways) { // Условный эмит
+  emit('update:modelValue', mergedValues.value)
+}
 
 // Обновляем значение
 const updateLanguage = (value) => {

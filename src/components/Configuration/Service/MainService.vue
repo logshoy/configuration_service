@@ -1,12 +1,10 @@
-Не сработало исправь
-
 <template>
   <div>
     <q-select
       v-if="isCreating"
       filled
       class="q-ma-md"
-      v-model="localConfigurationService"
+      v-model="selectedServiceType"
       :options="options"
       label="Тип конфигурации"
       @update:model-value="handleServiceChange"
@@ -15,15 +13,15 @@
     <component
       :is="activeComponent"
       v-if="activeComponent"
-      :modelValue="f"
+      :modelValue="modelValue"
       @update:modelValue="handleModelUpdate"
-      :configurationService="localConfigurationService"
+      :configurationService="selectedServiceType"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, computed } from 'vue';
 import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import PaymentAgent from 'components/Configuration/Service/PaymentAgent.vue';
 import AgentDevice from 'components/Configuration/Service/AgentDevice.vue';
@@ -41,10 +39,6 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  configurationService: {
-    type: Object,
-    default: null
-  },
   isCreating: {
     type: Boolean,
     required: true,
@@ -60,37 +54,24 @@ const serviceComponents = {
   serviceFiscalization: ServiceFiscalization
 };
 
-const localConfigurationService = ref(props.modelValue.serviceType || props.configurationService);
-const f = ref(JSON.parse(JSON.stringify(props.modelValue)));
+const selectedServiceType = ref(props.modelValue.serviceType);
+
+console.log(props.modelValue)
 
 const activeComponent = computed(() => {
-  return localConfigurationService.value?.value
-    ? serviceComponents[localConfigurationService.value.value]
+  return selectedServiceType.value?.value
+    ? serviceComponents[selectedServiceType.value.value]
     : null;
 });
 
-// Обработчик изменения сервиса
 const handleServiceChange = (newValue) => {
-  localConfigurationService.value = newValue;
+  selectedServiceType.value = newValue;
   emit('update:configurationService', newValue);
+  // Сброс модели при изменении типа сервиса
+  emit('update:modelValue', { });
 };
 
-// Обработчик изменения модели
 const handleModelUpdate = (newValue) => {
-  f.value = JSON.parse(JSON.stringify(newValue));
-  emit('update:modelValue', JSON.parse(JSON.stringify(newValue)));
+  emit('update:modelValue', newValue);
 };
-
-// Однонаправленный поток данных - только реагируем на внешние изменения
-watch(() => props.modelValue, (newValue) => {
-  if (JSON.stringify(f.value) !== JSON.stringify(newValue)) {
-    f.value = JSON.parse(JSON.stringify(newValue));
-  }
-}, { deep: true });
-
-watch(() => props.configurationService, (newValue) => {
-  if (JSON.stringify(localConfigurationService.value) !== JSON.stringify(newValue)) {
-    localConfigurationService.value = JSON.parse(JSON.stringify(newValue));
-  }
-}, { deep: true });
 </script>

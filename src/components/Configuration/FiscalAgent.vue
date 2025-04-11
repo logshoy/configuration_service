@@ -1,8 +1,8 @@
 <template>
   <div>
     <div
-      v-for="(fiscal, index) in mergedFiscals"
-      :key="fiscal.id"
+      v-for="(fiscal, index) in modelValue.fiscalRegistrators || defaultFiscals"
+      :key="fiscal.id || index"
       class="q-ma-md"
     >
       <div class="row justify-between q-my-md">
@@ -41,13 +41,13 @@
 
       <div class="row q-mt-md">
         <q-btn
-          v-if="index === mergedFiscals.length - 1"
+          v-if="index === (modelValue.fiscalRegistrators || defaultFiscals).length - 1"
           color="green"
           @click="addFiscalRegistrator"
           label="Добавить"
         />
         <q-btn
-          v-if="mergedFiscals.length > 1"
+          v-if="(modelValue.fiscalRegistrators || defaultFiscals).length > 1"
           color="red"
           class="q-ml-md"
           @click="removeFiscalRegistrator(index)"
@@ -59,14 +59,15 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { mergeFiscalDefaults } from 'src/utils/config/settingsConfigAgentFiscal.js'
+import { ref } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 
 const fiscalOptions = [
   { label: 'АТОЛ', value: 'atol' },
   { label: 'ШТРИХ', value: 'shtrih' }
 ]
+
+const defaultFiscals = ref([{ id: null, type: null, portName: '' }])
 
 const props = defineProps({
   modelValue: {
@@ -77,31 +78,28 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-const mergedFiscals = computed(() => {
-  return mergeFiscalDefaults(props.modelValue).fiscalRegistrators
-})
-
 const generateuid = (index) => {
   updateFiscal(index, 'id', uuidv4())
 }
 
 const updateFiscal = (index, field, value) => {
-  const updated = [...mergedFiscals.value]
-  updated[index][field] = value
-  emitUpdate(updated)
+  const fiscals = props.modelValue.fiscalRegistrators ? [...props.modelValue.fiscalRegistrators] : [...defaultFiscals.value]
+  fiscals[index][field] = value
+  emit('update:modelValue', { ...props.modelValue, fiscalRegistrators: fiscals })
 }
 
 const addFiscalRegistrator = () => {
-  const updated = [...mergedFiscals.value, { id: null, type: null, portName: '' }]
-  emitUpdate(updated)
+  const fiscals = props.modelValue.fiscalRegistrators ? [...props.modelValue.fiscalRegistrators] : [...defaultFiscals.value]
+  fiscals.push({ id: null, type: null, portName: '' })
+  emit('update:modelValue', { ...props.modelValue, fiscalRegistrators: fiscals })
 }
 
 const removeFiscalRegistrator = (index) => {
-  const updated = mergedFiscals.value.filter((_, i) => i !== index)
-  emitUpdate(updated.length > 0 ? updated : [{ id: uuidv4(), type: null, portName: '' }])
-}
-
-const emitUpdate = (fiscals) => {
-  emit('update:modelValue', { fiscalRegistrators: fiscals })
+  const fiscals = props.modelValue.fiscalRegistrators ? [...props.modelValue.fiscalRegistrators] : [...defaultFiscals.value]
+  fiscals.splice(index, 1)
+  emit('update:modelValue', {
+    ...props.modelValue,
+    fiscalRegistrators: fiscals.length > 0 ? fiscals : [{ id: uuidv4(), type: null, portName: '' }]
+  })
 }
 </script>

@@ -97,6 +97,10 @@ const props = defineProps({
   modelValue: {
     type: Object,
     default: () => ({})
+  },
+  emitAlways: {
+    type: Boolean,
+    default: false
   }
 });
 
@@ -108,6 +112,10 @@ const settingsConfig = settingsConfigGroup;
 const mergedValue = computed(() => {
   return mergeWithDefaults(props.modelValue, settingsConfig);
 });
+
+if (props.emitAlways) { // Условный эмит
+  emit('update:modelValue', mergedValue.value)
+}
 
 
 const updateField = (key, value) => {
