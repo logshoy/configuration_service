@@ -101,7 +101,7 @@ const saveChanges = () => {
 .drawer_button {
   position: fixed;
   top: 50%;
-  z-index: 20000; /* Увеличиваем z-index, чтобы кнопки были поверх других элементов */
+  z-index: 2222; /* Увеличиваем z-index, чтобы кнопки были поверх других элементов */
 }
 
 .drawer_left {

@@ -4,24 +4,48 @@
       v-if="isCreating"
       filled
       class="q-ma-md"
-      v-model="selectedServiceType"
+      v-model="localServiceType"
       :options="options"
       label="Тип конфигурации"
       @update:model-value="handleServiceChange"
     />
 
+    <!-- Настройки порта и протокола -->
+    <div class="row q-ma-md">
+      <q-select
+        v-model="localConfig.protocol"
+        :options="protocolOptions"
+        label="Протокол"
+        outlined
+        dense
+        class="col q-mr-sm"
+        @update:model-value="updateModel"
+      />
+      <q-input
+        v-model.number="localConfig.port"
+        type="number"
+        label="Порт"
+        outlined
+        dense
+        class="col"
+        :rules="portRules"
+        @update:model-value="updateModel"
+      />
+    </div>
+
     <component
       :is="activeComponent"
       v-if="activeComponent"
-      :modelValue="modelValue"
+      :modelValue="localConfig"
       @update:modelValue="handleModelUpdate"
-      :configurationService="selectedServiceType"
+      :configurationService="localServiceType"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
+import { DEFAULT_SERVICE_PORTS, PROTOCOL_OPTIONS } from 'src/utils/config/servicePorts';
 import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import PaymentAgent from 'components/Configuration/Service/PaymentAgent.vue';
 import AgentDevice from 'components/Configuration/Service/AgentDevice.vue';
@@ -34,10 +58,22 @@ const options = ref([
   { label: 'Сервис фискализации', value: 'serviceFiscalization' }
 ]);
 
+const protocolOptions = PROTOCOL_OPTIONS;
+
+const portRules = [
+  val => val > 0 && val <= 65535 || 'Порт должен быть между 1 и 65535',
+  val => Number.isInteger(val) || 'Порт должен быть целым числом'
+];
+
 const props = defineProps({
   modelValue: {
     type: Object,
     required: true,
+    default: () => ({
+      protocol: 'http',
+      port: null,
+      serviceType: null
+    })
   },
   isCreating: {
     type: Boolean,
@@ -47,6 +83,20 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'update:configurationService']);
 
+// Локальные копии для избежания мутации пропсов
+const localConfig = ref({...props.modelValue});
+const localServiceType = ref(props.modelValue.serviceType);
+
+// Инициализация при создании
+if (props.isCreating) {
+  localConfig.value = {
+    protocol: 'http',
+    port: null,
+    serviceType: null
+  };
+  emit('update:modelValue', localConfig.value);
+}
+
 const serviceComponents = {
   agentFiscalization: FiscalAgent,
   agentPayment: PaymentAgent,
@@ -54,24 +104,58 @@ const serviceComponents = {
   serviceFiscalization: ServiceFiscalization
 };
 
-const selectedServiceType = ref(props.modelValue.serviceType);
-
-console.log(props.modelValue)
-
 const activeComponent = computed(() => {
-  return selectedServiceType.value?.value
-    ? serviceComponents[selectedServiceType.value.value]
+  return localServiceType.value?.value
+    ? serviceComponents[localServiceType.value.value]
     : null;
 });
 
 const handleServiceChange = (newValue) => {
-  selectedServiceType.value = newValue;
+  localServiceType.value = newValue;
+
+  // Установка порта по умолчанию для выбранной службы
+  const defaultPort = DEFAULT_SERVICE_PORTS[newValue.value];
+
+  const newConfig = {
+    ...localConfig.value,
+    serviceType: newValue,
+    port: defaultPort
+  };
+
+  localConfig.value = newConfig;
+  emit('update:modelValue', newConfig);
   emit('update:configurationService', newValue);
-  // Сброс модели при изменении типа сервиса
-  emit('update:modelValue', { });
 };
 
 const handleModelUpdate = (newValue) => {
-  emit('update:modelValue', newValue);
+  const updatedConfig = {
+    ...localConfig.value,
+    ...newValue
+  };
+  localConfig.value = updatedConfig;
+  emit('update:modelValue', updatedConfig);
 };
+
+const updateModel = () => {
+  emit('update:modelValue', localConfig.value);
+};
+
+// Обновление локального состояния при изменении пропсов
+watch(() => props.modelValue, (newVal) => {
+  if (JSON.stringify(newVal) !== JSON.stringify(localConfig.value)) {
+    localConfig.value = {...newVal};
+    localServiceType.value = newVal.serviceType;
+  }
+}, { deep: true });
+
+// Валидация порта
+watch(() => localConfig.value.port, (newVal) => {
+  if (newVal && (newVal < 1 || newVal > 65535)) {
+    console.error('Некорректный номер порта');
+  }
+});
 </script>
+
+<style scoped>
+/* Дополнительные стили при необходимости */
+</style>

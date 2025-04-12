@@ -16,7 +16,7 @@ export const settingsConfigGroup = {
           { value: 'ru', label: 'Русский' },
           { value: 'en', label: 'Английский' },
         ],
-      }
+      },
     },
   },
 
@@ -116,21 +116,14 @@ export const settingsConfigGroup = {
     label: 'Дополнительные настройки',
     icon: 'tune',
     fields: {
-      log_azimuth: {
-        type: 'checkbox',
-        label: 'Вести лог Azimuth',
-        default: false,
-      },
-      max_hours_diff: {
-        type: 'number',
-        label: 'Макс. разность часов ФР',
-        default: 5,
-        min: 0,
-        max: 24,
-      },
       receipt_xml: {
         type: 'xml',
-        label: 'XML шаблон чека',
+        label: 'XML шаблон произвольного чека',
+        default: '<receipt>Привет</receipt>',
+      },
+      items_xml: {
+        type: 'xml',
+        label: 'XML шаблон товарного чека',
         default: '<receipt>Привет</receipt>',
       },
     },

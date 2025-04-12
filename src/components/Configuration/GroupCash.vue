@@ -63,15 +63,16 @@
             behavior="menu"
           />
 
-          <!-- XML Editor -->
+          <!-- XML Editor Button -->
           <div v-else-if="field.type === 'xml'">
-            <label class="text-caption">{{ field.label }}</label>
-            <q-editor
-              :model-value="mergedValue[fieldKey]"
-              @update:model-value="(val) => updateField(fieldKey, val)"
-              min-height="5rem"
-              :toolbar="xmlToolbar"
-            />
+            <div class="row q-mt-sm">
+              <q-btn
+                :label="field.label"
+                color="primary"
+                outline
+                @click="openXmlEditor(fieldKey, field.label)"
+              />
+            </div>
           </div>
 
           <!-- Описание параметра -->
@@ -85,11 +86,45 @@
         </div>
       </div>
     </q-expansion-item>
+
+    <!-- Диалог редактирования XML -->
+    <q-dialog v-model="xmlEditor.show" persistent>
+      <q-card style="width: 75vw; max-width: 1200px;">
+        <q-card-section>
+          <div class="text-h6">{{ xmlEditor.title }}</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-editor
+            v-model="xmlEditor.content"
+            :toolbar="xmlToolbar"
+            min-height="50vh"
+            style="border: 1px solid #ccc;"
+            content-class="xml-editor-content"
+          />
+        </q-card-section>
+
+        <q-card-actions align="center">
+          <q-btn
+            label="Отмена"
+            color="negative"
+            v-close-popup
+            class="q-mx-sm"
+          />
+          <q-btn
+            label="Сохранить"
+            color="positive"
+            @click="saveXmlChanges"
+            class="q-mx-sm"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script setup>
-import { computed} from 'vue';
+import { computed, reactive } from 'vue';
 import { settingsConfigGroup } from '/src/utils/config/settingsConfigGroup.js';
 import { mergeWithDefaults } from '/src/utils/merge-defaults.js';
 
@@ -108,6 +143,24 @@ const emit = defineEmits(['update:modelValue']);
 
 const settingsConfig = settingsConfigGroup;
 
+// Состояние редактора XML
+const xmlEditor = reactive({
+  show: false,
+  content: '',
+  currentField: null,
+  title: ''
+});
+
+// Настройки панели инструментов редактора
+const xmlToolbar = [
+  ['bold', 'italic', 'strike', 'underline'],
+  ['undo', 'redo'],
+  ['code'],
+  ['quote', 'unordered', 'ordered'],
+  ['removeFormat'],
+  ['fullscreen']
+];
+
 // Используем импортированную функцию
 const mergedValue = computed(() => {
   return mergeWithDefaults(props.modelValue, settingsConfig);
@@ -117,10 +170,25 @@ if (props.emitAlways) { // Условный эмит
   emit('update:modelValue', mergedValue.value)
 }
 
-
 const updateField = (key, value) => {
   const newValue = { ...props.modelValue, [key]: value };
   emit('update:modelValue', newValue);
+};
+
+// Открыть редактор XML
+const openXmlEditor = (fieldKey, fieldLabel) => {
+  xmlEditor.currentField = fieldKey;
+  xmlEditor.content = mergedValue.value[fieldKey] || '';
+  xmlEditor.title = `Редактор: ${fieldLabel}`;
+  xmlEditor.show = true;
+};
+
+// Сохранить изменения XML
+const saveXmlChanges = () => {
+  if (xmlEditor.currentField) {
+    updateField(xmlEditor.currentField, xmlEditor.content);
+  }
+  xmlEditor.show = false;
 };
 </script>
 
@@ -131,12 +199,8 @@ const updateField = (key, value) => {
   padding: 8px;
 }
 
-.q-editor {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.q-item__section--side {
-  padding-right: 12px;
+.xml-editor-content {
+  font-family: monospace;
+  font-size: 14px;
 }
 </style>

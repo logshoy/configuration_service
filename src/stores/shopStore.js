@@ -299,74 +299,67 @@ export const useShopStore = defineStore('shop', {
     },
 
     deleteNodeIfEmpty(nodeId) {
-      // 1. Ищем узел во всей структуре
-      let nodeToDelete = null
-      let parentArray = null
-      let index = -1
-      let canDelete = false
+      // Определяем тип узла
+      const nodeType = this.getNodeType(nodeId)
 
-      // Проверяем магазины
-      index = this.shops.findIndex((shop) => shop.id === nodeId)
-      if (index !== -1) {
-        const shop = this.shops[index]
-        canDelete = shop.cashGroups.length === 0
-        if (canDelete) {
-          nodeToDelete = shop
-          parentArray = this.shops
-        }
-      }
-
-      // Если не нашли в магазинах, проверяем группы касс
-      if (!nodeToDelete) {
-        for (const shop of this.shops) {
-          index = shop.cashGroups.findIndex((group) => group.id === nodeId)
-          if (index !== -1) {
-            const group = shop.cashGroups[index]
-            canDelete = group.cashRegisters.length === 0
-            if (canDelete) {
-              nodeToDelete = group
-              parentArray = shop.cashGroups
-            }
-            break
-          }
-        }
-      }
-
-      // Если не нашли в группах, проверяем кассы
-      if (!nodeToDelete) {
-        for (const shop of this.shops) {
-          for (const group of shop.cashGroups) {
-            index = group.cashRegisters.findIndex((register) => register.id === nodeId)
-            if (index !== -1) {
-              // Кассы всегда можно удалить (у них нет вложенности)
-              nodeToDelete = group.cashRegisters[index]
-              parentArray = group.cashRegisters
-              canDelete = true
-              break
-            }
-          }
-          if (nodeToDelete) break
-        }
-      }
-
-      // 2. Если узел найден и можно удалить
-      if (nodeToDelete && canDelete) {
-        parentArray.splice(index, 1)
-        this.persistState()
-        return true
-      }
-
-      // 3. Обработка случаев когда нельзя удалить
-      if (nodeToDelete && !canDelete) {
-        const nodeType = this.getNodeType(nodeId)
-        console.error(
-          `Нельзя удалить ${nodeType} "${nodeToDelete.name}" - содержит вложенные элементы`,
-        )
+      // Если узел не найден
+      if (!nodeType) {
+        console.error(`Узел с ID ${nodeId} не найден`)
         return false
       }
 
-      // 4. Если узел не найден
-      console.error(`Узел с ID ${nodeId} не найден`)
+      // Удаление кассы (кассы всегда можно удалить, так как у них нет вложенных элементов)
+      if (nodeType === 'cashRegister') {
+        for (const shop of this.shops) {
+          for (const group of shop.cashGroups) {
+            const index = group.cashRegisters.findIndex((register) => register.id === nodeId)
+            if (index !== -1) {
+              group.cashRegisters.splice(index, 1)
+              this.persistState()
+              return true
+            }
+          }
+        }
+        return false
+      }
+
+      // Удаление группы касс
+      if (nodeType === 'cashGroup') {
+        for (const shop of this.shops) {
+          const index = shop.cashGroups.findIndex((group) => group.id === nodeId)
+          if (index !== -1) {
+            if (shop.cashGroups[index].cashRegisters.length > 0) {
+              console.error(
+                `Нельзя удалить группу касс "${shop.cashGroups[index].name}" - она содержит кассы`,
+              )
+              return false
+            }
+            shop.cashGroups.splice(index, 1)
+            this.persistState()
+            return true
+          }
+        }
+        return false
+      }
+
+      // Удаление магазина
+      if (nodeType === 'shop') {
+        const index = this.shops.findIndex((shop) => shop.id === nodeId)
+        if (index !== -1) {
+          if (this.shops[index].cashGroups.length > 0) {
+            console.error(
+              `Нельзя удалить магазин "${this.shops[index].name}" - он содержит группы касс`,
+            )
+            return false
+          }
+          this.shops.splice(index, 1)
+          this.persistState()
+          return true
+        }
+        return false
+      }
+
+      console.error(`Неизвестный тип узла для ID ${nodeId}`)
       return false
     },
   },

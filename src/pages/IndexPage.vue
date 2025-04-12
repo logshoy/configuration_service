@@ -86,7 +86,7 @@ const hasNoConfigurations = computed(() => {
 const noConfigurationsMessage = computed(() => {
   return search.value
     ? 'Ничего не найдено 😞'
-    : 'Нет конфигураций для выбранного узла';
+    : 'Тут пусто';
 });
 
 </script>

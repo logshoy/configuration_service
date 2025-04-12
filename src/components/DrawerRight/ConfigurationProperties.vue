@@ -17,10 +17,17 @@
           class="q-mx-md"
           round
         />
+        <q-btn
+          color="secondary"
+          :icon="!showJsonEditor ? 'code' : 'topic'"
+          @click="toggleJsonEditor"
+          class="q-mx-md"
+          round
+        />
       </div>
 
       <!-- ID и кнопка копирования на одной линии -->
-      <div class="row items-center">
+      <div class="row items-center" v-if="!showJsonEditor">
         <q-input
           v-model="localItem.id"
           label="ID"
@@ -28,6 +35,7 @@
           outlined
           dense
           class="col-grow q-ma-md"
+          hide-bottom-space
         />
         <q-btn
           color="primary"
@@ -40,11 +48,13 @@
 
       <!-- Название конфигурации -->
       <q-input
+        v-if="!showJsonEditor"
         outlined
         required
         v-model="localItem.settings.configurationName"
         label="Название"
         class="q-ma-md"
+        hide-bottom-space
       />
 
       <!-- Уведомление об успешном копировании -->
@@ -62,10 +72,29 @@
         </q-card>
       </q-dialog>
 
+      <!-- JSON редактор -->
+      <q-card v-if="showJsonEditor" class="q-mb-md">
+        <q-card-section>
+          <div class="text-h6">Редактор JSON</div>
+          <q-input
+            v-model="jsonContent"
+            type="textarea"
+            outlined
+            autogrow
+            class="q-mt-md"
+            @update:model-value="handleJsonChange"
+            hide-bottom-space
+          />
+          <q-banner v-if="jsonError" class="bg-negative text-white q-mt-md">
+            {{ jsonError }}
+          </q-banner>
+        </q-card-section>
+      </q-card>
+
       <!-- Универсальный компонент для настроек -->
       <component
         :is="settingsComponent"
-        v-if="settingsComponent"
+        v-if="settingsComponent && !showJsonEditor"
         v-model="localItem.settings"
         :isCreating="false"
       />
@@ -76,15 +105,10 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
-
 import { useShopStore } from 'stores/shopStore';
-
 import { useQuasar } from 'quasar';
-
-import { validateServiceFiscalization  } from 'src/utils/validators.js';
-
+import { validateServiceFiscalization } from 'src/utils/validators.js';
 import AppCash from 'components/Configuration/AppCash.vue';
-
 import MainService from 'components/Configuration/Service/MainService.vue';
 import GroupCash from 'components/Configuration/GroupCash.vue';
 import ShopСompany from 'components/Configuration/ShopСompany.vue';
@@ -100,7 +124,10 @@ const selectedItem = computed(() => selectedItemStore.configuration);
 const localItem = ref(null);
 const initialItem = ref(null);
 const showCopiedNotification = ref(false);
-// const configurationService = ref(null);
+const showJsonEditor = ref(false);
+const jsonContent = ref('');
+const jsonError = ref(null);
+const hasJsonChanges = ref(false);
 
 // Определяем, какой компонент настроек использовать
 const settingsComponent = computed(() => {
@@ -125,12 +152,14 @@ watch(
   selectedItem,
   (newValue) => {
     if (newValue) {
-      // Убедимся, что свойства advance и keyboard существуют
       localItem.value = JSON.parse(JSON.stringify(newValue));
       initialItem.value = JSON.parse(JSON.stringify(newValue));
+      jsonContent.value = JSON.stringify(localItem.value, null, 2);
+      hasJsonChanges.value = false;
     } else {
       localItem.value = null;
       initialItem.value = null;
+      jsonContent.value = '';
     }
   },
   { immediate: true }
@@ -139,12 +168,45 @@ watch(
 // Проверка наличия изменений
 const hasChanges = computed(() => {
   if (!localItem.value || !initialItem.value) return false;
-  return JSON.stringify(localItem.value) !== JSON.stringify(initialItem.value);
+  return JSON.stringify(localItem.value) !== JSON.stringify(initialItem.value) || hasJsonChanges.value;
 });
 
-// Сохранение изменений
-const saveChanges = () => {
+// Переключение JSON редактора
+const toggleJsonEditor = () => {
+  showJsonEditor.value = !showJsonEditor.value;
+  if (showJsonEditor.value) {
+    jsonContent.value = JSON.stringify(localItem.value, null, 2);
+    hasJsonChanges.value = false;
+  }
+};
+
+// Обработка изменений в JSON
+const handleJsonChange = () => {
   try {
+    const parsed = JSON.parse(jsonContent.value);
+    // Проверяем, есть ли реальные изменения
+    if (JSON.stringify(parsed) !== JSON.stringify(localItem.value)) {
+      hasJsonChanges.value = true;
+    } else {
+      hasJsonChanges.value = false;
+    }
+    jsonError.value = null;
+  } catch (e) {
+    jsonError.value = 'Невалидный JSON: ' + e.message;
+    hasJsonChanges.value = false;
+  }
+};
+
+// Сохранение изменений
+const saveChanges = async () => {
+  try {
+    // Если есть изменения в JSON, сначала применяем их
+    if (hasJsonChanges.value) {
+      const parsed = JSON.parse(jsonContent.value);
+      localItem.value = parsed;
+      hasJsonChanges.value = false;
+    }
+
     validateServiceFiscalization(localItem.value.settings);
 
     // 1. Обновляем конфигурацию в хранилище
@@ -152,19 +214,25 @@ const saveChanges = () => {
 
     // 2. Если изменилось имя, обновляем его в shopStore
     if (localItem.value.settings.configurationName !== initialItem.value.settings.configurationName) {
-
-      shopStore.updateNodeName(
+      await shopStore.updateNodeName(
         localItem.value.id,
         localItem.value.settings.configurationName
       );
-
     }
 
     // 3. Сохраняем текущее состояние как исходное
     initialItem.value = JSON.parse(JSON.stringify(localItem.value));
+
+    $q.notify({
+      type: 'positive',
+      message: 'Изменения успешно сохранены',
+    });
   } catch (err) {
     console.error('Ошибка при сохранении изменений:', err);
-    alert(err.message);
+    $q.notify({
+      type: 'negative',
+      message: 'Ошибка при сохранении: ' + err.message,
+    });
   }
 };
 
@@ -264,6 +332,3 @@ const deleteItem = async () => {
   }
 };
 </script>
-
-<style scoped>
-</style>
