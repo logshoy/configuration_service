@@ -19,7 +19,7 @@
         <q-card
           v-for="item in filteredListByNode"
           :key="item.id"
-          :class="['my-card', 'rounded-borders', { 'selected-card': selectedItemId == item.id }]"
+          :class="['my-card', 'rounded-borders', { 'selected-card': selectedItemId === item.id && isSameBranch   }]"
           clickable
           @click="selectItem(item.id)"
         >
@@ -44,6 +44,7 @@ import ProductCard from 'components/ProductCard.vue';
 
 const selectedItemStore = useConfigurationStore();
 const selectedItemId = ref(null);
+const lastSelectedBranch = ref(null);
 
 const shopStore = useShopStore();
 const drawerStore = useDrawerStore();
@@ -51,15 +52,21 @@ const drawerStore = useDrawerStore();
 const branch = computed(() => shopStore.branch);
 const search = computed(() => drawerStore.search);
 
+
 // Добавляем watch для отслеживания изменений search
 watch(search, () => {
   // При изменении поискового запроса сбрасываем выбранный элемент
   selectedItemId.value = null;
 });
 
+const isSameBranch = computed(() => {
+  return lastSelectedBranch.value === branch.value;
+});
+
 const selectItem = (item) => {
   selectedItemStore.setConfiguration(item);
   selectedItemId.value = item;
+  lastSelectedBranch.value = branch.value; // Запоминаем ветку при выборе
 };
 
 onMounted(() => {
@@ -87,6 +94,13 @@ const noConfigurationsMessage = computed(() => {
   return search.value
     ? 'Ничего не найдено 😞'
     : 'Тут пусто';
+});
+
+
+
+// Сбрасываем флаг при смене ветки
+watch(branch, () => {
+  lastSelectedBranch.value = null;
 });
 
 </script>

@@ -302,10 +302,10 @@ export const useShopStore = defineStore('shop', {
       // Определяем тип узла
       const nodeType = this.getNodeType(nodeId)
 
-      // Если узел не найден
+      // Если узел не найден ,
       if (!nodeType) {
         console.error(`Узел с ID ${nodeId} не найден`)
-        return false
+        return true
       }
 
       // Удаление кассы (кассы всегда можно удалить, так как у них нет вложенных элементов)

@@ -39,6 +39,7 @@
       :modelValue="localConfig"
       @update:modelValue="handleModelUpdate"
       :configurationService="localServiceType"
+      :emitAlways="props.emitAlways"
     />
   </div>
 </template>
@@ -46,16 +47,32 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { DEFAULT_SERVICE_PORTS, PROTOCOL_OPTIONS } from 'src/utils/config/servicePorts';
+
 import FiscalAgent from 'components/Configuration/FiscalAgent.vue';
 import PaymentAgent from 'components/Configuration/Service/PaymentAgent.vue';
 import AgentDevice from 'components/Configuration/Service/AgentDevice.vue';
 import ServiceFiscalization from 'components/Configuration/Service/ServiceFiscalization.vue';
+import CardDispenser from 'components/Configuration/Service/AgentCardDispenser.vue';
+import CardReader from 'components/Configuration/Service/AgentCardReader.vue';
+import ServiceDiscount from 'components/Configuration/Service/ServiceDiscount.vue';
+import DKLinkMark from 'components/Configuration/Service/DKLinkMark.vue';
+import AgentExchange from 'components/Configuration/Service/AgentExchange.vue';
+import ServiceStorage from 'components/Configuration/Service/ServiceStorage.vue';
+import ServiceOrder from 'components/Configuration/Service/ServiceOrder.vue';
 
 const options = ref([
   { label: 'Агент оплат', value: 'agentPayment' },
   { label: 'Агент фискализации', value: 'agentFiscalization' },
   { label: 'Агент оборудования', value: 'agentDevice' },
-  { label: 'Сервис фискализации', value: 'serviceFiscalization' }
+  { label: 'Сервис фискализации', value: 'serviceFiscalization' },
+  { label: 'Агент диспенсоров для карт', value: 'agentCardDispenser' },
+  { label: 'Агент считывателей карта', value: 'agentCardReader' },
+  { label: 'DKLinkMark Модуль ГосСистем', value: 'serviceDKLinkMark' },
+  { label: 'Сервис скидок', value: 'serviceDiscount' },
+  { label: 'Агент обмена', value: 'agentExchange' },
+  { label: 'Сервис справочников', value: 'serviceStorage' },
+  { label: 'Сервис заказов', value: 'serviceOrder' },
+
 ]);
 
 const protocolOptions = PROTOCOL_OPTIONS;
@@ -79,6 +96,10 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  emitAlways: {
+    type: Boolean,
+    default: false
+  }
 });
 
 const emit = defineEmits(['update:modelValue', 'update:configurationService']);
@@ -101,7 +122,14 @@ const serviceComponents = {
   agentFiscalization: FiscalAgent,
   agentPayment: PaymentAgent,
   agentDevice: AgentDevice,
-  serviceFiscalization: ServiceFiscalization
+  serviceFiscalization: ServiceFiscalization,
+  agentCardDispenser: CardDispenser,
+  agentCardReader: CardReader,
+  serviceDKLinkMark: DKLinkMark,
+  serviceDiscount: ServiceDiscount,
+  agentExchange: AgentExchange,
+  serviceOrder: ServiceOrder,
+  serviceStorage: ServiceStorage
 };
 
 const activeComponent = computed(() => {

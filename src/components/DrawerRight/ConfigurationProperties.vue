@@ -103,188 +103,193 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
-import { useConfigurationStore } from 'stores/configurationStore';
-import { useShopStore } from 'stores/shopStore';
-import { useQuasar } from 'quasar';
-import { validateServiceFiscalization } from 'src/utils/validators.js';
-import AppCash from 'components/Configuration/AppCash.vue';
-import MainService from 'components/Configuration/Service/MainService.vue';
-import GroupCash from 'components/Configuration/GroupCash.vue';
-import ShopСompany from 'components/Configuration/ShopСompany.vue';
+import { ref, watch, computed } from 'vue'
+import { useConfigurationStore } from 'stores/configurationStore'
+import { useShopStore } from 'stores/shopStore'
+import { useQuasar } from 'quasar'
+import { validateServiceFiscalization } from 'src/utils/validators.js'
+import AppCash from 'components/Configuration/AppCash.vue'
+import MainService from 'components/Configuration/Service/MainService.vue'
+import GroupCash from 'components/Configuration/GroupCash.vue'
+import ShopСompany from 'components/Configuration/ShopСompany.vue'
 
-// Инициализация Quasar
-const $q = useQuasar();
+const $q = useQuasar()
+const selectedItemStore = useConfigurationStore()
+const shopStore = useShopStore()
 
-const selectedItemStore = useConfigurationStore();
-const shopStore = useShopStore();
+const selectedItem = computed(() => selectedItemStore.configuration)
+const localItem = ref(null)
+const initialItem = ref(null)
+const showCopiedNotification = ref(false)
+const showJsonEditor = ref(false)
+const jsonContent = ref('')
+const jsonError = ref(null)
+const hasJsonChanges = ref(false)
 
-const selectedItem = computed(() => selectedItemStore.configuration);
-
-const localItem = ref(null);
-const initialItem = ref(null);
-const showCopiedNotification = ref(false);
-const showJsonEditor = ref(false);
-const jsonContent = ref('');
-const jsonError = ref(null);
-const hasJsonChanges = ref(false);
+// Функция для преобразования объекта в JSON (только поле settings)
+const toJsonSettingsOnly = (obj) => {
+  if (!obj || !obj.settings) return ''
+  return JSON.stringify(obj.settings, null, 2)
+}
 
 // Определяем, какой компонент настроек использовать
 const settingsComponent = computed(() => {
-  if (!localItem.value) return null;
+  if (!localItem.value) return null
 
   switch (localItem.value.settings.configurationType) {
     case 'appCash':
-      return AppCash;
+      return AppCash
     case 'service':
-      return MainService;
+      return MainService
     case 'cashGroup':
-      return GroupCash;
+      return GroupCash
     case 'shop':
-      return ShopСompany;
+      return ShopСompany
     default:
-      return null;
+      return null
   }
-});
+})
 
 // Отслеживаем изменения выбранного элемента
 watch(
   selectedItem,
   (newValue) => {
     if (newValue) {
-      localItem.value = JSON.parse(JSON.stringify(newValue));
-      initialItem.value = JSON.parse(JSON.stringify(newValue));
-      jsonContent.value = JSON.stringify(localItem.value, null, 2);
-      hasJsonChanges.value = false;
+      localItem.value = JSON.parse(JSON.stringify(newValue))
+      initialItem.value = JSON.parse(JSON.stringify(newValue))
+      jsonContent.value = toJsonSettingsOnly(localItem.value)
+      hasJsonChanges.value = false
     } else {
-      localItem.value = null;
-      initialItem.value = null;
-      jsonContent.value = '';
+      localItem.value = null
+      initialItem.value = null
+      jsonContent.value = ''
     }
   },
   { immediate: true }
-);
+)
 
 // Проверка наличия изменений
 const hasChanges = computed(() => {
-  if (!localItem.value || !initialItem.value) return false;
-  return JSON.stringify(localItem.value) !== JSON.stringify(initialItem.value) || hasJsonChanges.value;
-});
+  if (!localItem.value || !initialItem.value) return false
+  return JSON.stringify(localItem.value) !== JSON.stringify(initialItem.value) || hasJsonChanges.value
+})
 
 // Переключение JSON редактора
 const toggleJsonEditor = () => {
-  showJsonEditor.value = !showJsonEditor.value;
+  showJsonEditor.value = !showJsonEditor.value
   if (showJsonEditor.value) {
-    jsonContent.value = JSON.stringify(localItem.value, null, 2);
-    hasJsonChanges.value = false;
+    jsonContent.value = toJsonSettingsOnly(localItem.value)
+    hasJsonChanges.value = false
   }
-};
+}
 
 // Обработка изменений в JSON
 const handleJsonChange = () => {
   try {
-    const parsed = JSON.parse(jsonContent.value);
-    // Проверяем, есть ли реальные изменения
-    if (JSON.stringify(parsed) !== JSON.stringify(localItem.value)) {
-      hasJsonChanges.value = true;
+    const parsed = JSON.parse(jsonContent.value)
+    if (JSON.stringify(parsed) !== JSON.stringify(localItem.value.settings)) {
+      hasJsonChanges.value = true
     } else {
-      hasJsonChanges.value = false;
+      hasJsonChanges.value = false
     }
-    jsonError.value = null;
+    jsonError.value = null
   } catch (e) {
-    jsonError.value = 'Невалидный JSON: ' + e.message;
-    hasJsonChanges.value = false;
+    jsonError.value = 'Невалидный JSON: ' + e.message
+    hasJsonChanges.value = false
   }
-};
+}
 
 // Сохранение изменений
 const saveChanges = async () => {
   try {
     // Если есть изменения в JSON, сначала применяем их
     if (hasJsonChanges.value) {
-      const parsed = JSON.parse(jsonContent.value);
-      localItem.value = parsed;
-      hasJsonChanges.value = false;
+      const parsedSettings = JSON.parse(jsonContent.value)
+      localItem.value = {
+        ...localItem.value,
+        settings: parsedSettings
+      }
+      hasJsonChanges.value = false
     }
 
-    validateServiceFiscalization(localItem.value.settings);
+    validateServiceFiscalization(localItem.value.settings)
 
     // 1. Обновляем конфигурацию в хранилище
-    selectedItemStore.updateItem(localItem.value);
+    selectedItemStore.updateItem(localItem.value)
 
     // 2. Если изменилось имя, обновляем его в shopStore
     if (localItem.value.settings.configurationName !== initialItem.value.settings.configurationName) {
       await shopStore.updateNodeName(
         localItem.value.id,
         localItem.value.settings.configurationName
-      );
+      )
     }
 
     // 3. Сохраняем текущее состояние как исходное
-    initialItem.value = JSON.parse(JSON.stringify(localItem.value));
+    initialItem.value = JSON.parse(JSON.stringify(localItem.value))
 
     $q.notify({
       type: 'positive',
-      message: 'Изменения успешно сохранены',
-    });
+      message: 'Изменения успешно сохранены'
+    })
   } catch (err) {
-    console.error('Ошибка при сохранении изменений:', err);
+    console.error('Ошибка при сохранении изменений:', err)
     $q.notify({
       type: 'negative',
-      message: 'Ошибка при сохранении: ' + err.message,
-    });
+      message: 'Ошибка при сохранении: ' + err.message
+    })
   }
-};
+}
 
 // Копирование ID в буфер обмена
 const copyToClipboard = async () => {
   if (!localItem.value || !localItem.value.id) {
     $q.notify({
       type: 'negative',
-      message: 'ID не найден',
-    });
-    return;
+      message: 'ID не найден'
+    })
+    return
   }
 
-  const textToCopy = localItem.value.id;
+  const textToCopy = localItem.value.id
 
   // Проверяем, поддерживается ли Clipboard API
   if (navigator.clipboard) {
     try {
-      await navigator.clipboard.writeText(textToCopy);
-      showCopiedNotification.value = true;
-      return;
+      await navigator.clipboard.writeText(textToCopy)
+      showCopiedNotification.value = true
+      return
     } catch (error) {
-      console.error('Ошибка при использовании Clipboard API:', error);
+      console.error('Ошибка при использовании Clipboard API:', error)
     }
   }
 
   // Fallback: Используем document.execCommand('copy')
-  const textArea = document.createElement('textarea');
-  textArea.value = textToCopy;
-  document.body.appendChild(textArea);
-  textArea.select();
+  const textArea = document.createElement('textarea')
+  textArea.value = textToCopy
+  document.body.appendChild(textArea)
+  textArea.select()
 
   try {
-    const successful = document.execCommand('copy');
+    const successful = document.execCommand('copy')
     if (successful) {
-      showCopiedNotification.value = true;
+      showCopiedNotification.value = true
     } else {
       $q.notify({
         type: 'negative',
-        message: 'Не удалось скопировать ID',
-      });
+        message: 'Не удалось скопировать ID'
+      })
     }
   } catch (error) {
     $q.notify({
       type: 'negative',
-      message: 'Не удалось скопировать ID',
-    });
-    console.log(error);
+      message: 'Не удалось скопировать ID'
+    })
+    console.log(error)
   } finally {
-    document.body.removeChild(textArea);
+    document.body.removeChild(textArea)
   }
-};
+}
 
 // Подтверждение удаления
 const confirmDelete = () => {
@@ -292,43 +297,43 @@ const confirmDelete = () => {
     title: 'Подтверждение удаления',
     message: 'Вы уверены, что хотите удалить этот элемент?',
     cancel: true,
-    persistent: true,
+    persistent: true
   }).onOk(() => {
-    deleteItem();
-  });
-};
+    deleteItem()
+  })
+}
 
 // Удаление элемента
 const deleteItem = async () => {
   if (!localItem.value) {
-    console.error('Локальный элемент не определен');
-    return;
+    console.error('Локальный элемент не определен')
+    return
   }
 
   try {
-    const shopStore = useShopStore();
-    const success = shopStore.deleteNodeIfEmpty(localItem.value.id);
+    const shopStore = useShopStore()
+    const success = shopStore.deleteNodeIfEmpty(localItem.value.id)
 
     if (success) {
       // Дополнительно удаляем конфигурацию из configurationStore
-      await selectedItemStore.deleteItem(localItem.value.id);
+      await selectedItemStore.deleteItem(localItem.value.id)
 
       $q.notify({
         type: 'positive',
-        message: 'Элемент успешно удален',
-      });
+        message: 'Элемент успешно удален'
+      })
     } else {
       $q.notify({
         type: 'warning',
-        message: 'Нельзя удалить элемент - он содержит вложенные объекты',
-      });
+        message: 'Нельзя удалить элемент - он содержит вложенные объекты'
+      })
     }
   } catch (error) {
     $q.notify({
       type: 'negative',
-      message: 'Не удалось удалить элемент',
-    });
-    console.error(error);
+      message: 'Не удалось удалить элемент'
+    })
+    console.error(error)
   }
-};
+}
 </script>

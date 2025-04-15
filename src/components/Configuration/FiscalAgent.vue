@@ -73,10 +73,19 @@ const props = defineProps({
   modelValue: {
     type: Object,
     required: true
+  },
+    emitAlways: {
+    type: Boolean,
+    default: false
   }
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+if (props.emitAlways) { // Условный эмит
+   emit('update:modelValue',  { ...props.modelValue, fiscalRegistrators: defaultFiscals })
+}
+
 
 const generateuid = (index) => {
   updateFiscal(index, 'id', uuidv4())
