@@ -24,7 +24,9 @@
       v-model="drawerOpen"
       side="right"
       bordered
+      :overlay="false"
       :width="drawerWidth"
+      behavior="desktop"
     >
       <q-scroll-area class="fit">
         <!-- Используем новый компонент -->
@@ -75,7 +77,7 @@ const windowWidth = ref(window.innerWidth);
 const drawerWidth = computed(() => {
   const minScreenWidth = 1024;
   const maxScreenWidth = 1920;
-  const minWidth = 415;
+  const minWidth = 315;
   const maxWidth = 815;
 
   // Если меньше минимального — вернуть минимум

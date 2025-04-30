@@ -1,15 +1,14 @@
 <template>
-  <q-layout view="hHh lpR fFf">
+  <q-layout view="lpr lpr lpr">
     <div class="flex">
       <div>
         <q-drawer
-          v-model="leftDrawerOpen"
           show-if-above
           bordered
           :mini="shouldMiniState"
           @mouseenter="handleDrawerEnter"
           @mouseleave="handleDrawerLeave"
-          mini-to-overlay
+          :breakpoint="0"
           :mini-width="75"
         >
           <div style="height: 100%">
@@ -19,7 +18,7 @@
         </q-drawer>
       </div>
       <q-page-container style="width: 100%">
-        <q-layout view="hHh lpR fFf">
+        <q-layout view="hHh rpR fFf">
           <q-page-container style="width: 100%">
             <div class="_content_center main">
               <DrawerListElements/>
@@ -64,7 +63,6 @@ import DrawerListElements from 'components/DrawerListElements.vue';
 import DrawerRight from 'components/DrawerRight.vue';
 
 const route = useRoute();
-const leftDrawerOpen = ref(false);
 
 const drawerStore = useDrawerStore();
 const selectedItemStore = useConfigurationStore();
@@ -83,6 +81,7 @@ const shouldMiniState = computed(() => {
 
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
+// const drawerOpen = ref(true)
 
 // Обработчики
 const handleDrawerEnter = () => {

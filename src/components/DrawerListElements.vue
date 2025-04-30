@@ -15,6 +15,8 @@
       :width="315"
       v-model="drawerOpen"
       bordered
+      :overlay="false"
+      behavior="desktop"
       @click="handleDrawerClick"
     >
       <q-scroll-area class="fit q-pa-md">
