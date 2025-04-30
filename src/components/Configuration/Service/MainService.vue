@@ -71,8 +71,7 @@ const options = ref([
   { label: 'Сервис скидок', value: 'serviceDiscount' },
   { label: 'Агент обмена', value: 'agentExchange' },
   { label: 'Сервис справочников', value: 'serviceStorage' },
-  { label: 'Сервис заказов', value: 'serviceOrder' },
-
+  { label: 'Сервис заказов', value: 'serviceOrder' }
 ]);
 
 const protocolOptions = PROTOCOL_OPTIONS;

@@ -24,10 +24,7 @@
       v-model="drawerOpen"
       side="right"
       bordered
-      :width="315"
-      behavior="desktop"
-      persistent="false"
-      class="drawer_21"
+      :width="drawerWidth"
     >
       <q-scroll-area class="fit">
         <!-- Используем новый компонент -->
@@ -48,7 +45,7 @@
 <script setup>
 import FormCreateConfiguration from 'components/FormCreateConfiguration.vue';
 import ConfigurationProperties from 'components/DrawerRight/ConfigurationProperties.vue'; // Импортируем новый компонент
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { useConfigurationStore } from 'stores/configurationStore';
 
 import { useDrawerStore } from 'stores/drawerStore';
@@ -61,6 +58,8 @@ const change = () => {
   drawerStore.setDrawerOpenRight()
 }
 
+
+
 const selectedItemStore = useConfigurationStore();
 const selectedItem = computed(() => selectedItemStore.configuration); // Получаем выбранный элемент из хранилища
 
@@ -69,6 +68,41 @@ const localItem = ref(null);
 
 // Видимость формы
 const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible);
+
+// Логика динамической ширины
+const windowWidth = ref(window.innerWidth);
+
+const drawerWidth = computed(() => {
+  const minScreenWidth = 1024;
+  const maxScreenWidth = 1920;
+  const minWidth = 415;
+  const maxWidth = 815;
+
+  // Если меньше минимального — вернуть минимум
+  if (windowWidth.value <= minScreenWidth) return minWidth;
+
+  // Если больше максимального — вернуть максимум
+  if (windowWidth.value >= maxScreenWidth) return maxWidth;
+
+  // Интерполяция между minWidth и maxWidth
+  const ratio = (windowWidth.value - minScreenWidth) / (maxScreenWidth - minScreenWidth);
+  return Math.round(minWidth + ratio * (maxWidth - minWidth));
+});
+
+// Обработчик изменения размера окна
+const handleResize = () => {
+  windowWidth.value = window.innerWidth;
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
+});
+
+
 
 // Следим за изменением выбранного элемента
 watch(
@@ -105,7 +139,7 @@ const saveChanges = () => {
 }
 
 .drawer_left {
-  right: 300px; /* Расстояние от правого края, учитывая ширину QDrawer */
+  right: 800px; /* Расстояние от правого края, учитывая ширину QDrawer */
 }
 
 .drawer_right {

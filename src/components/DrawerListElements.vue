@@ -13,7 +13,6 @@
     <q-drawer
       style="background-color: aliceblue;"
       :width="315"
-      show-if-above
       v-model="drawerOpen"
       bordered
       @click="handleDrawerClick"
