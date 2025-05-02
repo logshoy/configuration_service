@@ -7,12 +7,13 @@
       dense round color="blue"
       :icon="drawerOpen ? 'chevron_left' : 'chevron_right'"
       @click="change"
+      :style="drawerOpen ? { left: `${drawerWidthValue + 55}px` } : { left: '75px' }"
     />
 
     <!-- Drawer с деревом -->
     <q-drawer
       style="background-color: aliceblue;"
-      :width="315"
+      :width="drawerWidthValue"
       v-model="drawerOpen"
       bordered
       :overlay="false"
@@ -21,46 +22,43 @@
     >
       <q-scroll-area class="fit q-pa-md">
         <!-- Группа кнопок управления -->
-        <div class="row q-mb-md no-wrap" ref="buttonsContainer" >
+        <div class="row q-mb-md no-wrap" ref="buttonsContainer">
           <!-- Кнопка добавления -->
-          <div >
-          <q-btn
-            color="green"
-            icon="add"
-            dense
-            @click="enableCreateForm"
-          >
-            <q-tooltip>Добавить новый элемент</q-tooltip>
-          </q-btn>
+          <div>
+            <q-btn
+              color="green"
+              icon="add"
+              dense
+              @click="enableCreateForm"
+            >
+              <q-tooltip>Добавить новый элемент</q-tooltip>
+            </q-btn>
 
-          <!-- Кнопка перемещения -->
-          <q-btn
-            color="orange"
+            <!-- Кнопка перемещения -->
+            <q-btn
+              color="orange"
+              icon="drive_file_move"
+              dense
+              class="q-ml-sm"
+              @click="openMoveDialog"
+              :disable="!canMoveSelected"
+            >
+              <q-tooltip>Переместить выбранный элемент</q-tooltip>
+            </q-btn>
 
-            icon="drive_file_move"
-            dense
-            class="q-ml-sm"
-            @click="openMoveDialog"
-            :disable="!canMoveSelected"
-          >
-            <q-tooltip>Переместить выбранный элемент</q-tooltip>
-          </q-btn>
+            <!-- Кнопка копирования -->
+            <q-btn
+              color="teal"
+              icon="content_copy"
+              dense
+              class="q-ml-sm"
+              @click="openCopyDialog"
+              :disable="!canCopySelected"
+            >
+              <q-tooltip>Копировать кассу</q-tooltip>
+            </q-btn>
 
-          <!-- Кнопка копирования -->
-          <q-btn
-
-            color="teal"
-            icon="content_copy"
-            dense
-            class="q-ml-sm"
-            @click="openCopyDialog"
-            :disable="!canCopySelected"
-          >
-            <q-tooltip>Копировать кассу</q-tooltip>
-
-          </q-btn>
-
-          <q-btn
+            <q-btn
               color="purple"
               :icon="showAll ? 'visibility_off' : 'visibility'"
               dense
@@ -117,11 +115,10 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick  } from 'vue';
+import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { useShopStore } from 'stores/shopStore';
 import { useConfigurationStore } from 'stores/configurationStore';
 import { useDrawerStore } from 'stores/drawerStore';
-
 
 import CopyDialog from '/src/components/Dialog/CopyDialog.vue';
 import MoveDialog from '/src/components/Dialog/MoveDialog.vue';
@@ -131,12 +128,45 @@ const configurationStore = useConfigurationStore();
 const drawerStore = useDrawerStore();
 
 const treeRef = ref(null);
-
 const buttonsContainer = ref(null);
+const windowWidth = ref(window.innerWidth);
+const drawerWidthValue = ref(315);
 
 // Состояние drawer
 const drawerOpen = computed(() => drawerStore.drawerOpenLeft);
 const change = () => drawerStore.setDrawerOpenLeft();
+
+// Логика динамической ширины
+const calculateWidth = () => {
+  const minScreenWidth = 1024;
+  const maxScreenWidth = 1920;
+  const minWidth = 245;
+  const maxWidth = 315;
+
+  if (windowWidth.value <= minScreenWidth) return minWidth;
+  if (windowWidth.value >= maxScreenWidth) return maxWidth;
+
+  const ratio = (windowWidth.value - minScreenWidth) / (maxScreenWidth - minScreenWidth);
+  return Math.round(minWidth + ratio * (maxWidth - minWidth));
+};
+
+const updateDrawerWidth = () => {
+  drawerWidthValue.value = calculateWidth();
+};
+
+const handleResize = () => {
+  windowWidth.value = window.innerWidth;
+  updateDrawerWidth();
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+  updateDrawerWidth();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
+});
 
 // Данные дерева
 const treeData = computed(() => shopStore.treeData);
@@ -156,7 +186,6 @@ const selectedItem = computed(() => {
 const canMoveSelected = computed(() => {
   return selectedItem.value?.type === 'cashRegister';
 });
-
 
 const canCopySelected = computed(() => {
   return selectedItem.value?.type === 'cashRegister';
@@ -193,17 +222,13 @@ const handleMoveConfirm = async (targetGroupId) => {
     );
 
     if (success) {
-      // Принудительно обновляем выбранный элемент
       const newSelectedId = selectedItem.value.id;
-      shopStore.setBranch(null); // Сбрасываем выбор
+      shopStore.setBranch(null);
       nextTick(() => {
-        shopStore.setBranch(newSelectedId); // Восстанавливаем выбор
+        shopStore.setBranch(newSelectedId);
       });
 
       moveDialogVisible.value = false;
-      console.log('Перемещение завершено успешно');
-    } else {
-      console.error('Не удалось переместить кассу');
     }
   } catch (error) {
     console.error('Ошибка при перемещении кассы:', error);
@@ -233,27 +258,22 @@ const handleCopyConfirm = async ({ targetGroupId, newName }) => {
     if (!sourceCash) return;
 
     const originalSettings = configurationStore.getConfiguration(sourceCash.id);
-
-    // Подготавливаем данные для копирования
     const cashData = {
       ...sourceCash,
       settings: originalSettings
     };
 
-    // Вызываем обновленный метод с новым именем
     const success = await shopStore.addCashRegisterCopy(
       targetGroupId,
       cashData,
-      newName // Передаем новое имя
+      newName
     );
 
     if (success) {
       copyDialogVisible.value = false;
-      // Можно добавить уведомление об успешном копировании
     }
   } catch (error) {
     console.error('Ошибка при копировании кассы:', error);
-    // Можно добавить уведомление об ошибке
   }
 };
 
@@ -290,7 +310,6 @@ const getIcon = (node) => {
 };
 
 const handleDrawerClick = (event) => {
-  // Проверяем, что клик был не по кнопке и не по дереву
   const isButton = event.target.closest('.q-btn') !== null;
   const isTree = treeRef.value?.$el?.contains(event.target);
 
@@ -301,8 +320,7 @@ const handleDrawerClick = (event) => {
 
 const showAllConfigurations = () => {
   configurationStore.toggleViewMode()
-}
-
+};
 </script>
 
 <style scoped>
@@ -310,15 +328,7 @@ const showAllConfigurations = () => {
   position: fixed;
   top: 50%;
   z-index: 2222;
-  transition: left 0.3s ease;
-}
-
-.drawer_left {
-  left: 75px;
-}
-
-.drawer_right {
-  left: 370px;
+  /* transition: left 0.3s ease; */
 }
 
 :deep(.q-tree__node--selected) {

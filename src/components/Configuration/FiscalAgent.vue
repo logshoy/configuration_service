@@ -11,7 +11,7 @@
           :model-value="fiscal.id"
           @update:model-value="updateFiscal(index, 'id', $event)"
           filled
-          class="q-mx-xs"
+          class="q-mx-xs input"
         />
         <q-btn
           color="primary"
@@ -112,3 +112,11 @@ const removeFiscalRegistrator = (index) => {
   })
 }
 </script>
+
+<style scoped>
+
+.input{
+  width: 90wh;
+}
+
+</style>

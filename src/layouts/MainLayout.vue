@@ -8,8 +8,8 @@
           :mini="shouldMiniState"
           @mouseenter="handleDrawerEnter"
           @mouseleave="handleDrawerLeave"
-          :breakpoint="0"
           :mini-width="75"
+          mini-to-overlay
         >
           <div style="height: 100%">
             <EssentialLink />
