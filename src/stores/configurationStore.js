@@ -12,6 +12,7 @@ export const useConfigurationStore = defineStore('configuration', {
     error: null, // Ошибка, если есть
     configuration: null, // Выбранная конфигурация
     isCreateFormVisible: false, // Видимость формы создания
+    dialogCreate: false,
     typeCreateConfigutation: '',
     showAllConfiguration: false,
   }),
@@ -48,10 +49,14 @@ export const useConfigurationStore = defineStore('configuration', {
 
     // Установить выбранный элемент
     setConfiguration(id) {
-      if (id != null) {
-        this.configuration = this.configurationList.find((item) => item.id === id)
+      if (!this.isCreateFormVisible) {
+        if (id != null) {
+          this.configuration = this.configurationList.find((item) => item.id === id)
+        } else {
+          this.configuration = null
+        }
       } else {
-        this.configuration = null
+        this.dialogCreate = true
       }
     },
 
@@ -139,8 +144,12 @@ export const useConfigurationStore = defineStore('configuration', {
     },
 
     toggleViewMode() {
-      this.showAll = !this.showAll
+      this.showAllConfiguration = !this.showAllConfiguration
       console.log()
+    },
+
+    disableDialogCreate() {
+      this.dialogCreate = false
     },
   },
   getters: {
@@ -151,7 +160,7 @@ export const useConfigurationStore = defineStore('configuration', {
         let result = [...state.configurationList]
 
         // Если не включен режим "показать все"
-        if (!state.showAll) {
+        if (!state.showAllConfiguration) {
           // Если nodeId не передан → возвращаем null
           if (nodeId === null || nodeId === undefined) {
             return null
@@ -214,5 +223,7 @@ export const useConfigurationStore = defineStore('configuration', {
     getConfiguration: (state) => (id) => {
       return state.configurationList.find((item) => item.id === id) || null
     },
+
+    getShowAllConfiguration: (state) => state.showAllConfiguration,
   },
 })

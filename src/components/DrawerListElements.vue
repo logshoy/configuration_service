@@ -189,7 +189,7 @@ const canMoveSelected = computed(() => {
 });
 
 
-const showAll = computed(() => configurationStore.showAll);
+const showAll = computed(() => configurationStore.showAllConfiguration);
 
 // Логика перемещения кассы
 const moveDialogVisible = ref(false);

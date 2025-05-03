@@ -2,14 +2,14 @@ export const settingsConfigAppCash = {
   dimensions: {
     width: {
       type: 'number',
-      default: 100,
-      min: 50,
+      default: 1024,
+      min: 1024,
       max: 5000,
     },
     height: {
       type: 'number',
-      default: 100,
-      min: 50,
+      default: 768,
+      min: 768,
       max: 5000,
     },
   },

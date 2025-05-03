@@ -13,6 +13,10 @@
         v-model="configurationName"
         label="Название"
         class="q-ma-md"
+        :rules="[val => !!val || 'Поле обязательно для заполнения']"
+        lazy-rules
+        :color="!configurationName ? 'negative' : 'primary'"
+        :bg-color="!configurationName ? 'red-1' : ''"
       />
 
       <!-- Универсальный компонент для настроек -->
@@ -63,7 +67,7 @@ const selectedItemStore = useConfigurationStore();
 const shopeStore = useShopStore();
 
 const formContainer = ref(null);
-const showConfirmationDialog = ref(false);
+
 const configurationName = ref(null);
 const configurationService = ref(null);
 const settings = ref({});
@@ -75,6 +79,8 @@ const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
 const configuration = computed(() => selectedItemStore.configuration);
 const treeData = computed(() => shopeStore.treeData);
+
+const showConfirmationDialog = computed(() => selectedItemStore.dialogCreate);
 
 // Определяем, какой компонент настроек использовать
 const settingsComponent = computed(() => {
@@ -93,6 +99,7 @@ const settingsComponent = computed(() => {
 });
 
 
+
 // Закрытие формы с подтверждением
 const confirmClose = () => {
   selectedItemStore.disableCreateFormVisibility();
@@ -108,7 +115,7 @@ const confirmCloseForm = () => {
 
 // Закрытие формы без подтверждения (при нажатии "Отмена" в диалоге)
 const closeForm = () => {
-  showConfirmationDialog.value = false;
+  selectedItemStore.disableDialogCreate();
 };
 
 // Сброс формы

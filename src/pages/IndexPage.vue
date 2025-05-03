@@ -1,6 +1,6 @@
 <template>
   <div class="full-height">
-    <div v-if="branch">
+    <div v-if="branch || !showNoSelectionMessage">
       <div class="column q-mb-md" >
         <div class="text-h5 q-pa-xs">{{ $t(headerTitle) }}</div>
         <SearchInput
@@ -15,9 +15,9 @@
     <div v-if="isLoading">Загрузка...</div>
     <div v-else-if="error">Ошибка: {{ error }}</div>
       <!-- Сообщение, если ничего не выбрано -->
-      <div v-else-if="!branch" class="column justify-center full-height items-center" >
-        <h3 class="q-mb-sm">Выбери что-то</h3>
-      </div>
+    <div v-else-if="showNoSelectionMessage" class="column justify-center full-height items-center" >
+      <h3 class="q-mb-sm">Выбери что-то</h3>
+    </div>
 
       <!-- Сообщение, если нет конфигураций -->
       <div v-else-if="hasNoConfigurations" class="flex flex-center column" style="min-height: 300px;">
@@ -74,6 +74,12 @@ const branch = computed(() => shopStore.branch);
 const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
 const isSameBranch = computed(() => lastSelectedBranch.value === branch.value);
+
+
+const showNoSelectionMessage = computed(() => {
+  console.log(selectedItemStore.getShowAllConfiguration)
+  return !branch.value && !selectedItemStore.getShowAllConfiguration
+})
 
 const filteredListByNode = computed(() => {
   const result = selectedItemStore.filteredConfigurationList({
