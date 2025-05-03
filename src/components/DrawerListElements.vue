@@ -264,7 +264,7 @@ const openCopyDialog = () => {
   } else if (selectedItem.value.type === 'cashRegister') {
     copySource.value = {
       ...commonFields,
-      code: `CR-${selectedItem.value.id.slice(0, 4).toUpperCase()}`,
+      code: `${selectedItem.value.id.slice(0, 4).toUpperCase()}`,
       groupId: selectedItem.value.cashGroupId
     };
   }

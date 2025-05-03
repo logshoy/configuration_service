@@ -175,12 +175,14 @@ const findNodeById = (nodes, id) => {
 
 // Создание конфигурации
 const createConfiguration = async () => {
+
+  console.log(configuration.value.id, configurationName.value)
+
   try {
     let node;
     if (configuration.value) {
       node = findNodeById(treeData.value, configuration.value.id);
     }
-    console.log(settings.value)
     // const cleanedSettings = cleanSettings(settings.value);
     const configurationData = {
       configurationName: configurationName.value,
@@ -193,6 +195,8 @@ const createConfiguration = async () => {
     if (configurationService.value) {
       configurationData.serviceType = configurationService.value;
     }
+
+
 
     switch (configurationType.value) {
       case 'appCash':
@@ -212,6 +216,7 @@ const createConfiguration = async () => {
         }
         break;
       case 'cashGroup':
+        console.log(configuration.value.id, configurationName.value, configurationData)
         shopeStore.addCashGroup(configuration.value.id, configurationName.value, configurationData);
         break;
       case 'shop':
@@ -221,11 +226,10 @@ const createConfiguration = async () => {
         console.warn('Unknown configuration type:', configurationType.value);
     }
 
-    resetForm();
     selectedItemStore.disableCreateFormVisibility();
   } catch (err) {
     console.error('Ошибка при создании конфигурации:', err);
-    alert(err.message);
+    alert(err);
   }
 };
 </script>

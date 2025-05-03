@@ -71,7 +71,7 @@ export const useShopStore = defineStore('shop', {
     addCashGroup(shopId, name, settings) {
       const configurationStore = useConfigurationStore()
       const shop = this.shops.find((s) => s.id === shopId)
-
+      console.log(shopId, name, settings)
       if (shop) {
         const newCashGroup = {
           id: uuidv4(),

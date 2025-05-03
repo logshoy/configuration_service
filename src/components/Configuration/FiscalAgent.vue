@@ -1,60 +1,83 @@
 <template>
   <div>
-    <div
+    <q-expansion-item
       v-for="(fiscal, index) in modelValue.fiscalRegistrators || defaultFiscals"
       :key="fiscal.id || index"
-      class="q-ma-md"
+      group="fiscals"
+      :label="fiscal.name || `Фискальный регистратор ${index + 1}`"
+      :caption="getFiscalCaption(fiscal)"
+      header-class="bg-grey-2"
+      class="q-mb-sm"
     >
-      <div class="row justify-between q-my-md">
+      <div class="q-pa-md">
         <q-input
-          label="DeviceID"
-          :model-value="fiscal.id"
-          @update:model-value="updateFiscal(index, 'id', $event)"
           filled
-          class="q-mx-xs input"
+          label="Название"
+          :model-value="fiscal.name"
+          @update:model-value="updateFiscal(index, 'name', $event)"
+          class="q-mb-md"
         />
-        <q-btn
-          color="primary"
-          icon="sync"
-          @click="generateuid(index)"
-          round
-          padding="10px 10px"
-          class="q-my-xs"
+
+        <div class="row justify-between q-mb-md">
+          <q-input
+            label="DeviceID"
+            :model-value="fiscal.id"
+            @update:model-value="updateFiscal(index, 'id', $event)"
+            filled
+            class="col-grow q-mr-sm"
+          />
+          <q-btn
+            color="primary"
+            icon="sync"
+            @click="generateuid(index)"
+            round
+            padding="10px"
+          />
+        </div>
+
+        <q-select
+          filled
+          :model-value="fiscal.type"
+          @update:model-value="updateFiscal(index, 'type', $event)"
+          :options="fiscalOptions"
+          label="Тип фискального регистратора"
+          class="q-mb-md"
         />
+
+        <q-input
+          filled
+          :model-value="fiscal.portName"
+          @update:model-value="updateFiscal(index, 'portName', $event)"
+          label="PortName"
+          class="q-mb-md"
+        />
+
+        <div class="row justify-end">
+          <q-btn
+            v-if="(modelValue.fiscalRegistrators || defaultFiscals).length > 1"
+            color="red"
+            icon="delete"
+            @click="removeFiscalRegistrator(index)"
+            class="q-mr-sm"
+          />
+          <q-btn
+            v-if="index === (modelValue.fiscalRegistrators || defaultFiscals).length - 1"
+            color="green"
+            icon="add"
+            @click="addFiscalRegistrator"
+          />
+        </div>
       </div>
+    </q-expansion-item>
 
-      <q-select
-        filled
-        :model-value="fiscal.type"
-        @update:model-value="updateFiscal(index, 'type', $event)"
-        :options="fiscalOptions"
-        label="Тип фискального регистратора"
-      />
-
-      <q-input
-        filled
-        :model-value="fiscal.portName"
-        @update:model-value="updateFiscal(index, 'portName', $event)"
-        label="PortName"
-        class="q-mt-md"
-      />
-
-      <div class="row q-mt-md">
-        <q-btn
-          v-if="index === (modelValue.fiscalRegistrators || defaultFiscals).length - 1"
-          color="green"
-          @click="addFiscalRegistrator"
-          label="Добавить"
-        />
-        <q-btn
-          v-if="(modelValue.fiscalRegistrators || defaultFiscals).length > 1"
-          color="red"
-          class="q-ml-md"
-          @click="removeFiscalRegistrator(index)"
-          label="Удалить"
-        />
-      </div>
-    </div>
+    <q-btn
+      v-if="!modelValue.fiscalRegistrators?.length"
+      color="primary"
+      icon="add"
+      label="Добавить фискальный регистратор"
+      @click="addFiscalRegistrator"
+      class="full-width q-mt-sm"
+    />
   </div>
 </template>
 
@@ -67,14 +90,19 @@ const fiscalOptions = [
   { label: 'ШТРИХ', value: 'shtrih' }
 ]
 
-const defaultFiscals = ref([{ id: null, type: null, portName: '' }])
+const defaultFiscals = ref([{
+  id: uuidv4(),
+  name: '',
+  type: null,
+  portName: ''
+}])
 
 const props = defineProps({
   modelValue: {
     type: Object,
     required: true
   },
-    emitAlways: {
+  emitAlways: {
     type: Boolean,
     default: false
   }
@@ -82,10 +110,20 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 
-if (props.emitAlways) { // Условный эмит
-   emit('update:modelValue',  { ...props.modelValue, fiscalRegistrators: defaultFiscals })
+if (props.emitAlways) {
+  emit('update:modelValue', { ...props.modelValue, fiscalRegistrators: defaultFiscals.value })
 }
 
+const getFiscalLabel = (value) => {
+  return fiscalOptions.find(opt => opt.value === value)?.label || 'Неизвестный'
+}
+
+const getFiscalCaption = (fiscal) => {
+  const parts = []
+  if (fiscal.type) parts.push(`Тип: ${getFiscalLabel(fiscal.type)}`)
+  if (fiscal.portName) parts.push(`Порт: ${fiscal.portName}`)
+  return parts.join(' | ') || 'Не настроен'
+}
 
 const generateuid = (index) => {
   updateFiscal(index, 'id', uuidv4())
@@ -99,7 +137,12 @@ const updateFiscal = (index, field, value) => {
 
 const addFiscalRegistrator = () => {
   const fiscals = props.modelValue.fiscalRegistrators ? [...props.modelValue.fiscalRegistrators] : [...defaultFiscals.value]
-  fiscals.push({ id: null, type: null, portName: '' })
+  fiscals.push({
+    id: uuidv4(),
+    name: '',
+    type: null,
+    portName: ''
+  })
   emit('update:modelValue', { ...props.modelValue, fiscalRegistrators: fiscals })
 }
 
@@ -108,15 +151,19 @@ const removeFiscalRegistrator = (index) => {
   fiscals.splice(index, 1)
   emit('update:modelValue', {
     ...props.modelValue,
-    fiscalRegistrators: fiscals.length > 0 ? fiscals : [{ id: uuidv4(), type: null, portName: '' }]
+    fiscalRegistrators: fiscals.length > 0 ? fiscals : [{
+      id: uuidv4(),
+      name: '',
+      type: null,
+      portName: ''
+    }]
   })
 }
 </script>
 
 <style scoped>
-
-.input{
-  width: 90wh;
+.q-expansion-item {
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 4px;
 }
-
 </style>

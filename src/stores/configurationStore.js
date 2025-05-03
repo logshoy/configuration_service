@@ -134,7 +134,6 @@ export const useConfigurationStore = defineStore('configuration', {
     // Форма создания
     enableCreateFormVisibility(type) {
       this.isCreateFormVisible = true
-      this.configuration = null
       this.typeCreateConfigutation = type
     },
 

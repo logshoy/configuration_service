@@ -8,6 +8,7 @@ export const fiscalSettingsConfig = {
         default: [
           {
             id: null,
+            name: null,
             type: null,
             portName: '',
           },
