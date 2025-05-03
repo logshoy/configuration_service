@@ -3,12 +3,12 @@
     <q-card style="min-width: 400px">
       <q-card-section class="row items-center">
         <q-icon name="content_copy" size="md" class="q-mr-sm" />
-        <span class="text-h6">Копирование кассы</span>
+        <span class="text-h6">Копирование {{ copyType === 'shop' ? 'магазина' : copyType === 'cashGroup' ? 'группы касс' : 'кассы' }}</span>
       </q-card-section>
 
       <q-card-section>
         <div class="text-body1 q-mb-sm">
-          Копируем кассу: <strong>{{ source.name }}</strong>
+          Копируем: <strong>{{ source.name }}</strong>
         </div>
         <div class="text-caption q-mb-md">
           ID: {{ source.id }}
@@ -18,19 +18,31 @@
 
         <q-input
           v-model="newName"
-          label="Название копии"
+          :label="`Новое название ${copyType === 'shop' ? 'магазина' : copyType === 'cashGroup' ? 'группы касс' : 'кассы'}`"
           outlined
           class="q-mb-md"
           :rules="[val => !!val || 'Обязательное поле']"
         />
 
-        <div class="text-subtitle2 q-mb-sm">Куда скопировать?</div>
-        <q-option-group
-          v-model="targetGroupId"
-          :options="availableGroups"
-          type="radio"
-          color="primary"
-        />
+        <template v-if="copyType === 'cashGroup'">
+          <div class="text-subtitle2 q-mb-sm">В какой магазин скопировать?</div>
+          <q-option-group
+            v-model="targetShopId"
+            :options="availableShops"
+            type="radio"
+            color="primary"
+          />
+        </template>
+
+        <template v-else-if="copyType === 'cashRegister'">
+          <div class="text-subtitle2 q-mb-sm">Куда скопировать?</div>
+          <q-option-group
+            v-model="targetGroupId"
+            :options="availableGroups"
+            type="radio"
+            color="primary"
+          />
+        </template>
       </q-card-section>
 
       <q-card-actions align="right">
@@ -40,7 +52,7 @@
           color="primary"
           :loading="isLoading"
           @click="handleConfirm"
-          :disable="!targetGroupId || !newName"
+          :disable="!canConfirm"
         />
       </q-card-actions>
     </q-card>
@@ -58,6 +70,11 @@ const props = defineProps({
   source: {
     type: Object,
     required: true
+  },
+  copyType: {
+    type: String,
+    required: true,
+    validator: value => ['shop', 'cashGroup', 'cashRegister'].includes(value)
   }
 });
 
@@ -65,14 +82,14 @@ const emit = defineEmits(['update:modelValue', 'confirm']);
 
 const isLoading = ref(false);
 const newName = ref('');
+const targetShopId = ref(null);
 const targetGroupId = ref(null);
 
-// Инициализация значений при открытии диалога
-watch(() => props.modelValue, (isOpen) => {
-  if (isOpen && props.source) {
-    newName.value = `${props.source.name} (копия)`;
-    targetGroupId.value = props.source.groupId || null;
-  }
+const availableShops = computed(() => {
+  return shopStore.shops.map(shop => ({
+    label: shop.name,
+    value: shop.id
+  }));
 });
 
 const availableGroups = computed(() => {
@@ -84,20 +101,50 @@ const availableGroups = computed(() => {
   );
 });
 
+const canConfirm = computed(() => {
+  if (!newName.value) return false;
+
+  if (props.copyType === 'cashGroup') {
+    return !!targetShopId.value;
+  } else if (props.copyType === 'cashRegister') {
+    return !!targetGroupId.value;
+  }
+  return true; // Для магазина нужен только новый имя
+});
+
+// Инициализация значений при открытии диалога
+watch(() => props.modelValue, (isOpen) => {
+  if (isOpen && props.source) {
+    newName.value = `${props.source.name} (копия)`;
+
+    if (props.copyType === 'cashGroup') {
+      targetShopId.value = props.source.shopId || null;
+    } else if (props.copyType === 'cashRegister') {
+      targetGroupId.value = props.source.groupId || null;
+    }
+  }
+});
+
 const close = () => {
   emit('update:modelValue', false);
-  // Не сбрасываем значения здесь, чтобы сохранить состояние при повторном открытии
 };
 
 const handleConfirm = async () => {
-  if (!targetGroupId.value || !newName.value) return;
+  if (!canConfirm.value) return;
 
   isLoading.value = true;
   try {
-    emit('confirm', {
-      targetGroupId: targetGroupId.value,
+    const params = {
       newName: newName.value
-    });
+    };
+
+    if (props.copyType === 'cashGroup') {
+      params.targetShopId = targetShopId.value;
+    } else if (props.copyType === 'cashRegister') {
+      params.targetGroupId = targetGroupId.value;
+    }
+
+    emit('confirm', params);
     close();
   } finally {
     isLoading.value = false;

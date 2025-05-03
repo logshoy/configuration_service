@@ -198,7 +198,90 @@ export const useShopStore = defineStore('shop', {
       return null
     },
 
-    addCashRegisterCopy(targetGroupId, cashData, newName) {
+    // В разделе actions добавим новые методы:
+
+    async copyShop(originalShopId, newName) {
+      const configurationStore = useConfigurationStore()
+      const originalShop = this.shops.find((s) => s.id === originalShopId)
+      if (!originalShop) return false
+
+      // Получаем конфигурацию оригинального магазина
+      const originalConfig = configurationStore.getConfiguration(originalShopId)
+
+      // Создаем новый магазин
+      const newShop = {
+        id: uuidv4(),
+        name: newName,
+        cashGroups: [], // Пустые группы, без копирования вложенных элементов
+      }
+
+      this.shops.push(newShop)
+
+      // Создаем конфигурацию для нового магазина
+      if (originalConfig) {
+        const newSettings = {
+          ...originalConfig.settings,
+          configurationName: newName,
+        }
+        configurationStore.createConfiguration(newSettings, newShop.id)
+      }
+
+      this.persistState()
+      return true
+    },
+
+    async copyCashGroup(originalGroupId, targetShopId, newName) {
+      const configurationStore = useConfigurationStore()
+
+      // Находим исходную группу и ее магазин
+      let originalGroup = null
+      let originalShop = null
+
+      for (const shop of this.shops) {
+        const group = shop.cashGroups.find((g) => g.id === originalGroupId)
+        if (group) {
+          originalGroup = group
+          originalShop = shop
+          break
+        }
+      }
+
+      if (!originalGroup || !originalShop) return false
+
+      // Находим целевой магазин
+      const targetShop = this.shops.find((s) => s.id === targetShopId)
+      if (!targetShop) return false
+
+      // Получаем конфигурацию оригинальной группы
+      const originalConfig = configurationStore.getConfiguration(originalGroupId)
+
+      // Создаем новую группу
+      const newGroup = {
+        id: uuidv4(),
+        name: newName,
+        cashRegisters: [], // Пустые кассы, без копирования вложенных элементов
+      }
+
+      targetShop.cashGroups.push(newGroup)
+
+      // Создаем конфигурацию для новой группы
+      if (originalConfig) {
+        const newSettings = {
+          ...originalConfig.settings,
+          configurationName: newName,
+          node: targetShopId, // Обновляем привязку к новому магазину
+        }
+        configurationStore.createConfiguration(newSettings, newGroup.id)
+      }
+
+      this.persistState()
+      return true
+    },
+
+    // ... остальные методы без изменений ..
+
+    // Обновим метод addCashRegisterCopy для работы с конфигурациями
+    async addCashRegisterCopy(targetGroupId, cashData, newName) {
       const configurationStore = useConfigurationStore()
       const targetGroup = this.findCashGroupById(targetGroupId)
 
@@ -214,22 +297,23 @@ export const useShopStore = defineStore('shop', {
       const newCashRegister = {
         ...cashData,
         id: newId,
-        name: newName, // Используем переданное новое имя
-        shopId: targetGroup.shopId, // Обновляем shopId на целевой магазин
-        cashGroupId: targetGroupId, // Обновляем cashGroupId на целевую группу
+        name: newName,
+        shopId: targetGroup.shopId,
+        cashGroupId: targetGroupId,
       }
 
       // Добавляем кассу в целевую группу
       targetGroup.cashRegisters.push(newCashRegister)
 
       // Создаем новую конфигурацию для копии
-      const newSettings = {
-        ...cashData.settings.settings,
-        configurationName: newName, // Устанавливаем новое имя
-        node: targetGroupId, // Обновляем привязку к новой группе
+      if (cashData.settings) {
+        const newSettings = {
+          ...cashData.settings.settings,
+          configurationName: newName,
+          node: targetGroupId,
+        }
+        configurationStore.createConfiguration(newSettings, newId)
       }
-
-      configurationStore.createConfiguration(newSettings, newId)
 
       this.persistState()
       return true

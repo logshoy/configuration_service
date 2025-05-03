@@ -109,6 +109,7 @@
     <CopyDialog
       v-model="copyDialogVisible"
       :source="copySource"
+      :copyType="selectedItem?.type"
       @confirm="handleCopyConfirm"
     />
   </div>
@@ -187,9 +188,6 @@ const canMoveSelected = computed(() => {
   return selectedItem.value?.type === 'cashRegister';
 });
 
-const canCopySelected = computed(() => {
-  return selectedItem.value?.type === 'cashRegister';
-});
 
 const showAll = computed(() => configurationStore.showAll);
 
@@ -239,41 +237,69 @@ const handleMoveConfirm = async (targetGroupId) => {
 const copyDialogVisible = ref(false);
 const copySource = ref(null);
 
+// В секции script setup:
+
+const canCopySelected = computed(() => {
+  return ['shop', 'cashGroup', 'cashRegister'].includes(selectedItem.value?.type);
+});
+
 const openCopyDialog = () => {
   if (!selectedItem.value) return;
 
-  copySource.value = {
+  const commonFields = {
     id: selectedItem.value.id,
     name: selectedItem.value.label,
-    code: `CR-${selectedItem.value.id.slice(0, 4).toUpperCase()}`,
-    groupId: selectedItem.value.cashGroupId
   };
+
+  if (selectedItem.value.type === 'shop') {
+    copySource.value = {
+      ...commonFields,
+      shopId: selectedItem.value.id
+    };
+  } else if (selectedItem.value.type === 'cashGroup') {
+    copySource.value = {
+      ...commonFields,
+      shopId: selectedItem.value.shopId
+    };
+  } else if (selectedItem.value.type === 'cashRegister') {
+    copySource.value = {
+      ...commonFields,
+      code: `CR-${selectedItem.value.id.slice(0, 4).toUpperCase()}`,
+      groupId: selectedItem.value.cashGroupId
+    };
+  }
 
   copyDialogVisible.value = true;
 };
 
-const handleCopyConfirm = async ({ targetGroupId, newName }) => {
+const handleCopyConfirm = async (params) => {
   try {
-    const sourceCash = shopStore.getCashRegisterById(copySource.value.id);
-    if (!sourceCash) return;
+    const { newName } = params;
 
-    const originalSettings = configurationStore.getConfiguration(sourceCash.id);
-    const cashData = {
-      ...sourceCash,
-      settings: originalSettings
-    };
+    if (selectedItem.value.type === 'shop') {
+      await shopStore.copyShop(selectedItem.value.id, newName);
+    } else if (selectedItem.value.type === 'cashGroup') {
+      await shopStore.copyCashGroup(selectedItem.value.id, params.targetShopId, newName);
+    } else if (selectedItem.value.type === 'cashRegister') {
+      const sourceCash = shopStore.getCashRegisterById(selectedItem.value.id);
+      if (!sourceCash) return;
 
-    const success = await shopStore.addCashRegisterCopy(
-      targetGroupId,
-      cashData,
-      newName
-    );
+      const originalSettings = configurationStore.getConfiguration(sourceCash.id);
+      const cashData = {
+        ...sourceCash,
+        settings: originalSettings
+      };
 
-    if (success) {
-      copyDialogVisible.value = false;
+      await shopStore.addCashRegisterCopy(
+        params.targetGroupId,
+        cashData,
+        newName
+      );
     }
+
+    copyDialogVisible.value = false;
   } catch (error) {
-    console.error('Ошибка при копировании кассы:', error);
+    console.error('Ошибка при копировании:', error);
   }
 };
 
