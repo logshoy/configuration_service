@@ -6,7 +6,6 @@
         <SearchInput
           v-model="searchQuery"
           @clear="clearSearch"
-          class="q-mb-md"
         />
       </div>
 
@@ -29,7 +28,9 @@
         <q-card
           v-for="item in filteredListByNode"
           :key="item.id"
-          :class="['my-card', 'rounded-borders', { 'selected-card': selectedItemId === item.id && isSameBranch }]"
+          :class="['my-card', 'rounded-borders', {
+            'selected-card': selectedItemId === item.id && isSameBranch && !selectedItemStore.isCreateFormVisible
+          }]"
           clickable
           @click="selectItem(item.id)"
         >
@@ -77,7 +78,6 @@ const isSameBranch = computed(() => lastSelectedBranch.value === branch.value);
 
 
 const showNoSelectionMessage = computed(() => {
-  console.log(selectedItemStore.getShowAllConfiguration)
   return !branch.value && !selectedItemStore.getShowAllConfiguration
 })
 

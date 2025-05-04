@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 // Ключ для localStorage
 const STORAGE_KEY = 'shopStoreData'
 
+
 export const useShopStore = defineStore('shop', {
   state: () => {
     // Пытаемся загрузить shops из localStorage
@@ -52,8 +53,11 @@ export const useShopStore = defineStore('shop', {
     },
 
     setBranch(id) {
-      this.branch = id !== null ? id : null
-      this.persistState()
+      const configurationStore = useConfigurationStore()
+      if (!configurationStore.isCreateFormVisible) {
+        this.branch = id !== null ? id : null
+        this.persistState()
+      }
     },
 
     addShop(name, settings) {
@@ -71,7 +75,7 @@ export const useShopStore = defineStore('shop', {
     addCashGroup(shopId, name, settings) {
       const configurationStore = useConfigurationStore()
       const shop = this.shops.find((s) => s.id === shopId)
-      console.log(shopId, name, settings)
+
       if (shop) {
         const newCashGroup = {
           id: uuidv4(),

@@ -97,7 +97,6 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 
 if (props.emitAlways) { // Условный эмит
-  console.log('я выполнился')
   emit('update:modelValue',  { ...props.modelValue, paymentAgents: defaultAgents })
 }
 

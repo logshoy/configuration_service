@@ -65,7 +65,6 @@ const changeLocale = (newLocale) => {
 
 // Обработчик открытия меню
 const handleMenuShow = () => {
-  console.log('я работаю')
   drawerStore.lockMiniState(true); // Блокируем закрытие
 };
 

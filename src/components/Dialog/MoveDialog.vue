@@ -49,7 +49,7 @@ const props = defineProps({
   modelValue: Boolean,
   device: {
     type: Object,
-    required: true
+    default: null,
   }
 });
 

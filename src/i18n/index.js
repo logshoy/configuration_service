@@ -7,7 +7,6 @@ import ruRU from './ru-RU' // Русские переводы
 // Загружаем язык из localStorage или используем язык по умолчанию
 const savedLocale = localStorage.getItem('locale') || 'ru-RU'
 
-console.log(savedLocale)
 
 // Создаем экземпляр i18n
 const i18n = createI18n({

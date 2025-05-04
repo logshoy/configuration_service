@@ -69,11 +69,10 @@ const props = defineProps({
   modelValue: Boolean,
   source: {
     type: Object,
-    required: true
+    default: null,
   },
   copyType: {
     type: String,
-    required: true,
     validator: value => ['shop', 'cashGroup', 'cashRegister'].includes(value)
   }
 });

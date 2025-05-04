@@ -32,10 +32,9 @@
 
       <!-- Модальное окно подтверждения -->
       <q-dialog v-model="showConfirmationDialog">
-        <q-card>
+        <q-card class="q-pa-lg">
           <q-card-section>
-            <div class="text-h6">Подтверждение</div>
-            <div>Вы уверены, что хотите закрыть форму? Несохраненные данные будут потеряны.</div>
+            <div class=" flex items-center text-h3">😬<span class="text-h6"> Отменить изменения и продолжить?</span></div>
           </q-card-section>
 
           <q-card-actions align="right">
@@ -176,7 +175,6 @@ const findNodeById = (nodes, id) => {
 // Создание конфигурации
 const createConfiguration = async () => {
 
-  console.log(configuration.value.id, configurationName.value)
 
   try {
     let node;
@@ -216,7 +214,6 @@ const createConfiguration = async () => {
         }
         break;
       case 'cashGroup':
-        console.log(configuration.value.id, configurationName.value, configurationData)
         shopeStore.addCashGroup(configuration.value.id, configurationName.value, configurationData);
         break;
       case 'shop':
