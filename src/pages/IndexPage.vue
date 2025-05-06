@@ -11,7 +11,8 @@
     <!-- Компонент для перемещения -->
     <MoveDialog
       v-model="moveDialogVisible"
-      :device="moveDevice"
+      :source="moveDevice"
+      :copy-type="selectedItemType"
       @confirm="handleMoveConfirm"
     />
 
@@ -189,30 +190,30 @@ const openMoveDialog = () => {
   moveDevice.value = {
     id: selectedItemId.value,
     name: selectedConfiguration.value?.settings?.configurationName || 'Конфигурация',
-    code: selectedItemId.value.slice(0, 4).toUpperCase()
   };
+  console.log( moveDevice.value)
 
   moveDialogVisible.value = true;
 };
 
 const handleCopyConfirm = async (params) => {
   try {
-    const { newName } = params;
+    const { newName, targetId } = params;
     const originalConfig = selectedConfiguration.value;
 
     if (!originalConfig) return;
 
     const newConfig = {
       ...originalConfig,
-      id: undefined, // Будет сгенерирован автоматически
       settings: {
         ...originalConfig.settings,
-        configurationName: newName
+        configurationName: newName,
+        node: targetId
       }
     };
 
-    await selectedItemStore.createConfiguration(newConfig.settings);
-
+    selectedItemStore.createConfiguration(newConfig.settings);
+    console.log('я сработал')
     $q.notify({
       type: 'positive',
       message: 'Конфигурация успешно скопирована'
@@ -228,7 +229,9 @@ const handleCopyConfirm = async (params) => {
   }
 };
 
-const handleMoveConfirm = async (targetBranchId) => {
+const handleMoveConfirm = async (params) => {
+  const { targetId } = params;
+
   try {
     const config = selectedConfiguration.value;
     if (!config) return;
@@ -237,11 +240,11 @@ const handleMoveConfirm = async (targetBranchId) => {
       ...config,
       settings: {
         ...config.settings,
-        node: targetBranchId
+        node: targetId
       }
     };
 
-    await selectedItemStore.updateItem(updatedConfig);
+    selectedItemStore.updateItem(updatedConfig);
 
     $q.notify({
       type: 'positive',

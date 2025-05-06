@@ -2,53 +2,54 @@
   <q-dialog :model-value="modelValue" @update:model-value="val => $emit('update:modelValue', val)" persistent>
     <q-card style="min-width: 500px">
       <q-card-section class="row items-center">
-        <q-icon name="drive_file_move" size="md" class="q-mr-sm" />
-        <span class="text-h6">Перемещение {{ nodeTypeLabel }}</span>
+        <q-icon name="content_copy" size="md" class="q-mr-sm" />
+        <span class="text-h6">Копирование конфигурации</span>
       </q-card-section>
 
       <q-card-section>
         <div class="text-body1 q-mb-sm">
-          Перемещаем: <strong>{{ device.name }}</strong>
+          Копируем: <strong>{{ source.name }}</strong>
+        </div>
+        <div class="text-caption q-mb-md">
+          ID: {{ source.id }} | Тип: {{ nodeType || 'конфигурация' }}
         </div>
 
         <q-separator class="q-mb-md" />
 
-        <div class="text-subtitle2 q-mb-sm">Куда переместить?</div>
+        <q-input
+          v-model="newName"
+          label="Новое название"
+          outlined
+          class="q-mb-md"
+          :rules="[val => !!val || 'Обязательное поле']"
+        />
 
-        <template v-if="nodeType === 'cashGroup'">
-          <q-option-group
-            v-model="targetId"
-            :options="availableShops"
-            type="radio"
-            color="primary"
-          />
-
-          {{ availableShops }}
-        </template>
-
-        <template v-else-if="nodeType === 'cashRegister'">
-          <q-option-group
-            v-model="targetId"
-            :options="availableGroups"
-            type="radio"
-            color="primary"
-          />
-          {{ availableGroups }}
-        </template>
-
-        <div v-else-if="nodeType === 'shop'" class="text-negative">
-          Магазины нельзя перемещать
-        </div>
+        <div class="text-subtitle2 q-mb-sm">Куда скопировать?</div>
+        <q-tree
+          :nodes="availableNodes"
+          node-key="id"
+          selected-color="primary"
+          v-model:selected="targetNodeId"
+          default-expand-all
+          :filter="filterText"
+        >
+          <template v-slot:default-header="prop">
+            <div class="row items-center">
+              <q-icon :name="getNodeIcon(prop.node)" class="q-mr-sm" />
+              <span>{{ prop.node.label }}</span>
+            </div>
+          </template>
+        </q-tree>
       </q-card-section>
 
       <q-card-actions align="right">
         <q-btn flat label="Отмена" color="grey" @click="close" />
         <q-btn
-          label="Переместить"
+          label="Копировать"
           color="primary"
           :loading="isLoading"
           @click="handleConfirm"
-          :disable="!canMove"
+          :disable="!canConfirm"
         />
       </q-card-actions>
     </q-card>
@@ -56,166 +57,103 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useShopStore } from 'stores/shopStore';
-import { useConfigurationStore } from 'stores/configurationStore';
 
 const shopStore = useShopStore();
-const configStore = useConfigurationStore();
 
 const props = defineProps({
   modelValue: Boolean,
-  device: {
+  source: {
     type: Object,
     default: null,
+  },
+  copyType: {
+    type: String,
+    default: 'configuration'
   }
 });
 
 const emit = defineEmits(['update:modelValue', 'confirm']);
 
 const isLoading = ref(false);
-const targetId = ref(null);
+const newName = ref('');
+const targetNodeId = ref(null);
+const filterText = ref('');
 
+// Определяем тип исходного узла
 const nodeType = computed(() => {
-  return props.device?.id ? shopStore.getNodeType(props.device.id) : null;
+  if (!props.source?.id) return null;
+  return shopStore.getNodeType(props.source.id);
 });
 
-const nodeTypeLabel = computed(() => {
-  return {
-    shop: 'магазина',
-    cashGroup: 'группы касс',
-    cashRegister: 'кассы'
-  }[nodeType.value] || 'устройства';
+// Доступные узлы для копирования (исключая сам элемент, если он является узлом)
+const availableNodes = computed(() => {
+  const nodes = shopStore.getTreeDataCopy();
+
+  // Если источник является узлом дерева, исключаем его и его дочерние элементы
+  if (nodeType.value) {
+    const removeNode = (nodesList, idToRemove) => {
+      for (let i = 0; i < nodesList.length; i++) {
+        if (nodesList[i].id === idToRemove) {
+          nodesList.splice(i, 1);
+          return true;
+        }
+        if (nodesList[i].children) {
+          if (removeNode(nodesList[i].children, idToRemove)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    removeNode(nodes, props.source.id);
+  }
+
+  return nodes;
 });
 
-
-const availableShops = computed(() => {
-  return shopStore.shops
-    .filter(shop => shop.id !== props.device?.shopId)
-    .map(shop => ({
-      label: shop.name,
-      value: shop.id
-    }));
+const canConfirm = computed(() => {
+  return newName.value && targetNodeId.value;
 });
 
-const availableGroups = computed(() => {
-  console.log(shopStore.shops)
-  return shopStore.shops.flatMap(shop =>
-    shop.cashGroups
-      .map(group => ({
-        label: `${shop.name} > ${group.name}`,
-        value: group.id
-      }))
-  );
-});
+// Иконки для узлов дерева
+const getNodeIcon = (node) => {
+  const icons = {
+    shop: 'store',
+    cashGroup: 'group',
+    cashRegister: 'point_of_sale',
+    default: 'folder'
+  };
+  return icons[node.type] || icons.default;
+};
 
-const canMove = computed(() => {
-  if (nodeType.value === 'shop') return false;
-  return !!targetId.value;
+// Инициализация при открытии
+watch(() => props.modelValue, (isOpen) => {
+  if (isOpen && props.source) {
+    newName.value = `${props.source.name} (копия)`;
+    targetNodeId.value = null;
+  }
 });
 
 const close = () => {
   emit('update:modelValue', false);
-  targetId.value = null;
 };
 
 const handleConfirm = async () => {
-  if (!canMove.value) return;
+  if (!canConfirm.value) return;
 
   isLoading.value = true;
   try {
-    const nodeId = props.device.id;
-    const target = targetId.value;
-    const type = nodeType.value;
+    const params = {
+      newName: newName.value,
+      targetId: targetNodeId.value,
+      sourceType: nodeType.value || props.copyType
+    };
 
-    // Обновляем структуру данных
-    if (type === 'cashGroup') {
-      // 1. Перемещаем группу касс в другой магазин
-      const sourceShop = shopStore.shops.find(shop =>
-        shop.cashGroups.some(g => g.id === nodeId)
-      );
-
-      if (sourceShop) {
-        const groupIndex = sourceShop.cashGroups.findIndex(g => g.id === nodeId);
-        const group = sourceShop.cashGroups[groupIndex];
-
-        // Удаляем из исходного магазина
-        sourceShop.cashGroups.splice(groupIndex, 1);
-
-        // Добавляем в целевой магазин
-        const targetShop = shopStore.shops.find(s => s.id === target);
-        if (targetShop) {
-          targetShop.cashGroups.push(group);
-
-          // 2. Обновляем конфигурацию группы
-          const groupConfig = configStore.getConfiguration(nodeId);
-          if (groupConfig) {
-            await configStore.updateItem({
-              ...groupConfig,
-              settings: {
-                ...groupConfig.settings,
-                node: target
-              }
-            });
-          }
-
-          // 3. Обновляем конфигурации всех касс в группе
-          for (const cashRegister of group.cashRegisters) {
-            const cashConfig = configStore.getConfiguration(cashRegister.id);
-            if (cashConfig) {
-              await configStore.updateItem({
-                ...cashConfig,
-                settings: {
-                  ...cashConfig.settings,
-                  node: nodeId // Кассы остаются привязаны к группе
-                }
-              });
-            }
-          }
-        }
-      }
-    }
-    else if (type === 'cashRegister') {
-      // 1. Перемещаем кассу в другую группу
-      const sourceGroup = shopStore.shops.flatMap(shop =>
-        shop.cashGroups.find(g => g.cashRegisters.some(cr => cr.id === nodeId))
-      ).find(Boolean);
-
-      if (sourceGroup) {
-        const cashIndex = sourceGroup.cashRegisters.findIndex(cr => cr.id === nodeId);
-        const cashRegister = sourceGroup.cashRegisters[cashIndex];
-
-        // Удаляем из исходной группы
-        sourceGroup.cashRegisters.splice(cashIndex, 1);
-
-        // Добавляем в целевую группу
-        const targetGroup = shopStore.shops.flatMap(shop =>
-          shop.cashGroups.find(g => g.id === target)
-        ).find(Boolean);
-
-        if (targetGroup) {
-          targetGroup.cashRegisters.push(cashRegister);
-
-          // 2. Обновляем конфигурацию кассы
-          const cashConfig = configStore.getConfiguration(nodeId);
-          if (cashConfig) {
-            await configStore.updateItem({
-              ...cashConfig,
-              settings: {
-                ...cashConfig.settings,
-                node: target
-              }
-            });
-          }
-        }
-      }
-    }
-
-    shopStore.persistState();
-    emit('confirm', { targetId: target, moveType: type });
+    emit('confirm', params);
     close();
-  } catch (error) {
-    console.error('Ошибка при перемещении:', error);
   } finally {
     isLoading.value = false;
   }
