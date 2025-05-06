@@ -1,135 +1,177 @@
 <template>
-  <div>
-    <div
+  <div class="integrations-editor">
+    <q-card
       v-for="(integration, index) in modelValue.integrations || defaultIntegrations"
       :key="integration.id || index"
-      class="q-ma-md"
+      class="q-mb-md integration-card"
+      flat
+      bordered
     >
-      <q-select
-        filled
-        :model-value="integration.type"
-        @update:model-value="updateIntegration(index, 'type', $event)"
-        :options="integrationOptions"
-        label="Тип интеграции"
-        class="col q-mb-md"
-      />
-
-      <div class="row justify-between q-my-md">
-        <q-input
-          label="DeviceID"
-          :model-value="integration.id"
-          @update:model-value="updateIntegration(index, 'id', $event)"
-          filled
-          class="q-mx-xs"
-        />
-        <q-btn
-          color="primary"
-          icon="sync"
-          @click="generateUid(index)"
-          round
-          padding="10px 10px"
-          class="q-my-xs"
-        />
-      </div>
-
-      <q-input
-        filled
-        :model-value="integration.backOfficeUrl"
-        @update:model-value="updateIntegration(index, 'backOfficeUrl', $event)"
-        label="URL Back Office"
-        class="q-mb-md"
-      />
-
-      <div class="q-mb-md">
-        <q-select
-          filled
-          :model-value="integration.serviceStorage"
-          @update:model-value="updateIntegration(index, 'serviceStorage', $event)"
-          :options="serviceStorageOptions"
-          label="Выберите сервис справочников"
-
-        />
-      </div>
-
-      <div class="q-mb-md">
-        <q-select
-          filled
-          :model-value="integration.serviceOrder"
-          @update:model-value="updateIntegration(index, 'serviceOrder', $event)"
-          :options="serviceOrderOptions"
-          label="Выберите сервис заказов"
-
-        />
-      </div>
-
-      <q-select
-        filled
-        :model-value="integration.triggerType"
-        @update:model-value="updateIntegration(index, 'triggerType', $event)"
-        :options="typeTriggerOptions"
-        label="Тип триггера"
-
-        emit-value
-        map-options
-        class="q-mb-md"
-      />
-
-              <!-- multiple
-        use-chips -->
-
-      <div v-if="integration.triggerType === 'subscription'" class="q-mb-md">
-        <q-toggle
-          :model-value="integration.subscriptionEnabled"
-          @update:model-value="updateIntegration(index, 'subscriptionEnabled', $event)"
-          label="Подписка"
-        />
-      </div>
-
-      <div v-if="integration.triggerType === 'interval'" class="q-mb-md">
-        <q-input
-          filled
-          :model-value="integration.intervalValue"
-          @update:model-value="updateIntegration(index, 'intervalValue', $event)"
-          type="number"
-          label="Интервал (мин)"
-          min="1"
-          style="width: 150px"
-        />
-      </div>
-
-      <div v-if="integration.triggerType === 'schedule'" class="q-mb-md">
-        <q-input
-          filled
-          :model-value="integration.triggerTime"
-          @update:model-value="updateIntegration(index, 'triggerTime', $event)"
-          mask="time"
-          label="Время срабатывания"
-        >
-          <template v-slot:append>
-            <q-icon name="access_time" class="cursor-pointer">
-              <q-popup-proxy transition-show="scale" transition-hide="scale">
-                <q-time :model-value="integration.triggerTime" @update:model-value="updateIntegration(index, 'triggerTime', $event)" />
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
-      </div>
-
-      <div class="row q-mt-md">
-        <q-btn
-          v-if="index === (modelValue.integrations || defaultIntegrations).length - 1"
-          color="green"
-          @click="addIntegration"
-          label="Добавить интеграцию"
-        />
+      <q-card-section class="bg-grey-2">
+        <div class="text-h6">Интеграция #{{ index + 1 }}</div>
         <q-btn
           v-if="(modelValue.integrations || defaultIntegrations).length > 1"
-          color="red"
-          class="q-ml-md"
+          icon="delete"
+          color="negative"
+          flat
+          dense
+          round
+          class="absolute-top-right q-ma-sm"
           @click="removeIntegration(index)"
-          label="Удалить"
         />
-      </div>
+      </q-card-section>
+
+      <q-card-section>
+        <div class="row q-col-gutter-md">
+          <!-- Тип интеграции -->
+          <div class="col-12 col-md-6">
+            <q-select
+              filled
+              :model-value="integration.type"
+              @update:model-value="updateIntegration(index, 'type', $event)"
+              :options="integrationOptions"
+              label="Тип интеграции"
+              emit-value
+              map-options
+              clearable
+            />
+          </div>
+
+          <!-- Device ID -->
+          <div class="col-12 col-md-6">
+            <div class="row items-center q-col-gutter-sm">
+              <div class="col">
+                <q-input
+                  filled
+                  :model-value="integration.id"
+                  @update:model-value="updateIntegration(index, 'id', $event)"
+                  label="Device ID"
+                  :readonly="!integration.id"
+                />
+              </div>
+              <div class="col-auto">
+                <q-btn
+                  color="primary"
+                  icon="autorenew"
+                  @click="generateUid(index)"
+                  round
+                  dense
+                  title="Сгенерировать новый ID"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- URL Back Office -->
+          <div class="col-12">
+            <q-input
+              filled
+              :model-value="integration.backOfficeUrl"
+              @update:model-value="updateIntegration(index, 'backOfficeUrl', $event)"
+              label="URL Back Office"
+              type="url"
+            />
+          </div>
+
+          <!-- Сервисы -->
+          <div class="col-12 col-md-6">
+            <q-select
+              filled
+              :model-value="integration.serviceStorage"
+              @update:model-value="updateIntegration(index, 'serviceStorage', $event)"
+              :options="serviceStorageOptions"
+              label="Сервис справочников"
+              emit-value
+              map-options
+              clearable
+            />
+          </div>
+          <div class="col-12 col-md-6">
+            <q-select
+              filled
+              :model-value="integration.serviceOrder"
+              @update:model-value="updateIntegration(index, 'serviceOrder', $event)"
+              :options="serviceOrderOptions"
+              label="Сервис заказов"
+              emit-value
+              map-options
+              clearable
+            />
+          </div>
+
+          <!-- Тип триггера -->
+          <div class="col-12">
+            <q-select
+              filled
+              :model-value="integration.triggerType"
+              @update:model-value="updateIntegration(index, 'triggerType', $event)"
+              :options="typeTriggerOptions"
+              label="Тип триггера"
+              emit-value
+              map-options
+            />
+          </div>
+
+          <!-- Настройки триггеров -->
+          <div class="col-12">
+            <div v-if="integration.triggerType === 'subscription'" class="q-pa-sm">
+              <q-toggle
+                :model-value="integration.subscriptionEnabled"
+                @update:model-value="updateIntegration(index, 'subscriptionEnabled', $event)"
+                label="Активировать подписку"
+                left-label
+              />
+            </div>
+
+            <div v-if="integration.triggerType === 'interval'" class="row items-center">
+              <div class="col-auto q-pr-sm">
+                <q-input
+                  filled
+                  :model-value="integration.intervalValue"
+                  @update:model-value="updateIntegration(index, 'intervalValue', $event)"
+                  type="number"
+                  label="Интервал"
+                  min="1"
+                  style="width: 120px"
+                />
+              </div>
+              <div class="col">минут</div>
+            </div>
+
+            <div v-if="integration.triggerType === 'schedule'">
+              <q-input
+                filled
+                :model-value="integration.triggerTime"
+                @update:model-value="updateIntegration(index, 'triggerTime', $event)"
+                mask="time"
+                label="Время срабатывания"
+              >
+                <template v-slot:append>
+                  <q-icon name="access_time" class="cursor-pointer">
+                    <q-popup-proxy transition-show="scale" transition-hide="scale">
+                      <q-time
+                        :model-value="integration.triggerTime"
+                        @update:model-value="updateIntegration(index, 'triggerTime', $event)"
+                        format24h
+                      />
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
+          </div>
+        </div>
+      </q-card-section>
+    </q-card>
+
+    <div class="text-center q-mt-md">
+      <q-btn
+        color="positive"
+        icon="add"
+        @click="addIntegration"
+        label="Добавить интеграцию"
+        unelevated
+      />
     </div>
   </div>
 </template>
@@ -143,7 +185,7 @@ const configurationStore = useConfigurationStore()
 
 const integrationOptions = [
   { label: 'Entersight', value: 'Entersight' },
-  { label: 'GA', value: 'GA' }
+  { label: 'Google Analytics', value: 'GA' }
 ]
 
 const typeTriggerOptions = [
@@ -162,7 +204,7 @@ const serviceOrderOptions = computed(() =>
 )
 
 const defaultIntegrations = ref([{
-  id: null,
+  id: uuidv4(),
   type: null,
   backOfficeUrl: '',
   serviceStorage: null,
@@ -211,7 +253,7 @@ const updateIntegration = (index, field, value) => {
 const addIntegration = () => {
   const integrations = props.modelValue.integrations ? [...props.modelValue.integrations] : [...defaultIntegrations.value]
   integrations.push({
-    id: null,
+    id: uuidv4(),
     type: null,
     backOfficeUrl: '',
     serviceStorage: null,
@@ -243,3 +285,13 @@ const removeIntegration = (index) => {
   })
 }
 </script>
+
+<style scoped>
+.integration-card {
+  transition: all 0.3s ease;
+}
+
+.integration-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>

@@ -3,7 +3,7 @@
     <q-card style="min-width: 400px">
       <q-card-section class="row items-center">
         <q-icon name="drive_file_move" size="md" class="q-mr-sm" />
-        <span class="text-h6">Перемещение устройства</span>
+        <span class="text-h6">Перемещение {{ deviceType === 'cashGroup' ? 'группы касс' : 'устройства' }}</span>
       </q-card-section>
 
       <q-card-section>
@@ -15,14 +15,26 @@
         </div>
 
         <q-separator class="q-mb-md" />
+        {{ deviceType }}
+        <template v-if="deviceType === 'cashGroup'">
+          <div class="text-subtitle2 q-mb-sm">В какой магазин переместить?</div>
+          <q-option-group
+            v-model="targetShopId"
+            :options="availableShops"
+            type="radio"
+            color="primary"
+          />
+        </template>
 
-        <div class="text-subtitle2 q-mb-sm">Куда переместить?</div>
-        <q-option-group
-          v-model="targetGroupId"
-          :options="availableGroups"
-          type="radio"
-          color="primary"
-        />
+        <template v-else>
+          <div class="text-subtitle2 q-mb-sm">Куда переместить?</div>
+          <q-option-group
+            v-model="targetGroupId"
+            :options="availableGroups"
+            type="radio"
+            color="primary"
+          />
+        </template>
       </q-card-section>
 
       <q-card-actions align="right">
@@ -32,7 +44,7 @@
           color="primary"
           :loading="isLoading"
           @click="handleConfirm"
-          :disable="!targetGroupId"
+          :disable="!canMove"
         />
       </q-card-actions>
     </q-card>
@@ -50,17 +62,31 @@ const props = defineProps({
   device: {
     type: Object,
     default: null,
+  },
+  deviceType: {
+    type: String,
+    validator: value => ['cashGroup', 'cashRegister'].includes(value),
+    default: 'cashRegister'
   }
 });
 
 const emit = defineEmits(['update:modelValue', 'confirm']);
 
 const isLoading = ref(false);
+const targetShopId = ref(null);
 const targetGroupId = ref(null);
+
+const availableShops = computed(() => {
+  return shopStore.shops
+    .filter(shop => shop.id !== props.device.shopId)
+    .map(shop => ({
+      label: shop.name,
+      value: shop.id
+    }));
+});
 
 const availableGroups = computed(() => {
   if (!props.device?.groupId) return [];
-
   return shopStore.shops.flatMap(shop =>
     shop.cashGroups
       .filter(group => group.id !== props.device.groupId)
@@ -71,17 +97,28 @@ const availableGroups = computed(() => {
   );
 });
 
+const canMove = computed(() => {
+  return props.deviceType === 'cashGroup'
+    ? !!targetShopId.value
+    : !!targetGroupId.value;
+});
+
 const close = () => {
   emit('update:modelValue', false);
+  targetShopId.value = null;
   targetGroupId.value = null;
 };
 
 const handleConfirm = async () => {
-  if (!targetGroupId.value) return;
+  if (!canMove.value) return;
 
   isLoading.value = true;
   try {
-    emit('confirm', targetGroupId.value);
+    const targetId = props.deviceType === 'cashGroup'
+      ? targetShopId.value
+      : targetGroupId.value;
+
+    emit('confirm', targetId);
     close();
   } finally {
     isLoading.value = false;

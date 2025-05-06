@@ -1,47 +1,83 @@
 <template>
   <div class="full-height">
+    <!-- Компонент для копирования -->
+    <CopyDialog
+      v-model="copyDialogVisible"
+      :source="copySource"
+      :copy-type="selectedItemType"
+      @confirm="handleCopyConfirm"
+    />
+
+    <!-- Компонент для перемещения -->
+    <MoveDialog
+      v-model="moveDialogVisible"
+      :device="moveDevice"
+      @confirm="handleMoveConfirm"
+    />
+
+    <!-- Основной контент -->
     <div v-if="branch || !showNoSelectionMessage">
-      <div class="column q-mb-md" >
-        <div class="text-h5 q-pa-xs">{{ $t(headerTitle) }}</div>
+      <div class="column q-mb-md">
+        <div class="row justify-between items-center">
+          <div class="text-h5 q-pa-xs">{{ $t(headerTitle) }}</div>
+
+        </div>
         <SearchInput
           v-model="searchQuery"
           @clear="clearSearch"
         />
       </div>
-
+      <div class="row q-gutter-sm items-center">
       <ProductCard />
+        <q-btn
+              round
+              color="teal"
+              icon="content_copy"
+              @click="openCopyDialog"
+              title="Копировать конфигурацию"
+              :disable="!canCopySelected"
+            />
+            <q-btn
+              round
+              color="orange"
+              icon="drive_file_move"
+              @click="openMoveDialog"
+              title="Переместить конфигурацию"
+              :disable="!canMoveSelected"
+            />
+          </div>
     </div>
     <div v-if="isLoading">Загрузка...</div>
     <div v-else-if="error">Ошибка: {{ error }}</div>
-      <!-- Сообщение, если ничего не выбрано -->
-    <div v-else-if="showNoSelectionMessage" class="column justify-center full-height items-center" >
+    <!-- Сообщение, если ничего не выбрано -->
+    <div v-else-if="showNoSelectionMessage" class="column justify-center full-height items-center">
       <h3 class="q-mb-sm">Выбери что-то</h3>
     </div>
 
-      <!-- Сообщение, если нет конфигураций -->
-      <div v-else-if="hasNoConfigurations" class="flex flex-center column" style="min-height: 300px;">
-        <h3 class="q-mb-sm">{{ noConfigurationsMessage }}</h3>
-      </div>
+    <!-- Сообщение, если нет конфигураций -->
+    <div v-else-if="hasNoConfigurations" class="flex flex-center column" style="min-height: 300px;">
+      <h3 class="q-mb-sm">{{ noConfigurationsMessage }}</h3>
+    </div>
 
-      <!-- Отображение карточек, если есть результаты -->
-      <div v-else class="row q-gutter-md">
-        <q-card
-          v-for="item in filteredListByNode"
-          :key="item.id"
-          :class="['my-card', 'rounded-borders', {
-            'selected-card': selectedItemId === item.id && isSameBranch && !selectedItemStore.isCreateFormVisible
-          }]"
-          clickable
-          @click="selectItem(item.id)"
-        >
-          <q-card-section>
-            <div class="text-h6">{{ item.settings.configurationName }}</div>
-            <br>
-            <div class="text-subtitle2">ID: {{ item.id }}</div>
-            <br>
-          </q-card-section>
-        </q-card>
-      </div>
+    <!-- Отображение карточек, если есть результаты -->
+    <div v-else class="row q-gutter-md">
+      <q-card
+        v-for="item in filteredListByNode"
+        :key="item.id"
+        :class="['my-card', 'rounded-borders', {
+          'selected-card': selectedItemId === item.id && isSameBranch && !selectedItemStore.isCreateFormVisible
+        }]"
+        clickable
+        @click="selectItem(item.id)"
+      >
+        <q-card-section>
+          <div class="text-h6">{{ item.settings.configurationName }}</div>
+          <br>
+          <div class="text-subtitle2">ID: {{ item.id }}</div>
+          <br>
+        </q-card-section>
+      </q-card>
+    </div>
   </div>
 </template>
 
@@ -53,9 +89,13 @@ import { useConfigurationStore } from 'stores/configurationStore';
 import { useShopStore } from 'stores/shopStore';
 import { useDrawerStore } from 'stores/drawerStore';
 import { useHeaderStore } from 'stores/headerStore';
+import { useQuasar } from 'quasar';
 import ProductCard from 'components/ProductCard.vue';
 import SearchInput from 'components/Input/SearchInput.vue';
+import CopyDialog from 'components/Dialog/CopyConfigurationDialog.vue';
+import MoveDialog from 'components/Dialog/MoveConfigurationDialog.vue';
 
+const $q = useQuasar();
 const route = useRoute();
 const selectedItemStore = useConfigurationStore();
 const shopStore = useShopStore();
@@ -69,6 +109,10 @@ const { search: storeSearch } = storeToRefs(drawerStore);
 const selectedItemId = ref(null);
 const lastSelectedBranch = ref(null);
 const searchQuery = ref(storeSearch.value || '');
+const copyDialogVisible = ref(false);
+const moveDialogVisible = ref(false);
+const copySource = ref(null);
+const moveDevice = ref(null);
 
 // Computed свойства
 const branch = computed(() => shopStore.branch);
@@ -76,10 +120,26 @@ const isLoading = computed(() => selectedItemStore.isLoading);
 const error = computed(() => selectedItemStore.error);
 const isSameBranch = computed(() => lastSelectedBranch.value === branch.value);
 
+const selectedConfiguration = computed(() => {
+  return selectedItemId.value ? selectedItemStore.getConfiguration(selectedItemId.value) : null;
+});
+
+const selectedItemType = computed(() => {
+  return selectedConfiguration.value?.settings?.type;
+});
+
+
+const canCopySelected = computed(() => {
+  return !!selectedItemId.value;
+});
+
+const canMoveSelected = computed(() => {
+  return !!selectedItemId.value;
+});
 
 const showNoSelectionMessage = computed(() => {
-  return !branch.value && !selectedItemStore.getShowAllConfiguration
-})
+  return !branch.value && !selectedItemStore.getShowAllConfiguration;
+});
 
 const filteredListByNode = computed(() => {
   const result = selectedItemStore.filteredConfigurationList({
@@ -110,6 +170,94 @@ const clearSearch = () => {
   drawerStore.setSearch('');
 };
 
+
+const openCopyDialog = () => {
+  if (!selectedItemId.value) return;
+
+  copySource.value = {
+    id: selectedItemId.value,
+    name: selectedConfiguration.value?.settings?.configurationName || 'Конфигурация',
+    type: selectedItemType.value
+  };
+
+  copyDialogVisible.value = true;
+};
+
+const openMoveDialog = () => {
+  if (!selectedItemId.value) return;
+
+  moveDevice.value = {
+    id: selectedItemId.value,
+    name: selectedConfiguration.value?.settings?.configurationName || 'Конфигурация',
+    code: selectedItemId.value.slice(0, 4).toUpperCase()
+  };
+
+  moveDialogVisible.value = true;
+};
+
+const handleCopyConfirm = async (params) => {
+  try {
+    const { newName } = params;
+    const originalConfig = selectedConfiguration.value;
+
+    if (!originalConfig) return;
+
+    const newConfig = {
+      ...originalConfig,
+      id: undefined, // Будет сгенерирован автоматически
+      settings: {
+        ...originalConfig.settings,
+        configurationName: newName
+      }
+    };
+
+    await selectedItemStore.createConfiguration(newConfig.settings);
+
+    $q.notify({
+      type: 'positive',
+      message: 'Конфигурация успешно скопирована'
+    });
+
+    copyDialogVisible.value = false;
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Ошибка при копировании конфигурации'
+    });
+    console.error('Ошибка при копировании конфигурации:', error);
+  }
+};
+
+const handleMoveConfirm = async (targetBranchId) => {
+  try {
+    const config = selectedConfiguration.value;
+    if (!config) return;
+
+    const updatedConfig = {
+      ...config,
+      settings: {
+        ...config.settings,
+        node: targetBranchId
+      }
+    };
+
+    await selectedItemStore.updateItem(updatedConfig);
+
+    $q.notify({
+      type: 'positive',
+      message: 'Конфигурация успешно перемещена'
+    });
+
+    moveDialogVisible.value = false;
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Ошибка при перемещении конфигурации'
+    });
+    console.error('Ошибка при перемещении конфигурации:', error);
+  }
+};
+
 // Watchers
 watch(searchQuery, (newVal) => {
   drawerStore.setSearch(newVal);
@@ -123,7 +271,6 @@ watch(() => route.path, () => {
 
 watch(branch, (newBranch) => {
   lastSelectedBranch.value = null;
-  // Сбрасываем поиск при смене ветки
   if (newBranch) {
     searchQuery.value = '';
     drawerStore.setSearch('');

@@ -102,6 +102,7 @@
     <MoveDialog
       v-model="moveDialogVisible"
       :device="moveDevice"
+      :deviceType="selectedItem?.type"
       @confirm="handleMoveConfirm"
     />
 
@@ -185,7 +186,7 @@ const selectedItem = computed(() => {
 
 // Проверка возможности перемещения/копирования
 const canMoveSelected = computed(() => {
-  return selectedItem.value?.type === 'cashRegister';
+   return ['cashGroup', 'cashRegister'].includes(selectedItem.value?.type);
 });
 
 
@@ -198,26 +199,46 @@ const moveDevice = ref(null);
 const openMoveDialog = () => {
   if (!selectedItem.value) return;
 
-  moveDevice.value = {
-    id: selectedItem.value.id,
-    name: selectedItem.value.label,
-    groupId: selectedItem.value.cashGroupId
-  };
+  // Для групп касс передаем shopId, для касс - groupId
+  if (selectedItem.value.type === 'cashGroup') {
+    moveDevice.value = {
+      id: selectedItem.value.id,
+      name: selectedItem.value.label,
+      shopId: selectedItem.value.shopId // Добавляем shopId для групп касс
+    };
+  } else {
+    moveDevice.value = {
+      id: selectedItem.value.id,
+      name: selectedItem.value.label,
+      groupId: selectedItem.value.cashGroupId
+    };
+  }
 
   moveDialogVisible.value = true;
 };
 
-const handleMoveConfirm = async (targetGroupId) => {
+const handleMoveConfirm = async (targetId) => {
   try {
     if (!selectedItem.value) {
-      console.error('Не выбрана касса для перемещения');
+      console.error('Не выбран элемент для перемещения');
       return;
     }
 
-    const success = await shopStore.moveCashRegister(
-      selectedItem.value.id,
-      targetGroupId
-    );
+    let success;
+
+    if (selectedItem.value.type === 'cashGroup') {
+      // Для групп касс передаем targetId как shopId
+      success = await shopStore.moveCashGroup(
+        selectedItem.value.id,
+        targetId
+      );
+    } else {
+      // Для касс передаем targetId как groupId
+      success = await shopStore.moveCashRegister(
+        selectedItem.value.id,
+        targetId
+      );
+    }
 
     if (success) {
       const newSelectedId = selectedItem.value.id;
@@ -229,10 +250,9 @@ const handleMoveConfirm = async (targetGroupId) => {
       moveDialogVisible.value = false;
     }
   } catch (error) {
-    console.error('Ошибка при перемещении кассы:', error);
+    console.error('Ошибка при перемещении:', error);
   }
 };
-
 // Логика копирования кассы
 const copyDialogVisible = ref(false);
 const copySource = ref(null);
@@ -277,20 +297,18 @@ const handleCopyConfirm = async (params) => {
     const { newName } = params;
 
     if (selectedItem.value.type === 'shop') {
-      await shopStore.copyShop(selectedItem.value.id, newName);
+    shopStore.copyShop(selectedItem.value.id, newName);
     } else if (selectedItem.value.type === 'cashGroup') {
-      await shopStore.copyCashGroup(selectedItem.value.id, params.targetShopId, newName);
+    shopStore.copyCashGroup(selectedItem.value.id, params.targetShopId, newName);
     } else if (selectedItem.value.type === 'cashRegister') {
       const sourceCash = shopStore.getCashRegisterById(selectedItem.value.id);
-      if (!sourceCash) return;
 
       const originalSettings = configurationStore.getConfiguration(sourceCash.id);
       const cashData = {
         ...sourceCash,
         settings: originalSettings
       };
-
-      await shopStore.addCashRegisterCopy(
+      shopStore.addCashRegisterCopy(
         params.targetGroupId,
         cashData,
         newName

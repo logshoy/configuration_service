@@ -192,6 +192,28 @@ export const useShopStore = defineStore('shop', {
       })
       return true
     },
+
+    moveCashGroup(groupId, targetShopId) {
+      // Находим исходный магазин и группу
+      const sourceShop = this.shops.find((shop) => shop.cashGroups.some((g) => g.id === groupId))
+
+      if (!sourceShop) return false
+
+      const groupIndex = sourceShop.cashGroups.findIndex((g) => g.id === groupId)
+      const group = sourceShop.cashGroups[groupIndex]
+
+      // Находим целевой магазин
+      const targetShop = this.shops.find((s) => s.id === targetShopId)
+      if (!targetShop) return false
+
+      // Перемещаем группу
+      sourceShop.cashGroups.splice(groupIndex, 1)
+      targetShop.cashGroups.push(group)
+
+      this.persistState()
+      return true
+    },
+
     getCashRegisterById(id) {
       for (const shop of this.shops) {
         for (const group of shop.cashGroups) {
@@ -281,11 +303,9 @@ export const useShopStore = defineStore('shop', {
       this.persistState()
       return true
     },
-
-    // ... остальные методы без изменений ..
-
     // Обновим метод addCashRegisterCopy для работы с конфигурациями
     async addCashRegisterCopy(targetGroupId, cashData, newName) {
+      console.log(targetGroupId, cashData, newName)
       const configurationStore = useConfigurationStore()
       const targetGroup = this.findCashGroupById(targetGroupId)
 
@@ -310,6 +330,8 @@ export const useShopStore = defineStore('shop', {
       targetGroup.cashRegisters.push(newCashRegister)
 
       // Создаем новую конфигурацию для копии
+      console.log(cashData.settings)
+
       if (cashData.settings) {
         const newSettings = {
           ...cashData.settings.settings,
@@ -326,7 +348,12 @@ export const useShopStore = defineStore('shop', {
     findCashGroupById(groupId) {
       for (const shop of this.shops) {
         const group = shop.cashGroups.find((g) => g.id === groupId)
-        if (group) return group
+        if (group) {
+          return {
+            group,
+            shop,
+          }
+        }
       }
       return null
     },
@@ -365,11 +392,6 @@ export const useShopStore = defineStore('shop', {
       return null
     },
 
-    /**
-     * Получает тип узла по ID
-     * @param {string} nodeId - ID элемента
-     * @returns {string|null} - Тип узла ('shop', 'cashGroup', 'cashRegister') или null если не найден
-     */
     getNodeType(nodeId) {
       if (this.shops.some((s) => s.id === nodeId)) return 'shop'
 
@@ -449,6 +471,50 @@ export const useShopStore = defineStore('shop', {
 
       console.error(`Неизвестный тип узла для ID ${nodeId}`)
       return false
+    },
+
+    findNode(nodeId) {
+      // Поиск магазина
+      const shop = this.shops.find((s) => s.id === nodeId)
+      if (shop) {
+        return {
+          node: shop,
+          parent: null,
+          type: 'shop',
+        }
+      }
+
+      // Поиск группы касс
+      for (const shop of this.shops) {
+        const group = shop.cashGroups.find((g) => g.id === nodeId)
+        if (group) {
+          return {
+            node: group,
+            parent: shop,
+            type: 'cashGroup',
+          }
+        }
+      }
+
+      // Поиск кассы
+      for (const shop of this.shops) {
+        for (const group of shop.cashGroups) {
+          const register = group.cashRegisters.find((cr) => cr.id === nodeId)
+          if (register) {
+            return {
+              node: register,
+              parent: group,
+              type: 'cashRegister',
+            }
+          }
+        }
+      }
+
+      return null
+    },
+
+    getTreeDataCopy() {
+      return JSON.parse(JSON.stringify(this.treeData))
     },
   },
 })
