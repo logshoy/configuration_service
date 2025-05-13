@@ -1,88 +1,155 @@
 <template>
   <div>
     <!-- Поля размеров -->
-    <q-input
-      class="q-ma-md"
-      :model-value="mergedValues.width"
-      @update:model-value="updateField('width', $event)"
-      label="Ширина"
-      type="number"
-      outlined
-      required
-      :min="sizeColorSettingsConfig.dimensions.width.min"
-      :max="sizeColorSettingsConfig.dimensions.width.max"
-    />
+    <div class="row items-center q-ma-md">
+      <q-input
+        class="col"
+        :model-value="mergedValues.width"
+        @update:model-value="updateField('width', $event)"
+        label="Ширина"
+        type="number"
+        outlined
+        required
+        :min="sizeColorSettingsConfig.dimensions.width.min"
+        :max="sizeColorSettingsConfig.dimensions.width.max"
+      />
+      <q-icon
+        name="help_outline"
+        size="sm"
+        class="q-ml-sm cursor-help"
+      >
+        <q-tooltip>
+          Минимальная ширина: {{ sizeColorSettingsConfig.dimensions.width.min }},
+          Максимальная ширина: {{ sizeColorSettingsConfig.dimensions.width.max }}
+        </q-tooltip>
+      </q-icon>
+    </div>
 
-    <q-input
-      class="q-ma-md"
-      :model-value="mergedValues.height"
-      @update:model-value="updateField('height', $event)"
-      label="Высота"
-      type="number"
-      outlined
-      required
-      :min="sizeColorSettingsConfig.dimensions.height.min"
-      :max="sizeColorSettingsConfig.dimensions.height.max"
-    />
+    <div class="row items-center q-ma-md">
+      <q-input
+        class="col"
+        :model-value="mergedValues.height"
+        @update:model-value="updateField('height', $event)"
+        label="Высота"
+        type="number"
+        outlined
+        required
+        :min="sizeColorSettingsConfig.dimensions.height.min"
+        :max="sizeColorSettingsConfig.dimensions.height.max"
+      />
+      <q-icon
+        name="help_outline"
+        size="sm"
+        class="q-ml-sm cursor-help"
+      >
+        <q-tooltip>
+          Минимальная высота: {{ sizeColorSettingsConfig.dimensions.height.min }},
+          Максимальная высота: {{ sizeColorSettingsConfig.dimensions.height.max }}
+        </q-tooltip>
+      </q-icon>
+    </div>
 
     <!-- Поле цвета -->
-    <q-input
-      class="q-ma-md"
-      filled
-      :model-value="mergedValues.color"
-      @update:model-value="updateField('color', $event)"
-      hint="Цвет"
-    >
-      <template v-slot:append>
-        <q-icon name="colorize" class="cursor-pointer">
-          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-            <q-color
-              :model-value="mergedValues.color"
-              @update:model-value="updateField('color', $event)"
-            />
-          </q-popup-proxy>
-        </q-icon>
-      </template>
-    </q-input>
+    <div class="row items-center q-ma-md">
+      <q-input
+        class="col"
+        filled
+        :model-value="mergedValues.color"
+        @update:model-value="updateField('color', $event)"
+        label="Цвет"
+      >
+        <template v-slot:append>
+          <q-icon name="colorize" class="cursor-pointer">
+            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+              <q-color
+                :model-value="mergedValues.color"
+                @update:model-value="updateField('color', $event)"
+              />
+            </q-popup-proxy>
+          </q-icon>
+        </template>
+      </q-input>
+      <q-icon
+        name="help_outline"
+        size="sm"
+        class="q-ml-sm cursor-help"
+      >
+        <q-tooltip>
+          Выберите цвет из палитры или введите HEX-код цвета
+        </q-tooltip>
+      </q-icon>
+    </div>
 
     <!-- Секция агентов -->
     <q-expansion-item expand-separator icon="support_agent" label="Агенты">
-      <q-select
-        filled
-        class="q-ma-md"
-        :model-value="mergedValues.agents.fiscalAgent"
-        :options="filteredList"
-        label="Агент ФР"
-        @update:model-value="updateAgentField('fiscalAgent', $event)"
-        emit-value
-        map-options
-      />
+      <div class="row items-center q-ma-md">
+        <q-select
+          class="col"
+          filled
+          :model-value="mergedValues.agents.fiscalAgent"
+          :options="filteredList"
+          label="Агент ФР"
+          @update:model-value="updateAgentField('fiscalAgent', $event)"
+          emit-value
+          map-options
+        />
+        <q-icon
+          name="help_outline"
+          size="sm"
+          class="q-ml-sm cursor-help"
+        >
+          <q-tooltip>
+            Выберите агента для фискальных операций
+          </q-tooltip>
+        </q-icon>
+      </div>
 
-      <q-select
-        filled
-        class="q-ma-md"
-        :model-value="mergedValues.agents.agentPayment"
-        :options="filteredListAgentPayment"
-        label="Агент оплат"
-        @update:model-value="updateAgentField('agentPayment', $event)"
-        emit-value
-        map-options
-      />
+      <div class="row items-center q-ma-md">
+        <q-select
+          class="col"
+          filled
+          :model-value="mergedValues.agents.agentPayment"
+          :options="filteredListAgentPayment"
+          label="Агент оплат"
+          @update:model-value="updateAgentField('agentPayment', $event)"
+          emit-value
+          map-options
+        />
+        <q-icon
+          name="help_outline"
+          size="sm"
+          class="q-ml-sm cursor-help"
+        >
+          <q-tooltip>
+            Выберите агента для обработки платежей
+          </q-tooltip>
+        </q-icon>
+      </div>
 
-      <q-select
-        filled
-        class="q-ma-md"
-        :model-value="mergedValues.agents.agentDevice"
-        :options="filteredListAgentDevice"
-        label="Агент оборудования"
-        @update:model-value="updateAgentField('agentDevice', $event)"
-        emit-value
-        map-options
-      />
+      <div class="row items-center q-ma-md">
+        <q-select
+          class="col"
+          filled
+          :model-value="mergedValues.agents.agentDevice"
+          :options="filteredListAgentDevice"
+          label="Агент оборудования"
+          @update:model-value="updateAgentField('agentDevice', $event)"
+          emit-value
+          map-options
+        />
+        <q-icon
+          name="help_outline"
+          size="sm"
+          class="q-ml-sm cursor-help"
+        >
+          <q-tooltip>
+            Выберите агента для управления оборудованием
+          </q-tooltip>
+        </q-icon>
+      </div>
     </q-expansion-item>
   </div>
 </template>
-
 
 <script setup>
 import { computed } from 'vue'
@@ -103,16 +170,14 @@ const props = defineProps({
   }
 })
 
-
 const emit = defineEmits(['update:modelValue'])
 
 const mergedValues = computed(() => mergeSizeColorDefaults(props.modelValue))
 
-if (props.emitAlways) { // Условный эмит
+if (props.emitAlways) {
   emit('update:modelValue', mergedValues.value)
 }
 
-// Получаем списки агентов (восстановленная часть)
 const filteredList = computed(() =>
   selectedItemStore.typeFilteredConfigurationListService('agentFiscalization', 'serviceFiscalization')
 )
@@ -165,3 +230,9 @@ const updateAgentField = (key, value) => {
   updateModel({ agents: { [key]: value } })
 }
 </script>
+
+<style scoped>
+.cursor-help {
+  cursor: help;
+}
+</style>

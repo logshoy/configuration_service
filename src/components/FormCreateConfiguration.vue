@@ -6,18 +6,29 @@
         <q-btn type="submit" color="primary" class="q-mx-md">Создать</q-btn>
         <q-btn @click="confirmCloseForm" color="negative">X</q-btn>
       </div>
-
+      <div class="row items-center q-ma-md">
       <q-input
         outlined
         required
         v-model="configurationName"
         label="Название"
-        class="q-ma-md"
+        class="col"
         :rules="[val => !!val || 'Поле обязательно для заполнения']"
         lazy-rules
         :color="!configurationName ? 'negative' : 'primary'"
         :bg-color="!configurationName ? 'red-1' : ''"
+        hide-bottom-space
       />
+      <q-icon
+        name="help_outline"
+        size="sm"
+        class="q-ml-sm cursor-help"
+      >
+        <q-tooltip>
+          Название конфигурации
+        </q-tooltip>
+      </q-icon>
+    </div>
 
       <!-- Универсальный компонент для настроек -->
       <component

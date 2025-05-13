@@ -47,15 +47,26 @@
       </div>
 
       <!-- Название конфигурации -->
-      <q-input
-        v-if="!showJsonEditor"
-        outlined
-        required
-        v-model="localItem.settings.configurationName"
-        label="Название"
-        class="q-ma-md"
-        hide-bottom-space
-      />
+      <div class="row items-center q-ma-md">
+        <q-input
+          v-if="!showJsonEditor"
+          outlined
+          required
+          v-model="localItem.settings.configurationName"
+          label="Название"
+          class="col"
+          hide-bottom-space
+        />
+        <q-icon
+          name="help_outline"
+          size="sm"
+          class="q-ml-sm cursor-help"
+        >
+          <q-tooltip>
+            Название конфигурации
+          </q-tooltip>
+        </q-icon>
+      </div>
 
       <!-- Уведомление об успешном копировании -->
       <q-dialog v-model="showCopiedNotification" persistent>

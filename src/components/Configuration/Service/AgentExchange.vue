@@ -25,16 +25,23 @@
         <div class="row q-col-gutter-md">
           <!-- Тип интеграции -->
           <div class="col-12 col-md-6">
-            <q-select
-              filled
-              :model-value="integration.type"
-              @update:model-value="updateIntegration(index, 'type', $event)"
-              :options="integrationOptions"
-              label="Тип интеграции"
-              emit-value
-              map-options
-              clearable
-            />
+            <div class="row items-center">
+              <div class="col">
+                <q-select
+                  filled
+                  :model-value="integration.type"
+                  @update:model-value="updateIntegration(index, 'type', $event)"
+                  :options="integrationOptions"
+                  label="Тип интеграции"
+                  emit-value
+                  map-options
+                  clearable
+                />
+              </div>
+              <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                <q-tooltip>Выберите тип B.O. системы </q-tooltip>
+              </q-icon>
+            </div>
           </div>
 
           <!-- Device ID -->
@@ -56,71 +63,106 @@
                   @click="generateUid(index)"
                   round
                   dense
-                  title="Сгенерировать новый ID"
                 />
+                <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                  <q-tooltip>Уникальный идентификатор интеграции. Нажмите кнопку для генерации нового ID</q-tooltip>
+                </q-icon>
               </div>
             </div>
           </div>
 
           <!-- URL Back Office -->
           <div class="col-12">
-            <q-input
-              filled
-              :model-value="integration.backOfficeUrl"
-              @update:model-value="updateIntegration(index, 'backOfficeUrl', $event)"
-              label="URL Back Office"
-              type="url"
-            />
+            <div class="row items-center">
+              <div class="col">
+                <q-input
+                  filled
+                  :model-value="integration.backOfficeUrl"
+                  @update:model-value="updateIntegration(index, 'backOfficeUrl', $event)"
+                  label="URL Back Office"
+                  type="url"
+                />
+              </div>
+              <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                <q-tooltip>URL адрес Back Office системы (например, https://backoffice.example.com/api)</q-tooltip>
+              </q-icon>
+            </div>
           </div>
 
           <!-- Сервисы -->
           <div class="col-12 col-md-6">
-            <q-select
-              filled
-              :model-value="integration.serviceStorage"
-              @update:model-value="updateIntegration(index, 'serviceStorage', $event)"
-              :options="serviceStorageOptions"
-              label="Сервис справочников"
-              emit-value
-              map-options
-              clearable
-            />
+            <div class="row items-center">
+              <div class="col">
+                <q-select
+                  filled
+                  :model-value="integration.serviceStorage"
+                  @update:model-value="updateIntegration(index, 'serviceStorage', $event)"
+                  :options="serviceStorageOptions"
+                  label="Сервис справочников"
+                  emit-value
+                  map-options
+                  clearable
+                />
+              </div>
+              <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                <q-tooltip>Сервис для работы со справочниками товаров</q-tooltip>
+              </q-icon>
+            </div>
           </div>
           <div class="col-12 col-md-6">
-            <q-select
-              filled
-              :model-value="integration.serviceOrder"
-              @update:model-value="updateIntegration(index, 'serviceOrder', $event)"
-              :options="serviceOrderOptions"
-              label="Сервис заказов"
-              emit-value
-              map-options
-              clearable
-            />
+            <div class="row items-center">
+              <div class="col">
+                <q-select
+                  filled
+                  :model-value="integration.serviceOrder"
+                  @update:model-value="updateIntegration(index, 'serviceOrder', $event)"
+                  :options="serviceOrderOptions"
+                  label="Сервис заказов"
+                  emit-value
+                  map-options
+                  clearable
+                />
+              </div>
+              <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                <q-tooltip>Сервис для обработки заказов</q-tooltip>
+              </q-icon>
+            </div>
           </div>
 
           <!-- Тип триггера -->
           <div class="col-12">
-            <q-select
-              filled
-              :model-value="integration.triggerType"
-              @update:model-value="updateIntegration(index, 'triggerType', $event)"
-              :options="typeTriggerOptions"
-              label="Тип триггера"
-              emit-value
-              map-options
-            />
+            <div class="row items-center">
+              <div class="col">
+                <q-select
+                  filled
+                  :model-value="integration.triggerType"
+                  @update:model-value="updateIntegration(index, 'triggerType', $event)"
+                  :options="typeTriggerOptions"
+                  label="Тип триггера"
+                  emit-value
+                  map-options
+                />
+              </div>
+              <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                <q-tooltip>Способ активации интеграции (по событию, по интервалу или по расписанию)</q-tooltip>
+              </q-icon>
+            </div>
           </div>
 
           <!-- Настройки триггеров -->
           <div class="col-12">
             <div v-if="integration.triggerType === 'subscription'" class="q-pa-sm">
-              <q-toggle
-                :model-value="integration.subscriptionEnabled"
-                @update:model-value="updateIntegration(index, 'subscriptionEnabled', $event)"
-                label="Активировать подписку"
-                left-label
-              />
+              <div class="row items-center">
+                <q-toggle
+                  :model-value="integration.subscriptionEnabled"
+                  @update:model-value="updateIntegration(index, 'subscriptionEnabled', $event)"
+                  label="Активировать подписку"
+                  left-label
+                />
+                <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                  <q-tooltip>Включите для активации подписки на события</q-tooltip>
+                </q-icon>
+              </div>
             </div>
 
             <div v-if="integration.triggerType === 'interval'" class="row items-center">
@@ -136,28 +178,38 @@
                 />
               </div>
               <div class="col">минут</div>
+              <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                <q-tooltip>Интервал в минутах между выполнениями интеграции</q-tooltip>
+              </q-icon>
             </div>
 
             <div v-if="integration.triggerType === 'schedule'">
-              <q-input
-                filled
-                :model-value="integration.triggerTime"
-                @update:model-value="updateIntegration(index, 'triggerTime', $event)"
-                mask="time"
-                label="Время срабатывания"
-              >
-                <template v-slot:append>
-                  <q-icon name="access_time" class="cursor-pointer">
-                    <q-popup-proxy transition-show="scale" transition-hide="scale">
-                      <q-time
-                        :model-value="integration.triggerTime"
-                        @update:model-value="updateIntegration(index, 'triggerTime', $event)"
-                        format24h
-                      />
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+              <div class="row items-center">
+                <div class="col">
+                  <q-input
+                    filled
+                    :model-value="integration.triggerTime"
+                    @update:model-value="updateIntegration(index, 'triggerTime', $event)"
+                    mask="time"
+                    label="Время срабатывания"
+                  >
+                    <template v-slot:append>
+                      <q-icon name="access_time" class="cursor-pointer">
+                        <q-popup-proxy transition-show="scale" transition-hide="scale">
+                          <q-time
+                            :model-value="integration.triggerTime"
+                            @update:model-value="updateIntegration(index, 'triggerTime', $event)"
+                            format24h
+                          />
+                        </q-popup-proxy>
+                      </q-icon>
+                    </template>
+                  </q-input>
+                </div>
+                <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                  <q-tooltip>Время ежедневного срабатывания интеграции (формат ЧЧ:ММ)</q-tooltip>
+                </q-icon>
+              </div>
             </div>
           </div>
         </div>
@@ -185,7 +237,7 @@ const configurationStore = useConfigurationStore()
 
 const integrationOptions = [
   { label: 'Entersight', value: 'Entersight' },
-  { label: 'Google Analytics', value: 'GA' }
+  { label: 'Golden Apple', value: 'GA' }
 ]
 
 const typeTriggerOptions = [
@@ -293,5 +345,9 @@ const removeIntegration = (index) => {
 
 .integration-card:hover {
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.cursor-help {
+  cursor: help;
 }
 </style>

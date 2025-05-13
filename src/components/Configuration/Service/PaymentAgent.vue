@@ -5,49 +5,88 @@
       :key="agent.id || index"
       class="q-ma-md"
     >
-      <div class="row justify-between q-my-md">
+      <!-- DeviceID и генерация -->
+      <div class="row items-center q-my-md">
         <q-input
           label="DeviceID"
           :model-value="agent.id"
           @update:model-value="updateAgent(index, 'id', $event)"
           filled
-          class="q-mx-xs"
+          class="col"
         />
+        <q-icon
+          name="help_outline"
+          size="sm"
+          class="q-ml-sm cursor-help"
+        >
+          <q-tooltip>Идентификатор устройства. Уникален для каждого агента.</q-tooltip>
+        </q-icon>
         <q-btn
           color="primary"
           icon="sync"
           @click="generateUid(index)"
           round
           padding="10px 10px"
-          class="q-my-xs"
+          class="q-my-xs q-ml-md"
         />
       </div>
 
-      <q-select
-        filled
-        :model-value="agent.type"
-        @update:model-value="updateAgent(index, 'type', $event)"
-        :options="agentOptions"
-        label="Тип платежного агента"
-        class="q-mb-md"
-      />
+      <!-- Тип платежного агента -->
+      <div class="row items-center q-mb-md">
+        <q-select
+          filled
+          :model-value="agent.type"
+          @update:model-value="updateAgent(index, 'type', $event)"
+          :options="agentOptions"
+          label="Тип платежного агента"
+          class="col"
+        />
+        <q-icon
+          name="help_outline"
+          size="sm"
+          class="q-ml-sm cursor-help"
+        >
+          <q-tooltip>Выберите тип подключаемого платежного агента (например, Inpas или Сбербанк).</q-tooltip>
+        </q-icon>
+      </div>
 
-      <q-input
-        filled
-        :model-value="agent.terminalNumber"
-        @update:model-value="updateAgent(index, 'terminalNumber', $event)"
-        label="Номер терминала"
-        class="q-mb-md"
-      />
+      <!-- Номер терминала -->
+      <div class="row items-center q-mb-md">
+        <q-input
+          filled
+          :model-value="agent.terminalNumber"
+          @update:model-value="updateAgent(index, 'terminalNumber', $event)"
+          label="Номер терминала"
+          class="col"
+        />
+        <q-icon
+          name="help_outline"
+          size="sm"
+          class="q-ml-sm cursor-help"
+        >
+          <q-tooltip>Уникальный номер терминала, присвоенный банком или системой.</q-tooltip>
+        </q-icon>
+      </div>
 
-      <q-input
-        filled
-        :model-value="agent.comPort"
-        @update:model-value="updateAgent(index, 'comPort', $event)"
-        label="COM порт"
-        class="q-mb-md"
-      />
+      <!-- COM порт -->
+      <div class="row items-center q-mb-md">
+        <q-input
+          filled
+          :model-value="agent.comPort"
+          @update:model-value="updateAgent(index, 'comPort', $event)"
+          label="COM порт"
+          class="col"
+        />
+        <q-icon
+          name="help_outline"
+          size="sm"
+          class="q-ml-sm cursor-help"
+        >
+          <q-tooltip>Порт подключения терминала (например, COM3).</q-tooltip>
+        </q-icon>
+      </div>
 
+      <!-- Кнопки -->
       <div class="row q-mt-md">
         <q-btn
           v-if="index === (modelValue.paymentAgents || defaultAgents).length - 1"
@@ -66,6 +105,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue'

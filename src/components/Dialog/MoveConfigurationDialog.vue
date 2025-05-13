@@ -3,7 +3,7 @@
     <q-card style="min-width: 500px">
       <q-card-section class="row items-center">
         <q-icon name="content_copy" size="md" class="q-mr-sm" />
-        <span class="text-h6">Копирование конфигурации</span>
+        <span class="text-h6">Перемещение конфигурации</span>
       </q-card-section>
 
       <q-card-section>
@@ -11,18 +11,10 @@
           Копируем: <strong>{{ source.name }}</strong>
         </div>
         <div class="text-caption q-mb-md">
-          ID: {{ source.id }} | Тип: {{ nodeType || 'конфигурация' }}
+          ID: {{ source.id }} 
         </div>
 
-        <q-separator class="q-mb-md" />
 
-        <q-input
-          v-model="newName"
-          label="Новое название"
-          outlined
-          class="q-mb-md"
-          :rules="[val => !!val || 'Обязательное поле']"
-        />
 
         <div class="text-subtitle2 q-mb-sm">Куда скопировать?</div>
         <q-tree

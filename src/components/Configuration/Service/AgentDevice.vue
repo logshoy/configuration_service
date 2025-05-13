@@ -1,15 +1,15 @@
 <template>
   <div class="equipment-editor">
     <!-- Список карточек оборудования -->
-    <div class="row q-col-gutter-md">
+    <div class="row q-col-gutter-md q-mx-xs">
       <div
         v-for="(device, index) in modelValue.devices || defaultDevices"
         :key="device.id || index"
-        class="col-12 col-sm-6 col-md-4"
+        class="col-12 col-lg-4"
       >
         <q-card class="text-bold equipment-card cursor-pointer" @click="openEditDialog(index)">
           <q-card-section>
-            <div class="row ">
+            <div class="row">
               <div class="col">
                 <div>{{ getDeviceTitle(device) }}</div>
                 <div class="text-caption">ID: {{ device.id }}</div>
@@ -29,7 +29,7 @@
       </div>
 
       <!-- Кнопка добавления -->
-      <div class="col-12 col-sm-6 col-md-4">
+      <div class="col-12 col-lg-4">
         <q-card class="bg-positive add-card cursor-pointer" @click="addDevice">
           <q-card-section class="flex flex-center full-height bg-positive text-white">
             <div class="text-center">
@@ -70,76 +70,141 @@
                     @click="generateUid()"
                     round
                     dense
-                    title="Сгенерировать новый ID"
                   />
+                  <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                    <q-tooltip>
+                      Уникальный идентификатор оборудования.<br>
+                      Нажмите кнопку для генерации нового ID.
+                    </q-tooltip>
+                  </q-icon>
                 </div>
               </div>
             </div>
 
             <!-- Тип оборудования -->
             <div class="col-12 col-md-6">
-              <q-select
-                filled
-                v-model="editingDevice.type"
-                :options="equipmentTypeOptions"
-                label="Тип оборудования"
-                emit-value
-                map-options
-                @update:model-value="onTypeChange"
-                clearable
-              />
+              <div class="row items-center">
+                <div class="col">
+                  <q-select
+                    filled
+                    v-model="editingDevice.type"
+                    :options="equipmentTypeOptions"
+                    label="Тип оборудования"
+                    emit-value
+                    map-options
+                    @update:model-value="onTypeChange"
+                    clearable
+                  />
+                </div>
+                <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                  <q-tooltip>
+                    Выберите тип оборудования из списка.<br>
+                    Это определит доступные модели и настройки.
+                  </q-tooltip>
+                </q-icon>
+              </div>
             </div>
 
             <!-- Модель оборудования -->
             <div class="col-12 col-md-6" v-if="editingDevice.type">
-              <q-select
-                filled
-                v-model="editingDevice.model"
-                :options="getModelOptions(editingDevice.type)"
-                label="Модель"
-                emit-value
-                map-options
-                clearable
-              />
+              <div class="row items-center">
+                <div class="col">
+                  <q-select
+                    filled
+                    v-model="editingDevice.model"
+                    :options="getModelOptions(editingDevice.type)"
+                    label="Модель"
+                    emit-value
+                    map-options
+                    clearable
+                  />
+                </div>
+                <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                  <q-tooltip>
+                    Выберите модель оборудования.<br>
+                    Доступные модели зависят от выбранного типа.
+                  </q-tooltip>
+                </q-icon>
+              </div>
             </div>
 
             <!-- Порт подключения -->
             <div class="col-12 col-md-6">
-              <q-select
-                filled
-                v-model="editingDevice.connectionType"
-                :options="connectionOptions"
-                label="Тип подключения"
-                emit-value
-                map-options
-                clearable
-              />
+              <div class="row items-center">
+                <div class="col">
+                  <q-select
+                    filled
+                    v-model="editingDevice.connectionType"
+                    :options="connectionOptions"
+                    label="Тип подключения"
+                    emit-value
+                    map-options
+                    clearable
+                  />
+                </div>
+                <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                  <q-tooltip>
+                    Выберите способ подключения оборудования.<br>
+                    Это определит дополнительные настройки подключения.
+                  </q-tooltip>
+                </q-icon>
+              </div>
             </div>
 
             <!-- Настройки подключения -->
             <div class="col-12 col-md-6" v-if="editingDevice.connectionType === 'com'">
-              <q-input
-                filled
-                v-model="editingDevice.comPort"
-                label="COM порт"
-              />
+              <div class="row items-center">
+                <div class="col">
+                  <q-input
+                    filled
+                    v-model="editingDevice.comPort"
+                    label="COM порт"
+                  />
+                </div>
+                <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                  <q-tooltip>
+                    Укажите COM порт для подключения (например, COM1, COM3).<br>
+                    Проверьте правильность порта в диспетчере устройств.
+                  </q-tooltip>
+                </q-icon>
+              </div>
             </div>
 
             <div class="col-12 col-md-6" v-if="editingDevice.connectionType === 'network'">
-              <q-input
-                filled
-                v-model="editingDevice.ipAddress"
-                label="IP адрес"
-              />
+              <div class="row items-center">
+                <div class="col">
+                  <q-input
+                    filled
+                    v-model="editingDevice.ipAddress"
+                    label="IP адрес"
+                  />
+                </div>
+                <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                  <q-tooltip>
+                    Укажите IP адрес оборудования в сети.<br>
+                    Пример: 192.168.1.100
+                  </q-tooltip>
+                </q-icon>
+              </div>
             </div>
 
             <div class="col-12 col-md-6" v-if="editingDevice.connectionType === 'network'">
-              <q-input
-                filled
-                v-model="editingDevice.port"
-                label="Порт"
-                type="number"
-              />
+              <div class="row items-center">
+                <div class="col">
+                  <q-input
+                    filled
+                    v-model="editingDevice.port"
+                    label="Порт"
+                    type="number"
+                  />
+                </div>
+                <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                  <q-tooltip>
+                    Укажите порт для сетевого подключения.<br>
+                    По умолчанию: 9100 (стандартный порт для принтеров)
+                  </q-tooltip>
+                </q-icon>
+              </div>
             </div>
 
             <!-- Дополнительные настройки -->
@@ -148,36 +213,80 @@
                 label="Дополнительные настройки"
                 class="bg-grey-1 q-mt-sm"
               >
+                <template v-slot:header>
+                  <div class="row items-center">
+                    <div>Дополнительные настройки</div>
+                    <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                      <q-tooltip>
+                        Дополнительные параметры работы оборудования.<br>
+                        Настройки зависят от выбранного типа устройства.
+                      </q-tooltip>
+                    </q-icon>
+                  </div>
+                </template>
+
                 <div class="q-pa-md">
                   <template v-if="editingDevice.type === 'printer'">
-                    <q-toggle
-                      v-model="editingDevice.cutEnabled"
-                      label="Автоотрезка чека"
-                      left-label
-                    />
-                    <q-toggle
-                      v-model="editingDevice.openCashDrawer"
-                      label="Открытие денежного ящика"
-                      left-label
-                      class="q-mt-sm"
-                    />
+                    <div class="row items-center">
+                      <q-toggle
+                        v-model="editingDevice.cutEnabled"
+                        label="Автоотрезка чека"
+                        left-label
+                      />
+                      <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                        <q-tooltip>
+                          Включите, если принтер должен автоматически<br>
+                          отрезать чек после печати.
+                        </q-tooltip>
+                      </q-icon>
+                    </div>
+                    <div class="row items-center q-mt-sm">
+                      <q-toggle
+                        v-model="editingDevice.openCashDrawer"
+                        label="Открытие денежного ящика"
+                        left-label
+                      />
+                      <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                        <q-tooltip>
+                          Включите, если принтер должен открывать<br>
+                          денежный ящик после печати чека.
+                        </q-tooltip>
+                      </q-icon>
+                    </div>
                   </template>
 
                   <template v-if="editingDevice.type === 'customerDisplay'">
-                    <q-input
-                      filled
-                      v-model="editingDevice.lineLength"
-                      label="Количество символов в строке"
-                      type="number"
-                      min="20"
-                      max="80"
-                    />
-                    <q-toggle
-                      v-model="editingDevice.showPrices"
-                      label="Показывать цены"
-                      left-label
-                      class="q-mt-sm"
-                    />
+                    <div class="row items-center">
+                      <div class="col">
+                        <q-input
+                          filled
+                          v-model="editingDevice.lineLength"
+                          label="Количество символов в строке"
+                          type="number"
+                          min="20"
+                          max="80"
+                        />
+                      </div>
+                      <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                        <q-tooltip>
+                          Укажите максимальное количество символов<br>
+                          в одной строке дисплея (обычно 20-80 символов).
+                        </q-tooltip>
+                      </q-icon>
+                    </div>
+                    <div class="row items-center q-mt-sm">
+                      <q-toggle
+                        v-model="editingDevice.showPrices"
+                        label="Показывать цены"
+                        left-label
+                      />
+                      <q-icon name="help_outline" size="sm" class="q-ml-sm cursor-help">
+                        <q-tooltip>
+                          Включите, чтобы показывать цены товаров<br>
+                          на дисплее покупателя.
+                        </q-tooltip>
+                      </q-icon>
+                    </div>
                   </template>
                 </div>
               </q-expansion-item>
@@ -371,5 +480,9 @@ const generateUid = () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.cursor-help {
+  cursor: help;
 }
 </style>

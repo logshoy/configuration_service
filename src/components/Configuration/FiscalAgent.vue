@@ -1,5 +1,6 @@
 <template>
   <div>
+
     <q-expansion-item
       v-for="(fiscal, index) in modelValue.fiscalRegistrators || defaultFiscals"
       :key="fiscal.id || index"
@@ -10,21 +11,32 @@
       class="q-mb-sm"
     >
       <div class="q-pa-md">
-        <q-input
-          filled
-          label="Название"
-          :model-value="fiscal.name"
-          @update:model-value="updateFiscal(index, 'name', $event)"
-          class="q-mb-md"
-        />
+        <!-- Название -->
+        <div class="row items-center q-mb-md">
+          <q-input
+            filled
+            label="Название"
+            :model-value="fiscal.name"
+            @update:model-value="updateFiscal(index, 'name', $event)"
+            class="col"
+          />
+          <q-icon
+            name="help_outline"
+            size="sm"
+            class="q-ml-sm cursor-help"
+          >
+            <q-tooltip>Название конфигурации</q-tooltip>
+          </q-icon>
+        </div>
 
-        <div class="row justify-between q-mb-md">
+        <!-- DeviceID и генерация -->
+        <div class="row items-center q-mb-md">
           <q-input
             label="DeviceID"
             :model-value="fiscal.id"
             @update:model-value="updateFiscal(index, 'id', $event)"
             filled
-            class="col-grow q-mr-sm"
+            class="col q-mr-sm"
           />
           <q-btn
             color="primary"
@@ -32,26 +44,56 @@
             @click="generateuid(index)"
             round
             padding="10px"
+            class="q-mr-sm"
           />
+          <q-icon
+            name="help_outline"
+            size="sm"
+            class=" cursor-help"
+          >
+            <q-tooltip>Идентификатор устройства, генерируется автоматически</q-tooltip>
+          </q-icon>
+
         </div>
 
-        <q-select
-          filled
-          :model-value="fiscal.type"
-          @update:model-value="updateFiscal(index, 'type', $event)"
-          :options="fiscalOptions"
-          label="Тип фискального регистратора"
-          class="q-mb-md"
-        />
+        <!-- Тип -->
+        <div class="row items-center q-mb-md">
+          <q-select
+            filled
+            :model-value="fiscal.type"
+            @update:model-value="updateFiscal(index, 'type', $event)"
+            :options="fiscalOptions"
+            label="Тип фискального регистратора"
+            class="col"
+          />
+          <q-icon
+            name="help_outline"
+            size="sm"
+            class="q-ml-sm cursor-help"
+          >
+            <q-tooltip>Выберите производителя или тип фискального регистратора</q-tooltip>
+          </q-icon>
+        </div>
 
-        <q-input
-          filled
-          :model-value="fiscal.portName"
-          @update:model-value="updateFiscal(index, 'portName', $event)"
-          label="PortName"
-          class="q-mb-md"
-        />
+        <!-- PortName -->
+        <div class="row items-center q-mb-md">
+          <q-input
+            filled
+            :model-value="fiscal.portName"
+            @update:model-value="updateFiscal(index, 'portName', $event)"
+            label="PortName"
+            class="col"
+          />
+          <q-icon
+            name="help_outline"
+            size="sm"
+            class="q-ml-sm cursor-help"
+          >
+            <q-tooltip>Название COM-порта или путь к устройству</q-tooltip>
+          </q-icon>
+        </div>
 
+        <!-- Кнопки удаления и добавления -->
         <div class="row justify-end">
           <q-btn
             v-if="(modelValue.fiscalRegistrators || defaultFiscals).length > 1"
@@ -60,26 +102,22 @@
             @click="removeFiscalRegistrator(index)"
             class="q-mr-sm"
           />
-          <q-btn
-            v-if="index === (modelValue.fiscalRegistrators || defaultFiscals).length - 1"
-            color="green"
-            icon="add"
-            @click="addFiscalRegistrator"
-          />
         </div>
       </div>
     </q-expansion-item>
 
-    <q-btn
-      v-if="!modelValue.fiscalRegistrators?.length"
-      color="primary"
-      icon="add"
-      label="Добавить фискальный регистратор"
-      @click="addFiscalRegistrator"
-      class="full-width q-mt-sm"
-    />
+    <!-- Кнопка внизу -->
+    <div class="text-right q-mt-md">
+      <q-btn
+        color="primary"
+        icon="add"
+        label="Добавить фискальный регистратор"
+        @click="addFiscalRegistrator"
+      />
+    </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref } from 'vue'
@@ -114,13 +152,10 @@ if (props.emitAlways) {
   emit('update:modelValue', { ...props.modelValue, fiscalRegistrators: defaultFiscals.value })
 }
 
-const getFiscalLabel = (value) => {
-  return fiscalOptions.find(opt => opt.value === value)?.label || 'Неизвестный'
-}
 
 const getFiscalCaption = (fiscal) => {
   const parts = []
-  if (fiscal.type) parts.push(`Тип: ${getFiscalLabel(fiscal.type)}`)
+  if (fiscal.type) parts.push(`Тип: ${fiscal.type.label}`)
   if (fiscal.portName) parts.push(`Порт: ${fiscal.portName}`)
   return parts.join(' | ') || 'Не настроен'
 }

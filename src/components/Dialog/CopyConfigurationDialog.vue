@@ -11,7 +11,7 @@
           Копируем: <strong>{{ source.name }}</strong>
         </div>
         <div class="text-caption q-mb-md">
-          ID: {{ source.id }} | Тип: {{ nodeType || 'конфигурация' }}
+          ID: {{ source.id }}
         </div>
 
         <q-separator class="q-mb-md" />
