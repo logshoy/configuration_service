@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="drawer_container">
     <!-- Кнопка управления drawer -->
     <q-btn
       class="drawer_button"
@@ -12,7 +12,7 @@
 
     <!-- Drawer с деревом -->
     <q-drawer
-      style="background-color: aliceblue;"
+      style="background-color: aliceblue; margin-left: 75px;"
       :width="drawerWidthValue"
       v-model="drawerOpen"
       bordered

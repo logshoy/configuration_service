@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hHh lpR fFf">
+  <q-layout view="hHh lpr fff">
     <div class="flex">
       <div>
         <q-drawer
@@ -18,9 +18,9 @@
         </q-drawer>
       </div>
       <q-page-container class="container">
-        <q-layout view="hHh lpR fFf">
+        <q-layout view="hHh LpR fff">
           <q-page-container class="container">
-            <div class="_content_center main">
+            <div class="_content_center main no-scroll">
               <DrawerListElements/>
               <slot name="content">
                 <router-view />

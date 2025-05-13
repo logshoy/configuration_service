@@ -1,4 +1,5 @@
 <template>
+  <!-- <q-page> -->
   <div class="full-height">
     <!-- Компонент для копирования -->
     <CopyDialog
@@ -61,7 +62,12 @@
     </div>
 
     <!-- Отображение карточек, если есть результаты -->
-    <div v-else class="row q-gutter-md">
+      <q-scroll-area
+        v-else
+        class="scroll-area-custom"
+        :visible="false"
+        >
+        <div class="row q-gutter-lg q-pa-md">
       <q-card
         v-for="item in filteredListByNode"
         :key="item.id"
@@ -78,8 +84,10 @@
           <br>
         </q-card-section>
       </q-card>
-    </div>
+      </div>
+      </q-scroll-area>
   </div>
+  <!-- </q-page> -->
 </template>
 
 <script setup>
@@ -115,6 +123,8 @@ const moveDialogVisible = ref(false);
 const copySource = ref(null);
 const moveDevice = ref(null);
 
+const branchChanged = ref(false);
+
 // Computed свойства
 const branch = computed(() => shopStore.branch);
 const isLoading = computed(() => selectedItemStore.isLoading);
@@ -131,11 +141,11 @@ const selectedItemType = computed(() => {
 
 
 const canCopySelected = computed(() => {
-  return !!selectedItemId.value;
+  return !!selectedItemId.value && !branchChanged.value;
 });
 
 const canMoveSelected = computed(() => {
-  return !!selectedItemId.value;
+  return !!selectedItemId.value && !branchChanged.value;
 });
 
 const showNoSelectionMessage = computed(() => {
@@ -165,6 +175,7 @@ const selectItem = (item) => {
   selectedItemStore.setConfiguration(item);
   selectedItemId.value = item;
   lastSelectedBranch.value = branch.value;
+  branchChanged.value = false;
 };
 
 const clearSearch = () => {
@@ -265,24 +276,30 @@ const handleMoveConfirm = async (params) => {
 watch(searchQuery, (newVal) => {
   drawerStore.setSearch(newVal);
   selectedItemId.value = null;
+  branchChanged.value = true;
 });
 
 watch(() => route.path, () => {
   searchQuery.value = '';
   drawerStore.setSearch('');
+  branchChanged.value = true;
 });
 
-watch(branch, (newBranch) => {
-  lastSelectedBranch.value = null;
-  if (newBranch) {
-    searchQuery.value = '';
-    drawerStore.setSearch('');
+watch(branch, (newBranch, oldBranch) => {
+  if (newBranch !== oldBranch) {
+    branchChanged.value = true; // Устанавливаем флаг при изменении branch
+    lastSelectedBranch.value = null;
+    if (newBranch) {
+      searchQuery.value = '';
+      drawerStore.setSearch('');
+    }
   }
 });
 
 watch(storeSearch, (newVal) => {
   if (newVal !== searchQuery.value) {
     searchQuery.value = newVal;
+    branchChanged.value = true;
   }
 });
 
@@ -297,6 +314,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.scroll-area-custom {
+  height: calc(100vh - 200px); /* Подстройте под ваш макет */
+  width: 100%;
+}
+
 .my-card {
   width: 200px;
   border-radius: 10px;
