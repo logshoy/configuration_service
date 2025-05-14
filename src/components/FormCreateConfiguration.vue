@@ -145,43 +145,6 @@ const findNodeById = (nodes, id) => {
   return null;
 };
 
-// const cleanSettings = (settings) => {
-//   const allowedFields = {
-//     appCash: ['width', 'height', 'color', 'fiscalAgent'],
-//     service: {
-//       agentFiscalization: ['fiscalRegistrators'],
-//       serviceFiscalization: ['settingCashToAgentFiscalization', 'localUniqueCashMode'],
-//       default: []
-//     },
-//     cashGroup: ['keyboard', 'advance'],
-//     shop: ['language']
-//   };
-
-//   const cleanedSettings = {};
-//   const configType = configurationType.value;
-
-//   // Для типа 'service' учитываем подтип сервиса
-//   if (configType === 'service') {
-//     const serviceType = configurationService.value?.value;
-//     const fields = allowedFields.service[serviceType] || allowedFields.service.default;
-
-//     fields.forEach(field => {
-//       if (settings[field] !== undefined) {
-//         cleanedSettings[field] = settings[field];
-//       }
-//     });
-//   }
-//   // Для остальных типов
-//   else if (allowedFields[configType]) {
-//     allowedFields[configType].forEach(field => {
-//       if (settings[field] !== undefined) {
-//         cleanedSettings[field] = settings[field];
-//       }
-//     });
-//   }
-
-//   return cleanedSettings;
-// };
 
 // Создание конфигурации
 const createConfiguration = async () => {

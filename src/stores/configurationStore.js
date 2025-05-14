@@ -15,6 +15,7 @@ export const useConfigurationStore = defineStore('configuration', {
     dialogCreate: false,
     typeCreateConfigutation: '',
     showAllConfiguration: false,
+    selectedServiceType: null,
   }),
   actions: {
     // Общая функция для обработки запросов
@@ -58,6 +59,10 @@ export const useConfigurationStore = defineStore('configuration', {
       } else {
         this.dialogCreate = true
       }
+    },
+
+    setSelectedServiceType(type) {
+      this.selectedServiceType = type
     },
 
     // Создать новую конфигурацию
@@ -154,32 +159,31 @@ export const useConfigurationStore = defineStore('configuration', {
   getters: {
     // Геттер для получения отфильтрованного списка
     filteredConfigurationList:
-      (state) =>
-      ({ query = null, nodeId = null }) => {
-        let result = [...state.configurationList]
+  (state) =>
+  ({ query = null, nodeId = null, serviceType = null }) => {
+    let result = [...state.configurationList]
 
-        // Если не включен режим "показать все"
-        if (!state.showAllConfiguration) {
-          // Если nodeId не передан → возвращаем null
-          if (nodeId === null || nodeId === undefined) {
-            return null
-          }
-          // Фильтрация по nodeId
-          result = result.filter((item) => item.settings.node == nodeId)
-        }
+    if (!state.showAllConfiguration) {
+      if (nodeId == null) return []
+      result = result.filter((item) => item.settings.node == nodeId)
+    }
 
-        // Фильтрация по query (работает в обоих режимах)
-        if (query !== null && query.trim() !== '') {
-          const searchTerm = query.toLowerCase()
-          result = result.filter((item) => {
-            const idMatch = item.id.toLowerCase().includes(searchTerm)
-            const nameMatch = item.settings?.configurationName?.toLowerCase().includes(searchTerm)
-            return idMatch || nameMatch
-          })
-        }
+    if (query?.trim()) {
+      const searchTerm = query.toLowerCase()
+      result = result.filter((item) => {
+        const idMatch = item.id.toLowerCase().includes(searchTerm)
+        const nameMatch = item.settings?.configurationName?.toLowerCase().includes(searchTerm)
+        return idMatch || nameMatch
+      })
+    }
 
-        return result.length ? result : null
-      },
+    if (serviceType !== null) {
+      const typeValue = typeof serviceType === 'object' ? serviceType.value : serviceType
+      result = result.filter((item) => item.settings?.serviceType?.value === typeValue)
+    }
+
+    return result
+  },
 
     // Геттер для получения отфильтрованного списка по типу
     typeFilteredConfigurationListService:

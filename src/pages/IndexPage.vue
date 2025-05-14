@@ -22,32 +22,44 @@
       <div class="column q-mb-md">
         <div class="row justify-between items-center">
           <div class="text-h5 q-pa-xs">{{ $t(headerTitle) }}</div>
-
         </div>
-        <SearchInput
-          v-model="searchQuery"
-          @clear="clearSearch"
-        />
+          <SearchInput
+            v-model="searchQuery"
+            @clear="clearSearch"
+          />
+
       </div>
       <div class="row q-gutter-sm items-center">
-      <ProductCard />
+        <ProductCard />
         <q-btn
-              round
-              color="teal"
-              icon="content_copy"
-              @click="openCopyDialog"
-              title="Копировать конфигурацию"
-              :disable="!canCopySelected"
-            />
-            <q-btn
-              round
-              color="orange"
-              icon="drive_file_move"
-              @click="openMoveDialog"
-              title="Переместить конфигурацию"
-              :disable="!canMoveSelected"
-            />
-          </div>
+          round
+          color="teal"
+          icon="content_copy"
+          @click="openCopyDialog"
+          title="Копировать конфигурацию"
+          :disable="!canCopySelected"
+        />
+        <q-btn
+          round
+          color="orange"
+          icon="drive_file_move"
+          @click="openMoveDialog"
+          title="Переместить конфигурацию"
+          :disable="!canMoveSelected"
+        />
+        <q-select
+            v-model="selectedServiceTypeProxy"
+            :options="options"
+            label="Тип сервиса"
+            dense
+            outlined
+            clearable
+            style="min-width: 250px; max-width: 250px;"
+            @update:model-value="updateServiceTypeFilter"
+            class="q-my-md"
+            rounded
+          />
+      </div>
     </div>
     <div v-if="isLoading">Загрузка...</div>
     <div v-else-if="error">Ошибка: {{ error }}</div>
@@ -62,30 +74,30 @@
     </div>
 
     <!-- Отображение карточек, если есть результаты -->
-      <q-scroll-area
-        v-else
-        class="scroll-area-custom"
-        :visible="false"
+    <q-scroll-area
+      v-else
+      class="scroll-area-custom"
+      :visible="false"
+    >
+      <div class="row q-gutter-lg q-pa-md">
+        <q-card
+          v-for="item in filteredListByNodeAndType"
+          :key="item.id"
+          :class="['my-card', 'rounded-borders', {
+            'selected-card': selectedItemId === item.id && isSameBranch && !selectedItemStore.isCreateFormVisible
+          }]"
+          clickable
+          @click="selectItem(item.id)"
         >
-        <div class="row q-gutter-lg q-pa-md">
-      <q-card
-        v-for="item in filteredListByNode"
-        :key="item.id"
-        :class="['my-card', 'rounded-borders', {
-          'selected-card': selectedItemId === item.id && isSameBranch && !selectedItemStore.isCreateFormVisible
-        }]"
-        clickable
-        @click="selectItem(item.id)"
-      >
-        <q-card-section>
-          <div class="text-h6">{{ item.settings.configurationName }}</div>
-          <br>
-          <div class="text-subtitle2">ID: {{ item.id }}</div>
-          <br>
-        </q-card-section>
-      </q-card>
+          <q-card-section>
+            <div class="text-h6">{{ item.settings.configurationName }}</div>
+            <br>
+            <div class="text-subtitle2">ID: {{ item.id }}</div>
+            <br>
+          </q-card-section>
+        </q-card>
       </div>
-      </q-scroll-area>
+    </q-scroll-area>
   </div>
   <!-- </q-page> -->
 </template>
@@ -99,6 +111,8 @@ import { useShopStore } from 'stores/shopStore';
 import { useDrawerStore } from 'stores/drawerStore';
 import { useHeaderStore } from 'stores/headerStore';
 import { useQuasar } from 'quasar';
+
+
 import ProductCard from 'components/ProductCard.vue';
 import SearchInput from 'components/Input/SearchInput.vue';
 import CopyDialog from 'components/Dialog/CopyConfigurationDialog.vue';
@@ -114,6 +128,26 @@ const headerStore = useHeaderStore();
 const { title: headerTitle } = storeToRefs(headerStore);
 const { search: storeSearch } = storeToRefs(drawerStore);
 
+// Опции для фильтрации по типу сервиса
+const options = ref([
+  { label: 'Агент оплат', value: 'agentPayment' },
+  { label: 'Агент фискализации', value: 'agentFiscalization' },
+  { label: 'Агент оборудования', value: 'agentDevice' },
+  { label: 'Сервис фискализации', value: 'serviceFiscalization' },
+  { label: 'Агент диспенсоров для карт', value: 'agentCardDispenser' },
+  { label: 'Агент считывателей карта', value: 'agentCardReader' },
+  { label: 'DKLinkMark Модуль ГосСистем', value: 'serviceDKLinkMark' },
+  { label: 'Сервис скидок', value: 'serviceDiscount' },
+  { label: 'Агент обмена', value: 'agentExchange' },
+  { label: 'Сервис справочников', value: 'serviceStorage' },
+  { label: 'Сервис заказов', value: 'serviceOrder' }
+]);
+
+const selectedServiceTypeProxy = computed({
+  get: () => selectedItemStore.selectedServiceType,
+  set: (val) => selectedItemStore.setSelectedServiceType(val)
+})
+
 // Состояние компонента
 const selectedItemId = ref(null);
 const lastSelectedBranch = ref(null);
@@ -122,7 +156,6 @@ const copyDialogVisible = ref(false);
 const moveDialogVisible = ref(false);
 const copySource = ref(null);
 const moveDevice = ref(null);
-
 const branchChanged = ref(false);
 
 // Computed свойства
@@ -139,7 +172,6 @@ const selectedItemType = computed(() => {
   return selectedConfiguration.value?.settings?.type;
 });
 
-
 const canCopySelected = computed(() => {
   return !!selectedItemId.value && !branchChanged.value;
 });
@@ -152,20 +184,29 @@ const showNoSelectionMessage = computed(() => {
   return !branch.value && !selectedItemStore.getShowAllConfiguration;
 });
 
-const filteredListByNode = computed(() => {
-  const result = selectedItemStore.filteredConfigurationList({
+
+// Новый computed для фильтрации по типу сервиса
+const filteredListByNodeAndType = computed(() => {
+  return selectedItemStore.filteredConfigurationList({
     query: searchQuery.value,
-    nodeId: branch.value
-  });
-  return result || [];
-});
+    nodeId: branch.value,
+    serviceType: selectedServiceTypeProxy.value
+  }) || []
+})
+
+// Метод для обновления фильтра
+const updateServiceTypeFilter = (value) => {
+  selectedItemStore.setSelectedServiceType(value)
+  selectedItemId.value = null
+  branchChanged.value = true
+}
 
 const hasNoConfigurations = computed(() => {
-  return branch.value && filteredListByNode.value.length === 0;
+  return branch.value && filteredListByNodeAndType.value.length === 0;
 });
 
 const noConfigurationsMessage = computed(() => {
-  return searchQuery.value
+  return searchQuery.value || selectedServiceTypeProxy.value
     ? 'Ничего не найдено 😞'
     : 'Тут пусто';
 });
@@ -180,8 +221,9 @@ const selectItem = (item) => {
 
 const clearSearch = () => {
   drawerStore.setSearch('');
+  searchQuery.value = '';
+  selectedItemStore.setSelectedServiceType(null);
 };
-
 
 const openCopyDialog = () => {
   if (!selectedItemId.value) return;
@@ -202,7 +244,6 @@ const openMoveDialog = () => {
     id: selectedItemId.value,
     name: selectedConfiguration.value?.settings?.configurationName || 'Конфигурация',
   };
-  console.log( moveDevice.value)
 
   moveDialogVisible.value = true;
 };
@@ -224,7 +265,6 @@ const handleCopyConfirm = async (params) => {
     };
 
     selectedItemStore.createConfiguration(newConfig.settings);
-    console.log('я сработал')
     $q.notify({
       type: 'positive',
       message: 'Конфигурация успешно скопирована'
@@ -279,19 +319,22 @@ watch(searchQuery, (newVal) => {
   branchChanged.value = true;
 });
 
+
 watch(() => route.path, () => {
   searchQuery.value = '';
   drawerStore.setSearch('');
+  selectedServiceTypeProxy.value = null;
   branchChanged.value = true;
 });
 
 watch(branch, (newBranch, oldBranch) => {
   if (newBranch !== oldBranch) {
-    branchChanged.value = true; // Устанавливаем флаг при изменении branch
+    branchChanged.value = true;
     lastSelectedBranch.value = null;
     if (newBranch) {
       searchQuery.value = '';
       drawerStore.setSearch('');
+      selectedServiceTypeProxy.value = null;
     }
   }
 });
@@ -315,12 +358,12 @@ onMounted(() => {
 
 <style scoped>
 .scroll-area-custom {
-  height: calc(100vh - 200px); /* Подстройте под ваш макет */
+  height: calc(100vh - 200px);
   width: 100%;
 }
 
 .my-card {
-  width: 250px;
+  width: 220px;
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;

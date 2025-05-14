@@ -1,12 +1,11 @@
 <template>
-  <div class="row q-pa-md">
+  <div class="row q-pa-xs">
     <q-btn
-      class="q-mx-md"
       @click="enableCreateForm"
       :disable="!shopStore.branch"
-      color="primary"
+      color="green"
     >
-      Создать конфигурацию сервиса
+      Создать сервис
     </q-btn>
   </div>
 </template>
