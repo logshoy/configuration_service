@@ -38,6 +38,17 @@ export const useShopStore = defineStore('shop', {
         })),
       }))
     },
+    isFolder: () => (id) => {
+      const shopStore = useShopStore()
+      return shopStore.treeData.some(
+        (node) =>
+          node.id === id ||
+          node.children?.some(
+            (child) =>
+              child.id === id || child.children?.some((grandChild) => grandChild.id === id),
+          ),
+      )
+    },
   },
 
   actions: {

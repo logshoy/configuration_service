@@ -7,6 +7,8 @@ export const useDrawerStore = defineStore('drawer', {
     drawerOpenRight: true, // Состояние блокировки
     drawerOpenLeft: true,
     search: null, // Состояние блокировки,
+    maxWidth: 815,
+    fullScreenConfiguration: false
   }),
   actions: {
     // Установка состояния miniState

@@ -81,21 +81,26 @@
     >
       <div class="row q-gutter-lg q-pa-md">
         <q-card
-          v-for="item in filteredListByNodeAndType"
-          :key="item.id"
-          :class="['my-card', 'rounded-borders', {
-            'selected-card': selectedItemId === item.id && isSameBranch && !selectedItemStore.isCreateFormVisible
-          }]"
-          clickable
-          @click="selectItem(item.id)"
-        >
-          <q-card-section>
-            <div class="text-h6">{{ item.settings.configurationName }}</div>
-            <br>
-            <div class="text-subtitle2">ID: {{ item.id }}</div>
-            <br>
-          </q-card-section>
-        </q-card>
+        v-for="item in filteredListByNodeAndType"
+        :key="item.id"
+        :class="['my-card', 'rounded-borders', {
+          'selected-card': selectedItemId === item.id && isSameBranch && !selectedItemStore.isCreateFormVisible,
+          // 'folder-card': isFolder(item.id)
+        }]"
+        clickable
+        @click="selectItem(item.id)"
+      >
+        <q-card-section>
+          <div class="text-h6">
+            {{ item.settings.configurationName }}
+            <!-- <q-icon v-if="isFolder(item.id)" name="folder" class="q-ml-sm" /> -->
+          </div>
+          <br>
+          <div class="text-subtitle2">ID: {{ item.id }}</div>
+          <!-- <div v-if="isFolder(item.id)" class="text-caption text-grey">(Папка)</div> -->
+          <br>
+        </q-card-section>
+      </q-card>
       </div>
     </q-scroll-area>
   </div>
@@ -168,16 +173,20 @@ const selectedConfiguration = computed(() => {
   return selectedItemId.value ? selectedItemStore.getConfiguration(selectedItemId.value) : null;
 });
 
+// const isFolder = selectedItemStore.isFolder;
+
 const selectedItemType = computed(() => {
   return selectedConfiguration.value?.settings?.type;
 });
 
 const canCopySelected = computed(() => {
-  return !!selectedItemId.value && !branchChanged.value;
+  return !!selectedItemId.value &&
+         !branchChanged.value
 });
 
 const canMoveSelected = computed(() => {
-  return !!selectedItemId.value && !branchChanged.value;
+  return !!selectedItemId.value &&
+         !branchChanged.value 
 });
 
 const showNoSelectionMessage = computed(() => {

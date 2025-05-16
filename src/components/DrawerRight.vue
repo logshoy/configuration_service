@@ -71,7 +71,11 @@ const calculateWidth = () => {
   const minScreenWidth = 1024;
   const maxScreenWidth = 1920;
   const minWidth = 315;
-  const maxWidth = 815;
+  // const minWidth = 615;
+
+  const maxWidth = 980;
+  // const maxWidth = 1500;
+
 
   if (windowWidth.value <= minScreenWidth) return minWidth;
   if (windowWidth.value >= maxScreenWidth) return maxWidth;

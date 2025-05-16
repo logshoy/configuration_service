@@ -24,6 +24,13 @@
           class="q-mx-md"
           round
         />
+        <q-btn
+          color="secondary"
+          icon="fullscreen"
+          @click="getFullScreen"
+          class="q-mx-md"
+          round
+        />
       </div>
 
       <!-- ID и кнопка копирования на одной линии -->
