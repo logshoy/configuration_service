@@ -12,7 +12,7 @@
 
     <!-- Drawer с деревом -->
     <q-drawer
-      style="background-color: aliceblue; margin-left: 75px;"
+      style="background-color: #f5f9ff; margin-left: 75px;"
       :width="drawerWidthValue"
       v-model="drawerOpen"
       bordered
@@ -22,13 +22,14 @@
     >
       <q-scroll-area class="fit q-pa-md">
         <!-- Группа кнопок управления -->
-        <div class="row q-mb-md no-wrap" ref="buttonsContainer">
+        <div class="row q-mb-md no-wrap " ref="buttonsContainer">
           <!-- Кнопка добавления -->
           <div>
             <q-btn
-              color="green"
+              color="green-8"
               icon="add"
               dense
+              glossy
               @click="enableCreateForm"
             >
               <q-tooltip>Добавить новый элемент</q-tooltip>
@@ -36,9 +37,10 @@
 
             <!-- Кнопка перемещения -->
             <q-btn
-              color="orange"
+              color="deep-orange-8"
               icon="drive_file_move"
               dense
+              glossy
               class="q-ml-sm"
               @click="openMoveDialog"
               :disable="!canMoveSelected"
@@ -48,9 +50,10 @@
 
             <!-- Кнопка копирования -->
             <q-btn
-              color="teal"
+              color="teal-8"
               icon="content_copy"
               dense
+              glossy
               class="q-ml-sm"
               @click="openCopyDialog"
               :disable="!canCopySelected"
@@ -59,9 +62,10 @@
             </q-btn>
 
             <q-btn
-              color="purple"
+              color="purple-8"
               :icon="showAll ? 'visibility_off' : 'visibility'"
               dense
+              glossy
               class="q-ml-sm"
               @click="showAllConfigurations"
             >
@@ -80,18 +84,29 @@
           selected-color="primary"
           v-model:selected="selectedItemId"
           default-expand-all
+          class="colorful-tree"
         >
           <template v-slot:default-header="prop">
-            <div class="row items-center"
-              :class="{ 'selected-node': selectedItemId === prop.node.id }">
+            <div class="row items-center tree-node"
+              :data-node-type="prop.node.type"
+              :class="{
+                'selected-node': selectedItemId === prop.node.id,
+                [`node-type-${prop.node.type}`]: true
+              }">
               <q-icon
                 :name="getIcon(prop.node)"
                 class="q-mr-sm"
                 size="1.2em"
+                :color="getIconColor(prop.node)"
               />
-              <span>
+              <span class="node-label">
                 {{ prop.node.label }}
               </span>
+              <q-badge v-if="prop.node.status"
+                      :color="getBadgeColor(prop.node.status)"
+                      class="q-ml-sm">
+                {{ prop.node.status }}
+              </q-badge>
             </div>
           </template>
         </q-tree>
@@ -189,7 +204,6 @@ const canMoveSelected = computed(() => {
    return ['cashGroup', 'cashRegister'].includes(selectedItem.value?.type);
 });
 
-
 const showAll = computed(() => configurationStore.showAllConfiguration);
 
 // Логика перемещения кассы
@@ -204,7 +218,7 @@ const openMoveDialog = () => {
     moveDevice.value = {
       id: selectedItem.value.id,
       name: selectedItem.value.label,
-      shopId: selectedItem.value.shopId // Добавляем shopId для групп касс
+      shopId: selectedItem.value.shopId
     };
   } else {
     moveDevice.value = {
@@ -227,13 +241,11 @@ const handleMoveConfirm = async (targetId) => {
     let success;
 
     if (selectedItem.value.type === 'cashGroup') {
-      // Для групп касс передаем targetId как shopId
       success = await shopStore.moveCashGroup(
         selectedItem.value.id,
         targetId
       );
     } else {
-      // Для касс передаем targetId как groupId
       success = await shopStore.moveCashRegister(
         selectedItem.value.id,
         targetId
@@ -253,11 +265,10 @@ const handleMoveConfirm = async (targetId) => {
     console.error('Ошибка при перемещении:', error);
   }
 };
+
 // Логика копирования кассы
 const copyDialogVisible = ref(false);
 const copySource = ref(null);
-
-// В секции script setup:
 
 const canCopySelected = computed(() => {
   return ['shop', 'cashGroup', 'cashRegister'].includes(selectedItem.value?.type);
@@ -297,9 +308,9 @@ const handleCopyConfirm = async (params) => {
     const { newName } = params;
 
     if (selectedItem.value.type === 'shop') {
-    shopStore.copyShop(selectedItem.value.id, newName);
+      shopStore.copyShop(selectedItem.value.id, newName);
     } else if (selectedItem.value.type === 'cashGroup') {
-    shopStore.copyCashGroup(selectedItem.value.id, params.targetShopId, newName);
+      shopStore.copyCashGroup(selectedItem.value.id, params.targetShopId, newName);
     } else if (selectedItem.value.type === 'cashRegister') {
       const sourceCash = shopStore.getCashRegisterById(selectedItem.value.id);
 
@@ -353,6 +364,25 @@ const getIcon = (node) => {
   }[node.type];
 };
 
+const getIconColor = (node) => {
+  const colors = {
+    shop: 'deep-purple',
+    cashGroup: 'orange',
+    cashRegister: 'green'
+  };
+  return colors[node.type] || 'grey';
+};
+
+const getBadgeColor = (status) => {
+  const statusColors = {
+    new: 'green',
+    modified: 'orange',
+    deleted: 'red',
+    archived: 'blue'
+  };
+  return statusColors[status] || 'grey';
+};
+
 const handleDrawerClick = (event) => {
   const isButton = event.target.closest('.q-btn') !== null;
   const isTree = treeRef.value?.$el?.contains(event.target);
@@ -372,29 +402,155 @@ const showAllConfigurations = () => {
   position: fixed;
   top: 50%;
   z-index: 2222;
-  /* transition: left 0.3s ease; */
+  transition: all 0.3s ease;
 }
 
-:deep(.q-tree__node--selected) {
-  background-color: #e0f7fa;
-  font-weight: bold;
-  border-left: 4px solid #00bcd4;
+.action-buttons {
+  background: linear-gradient(90deg, #f5f9ff 0%, #e6f0ff 100%);
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.button-group {
+  display: flex;
+  gap: 6px;
+}
+
+.colorful-tree {
+  --tree-indent: 24px;
+}
+
+.tree-node {
+  padding: 4px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.node-type-shop {
+  background-color: #f3e5f5;
+  border-left: 3px solid #9c27b0;
+}
+
+.node-type-cashGroup {
+  background-color: #fff3e0;
+  border-left: 3px solid #ff9800;
+}
+
+.node-type-cashRegister {
+  background-color: #e8f5e9;
+  border-left: 3px solid #4caf50;
 }
 
 .selected-node {
-  background-color: #e0f7fa;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 4px;
+  background-color: #e3f2fd !important;
+  border-left: 12px solid #2196f3 !important;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+}
+
+.node-label {
+  transition: color 0.3s ease;
+  color: #333;
+}
+
+:deep(.q-tree__node--selected) .node-label {
+  color: #0d47a1;
 }
 
 :deep(.q-drawer) {
   box-shadow: 12px 8px 5px rgba(73, 62, 129, 0.078);
+  background: linear-gradient(180deg, #f5f9ff 0%, #e6f0ff 100%);
+}
+
+/* :deep(.q-tree__node:before) {
+  content: '';
+  position: absolute;
+  left: -18px;
+  top: -12px;
+  width: 1px;
+  height: calc(100% + 24px);
+  border-left: 2px solid;
+  color: black;
+} */
+
+:deep(.q-tree__node[data-node-type="shop"]:before) {
+  border-color: #9c27b0 !important; /* Фиолетовый для магазинов */
+}
+
+:deep(.q-tree__node[data-node-type="cashGroup"]:before) {
+  border-color: #ff9800 !important; /* Оранжевый для групп касс */
+}
+
+:deep(.q-tree__node[data-node-type="cashRegister"]:before) {
+  border-color: #4caf50 !important; /* Зеленый для касс */
+}
+
+/* Стили для горизонтальных соединителей */
+:deep(.q-tree__node-connector) {
+  position: relative;
+}
+
+:deep(.q-tree__node-connector:after) {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -18px;
+  width: 16px;
+  border-top: 2px solid;
+}
+
+:deep([data-node-type="shop"] .q-tree__node-connector:after) {
+  border-color: #9c27b0 !important;
+}
+
+:deep([data-node-type="cashGroup"] .q-tree__node-connector:after) {
+  border-color: #ff9800 !important;
+}
+
+:deep([data-node-type="cashRegister"] .q-tree__node-connector:after) {
+  border-color: #4caf50 !important;
+}
+
+
+:deep(.q-tree__node[data-node-type="shop"]:before) {
+  border-color: #9c27b0 !important;
+}
+
+:deep(.q-tree__node[data-node-type="cashGroup"]:before) {
+  border-color: #ff9800 !important;
+}
+
+:deep(.q-tree__node[data-node-type="cashRegister"]:before) {
+  border-color: #4caf50 !important;
+}
+
+/* Горизонтальные линии */
+:deep([data-node-type="shop"] .q-tree__node-connector:after) {
+  border-color: #9c27b0 !important;
+}
+
+:deep([data-node-type="cashGroup"] .q-tree__node-connector:after) {
+  border-color: #ff9800 !important;
+}
+
+:deep([data-node-type="cashRegister"] .q-tree__node-connector:after) {
+  border-color: #4caf50 !important;
 }
 
 .row.q-mb-md.no-wrap {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
+}
+
+.q-badge {
+  font-size: 0.7em;
+  padding: 2px 5px;
+  margin-left: 8px;
 }
 </style>

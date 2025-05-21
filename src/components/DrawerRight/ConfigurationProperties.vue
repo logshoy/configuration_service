@@ -1,37 +1,40 @@
 <template>
   <div class="q-pa-md">
     <q-form @submit.prevent="saveChanges">
-      <div class="row items-center q-mb-md">
-        <q-btn
-          type="submit"
-          color="primary"
-          class="q-mx-md"
-          :disabled="!hasChanges"
-          icon="save"
-          round
-        />
-        <q-btn
-          color="negative"
-          icon="delete"
-          @click="confirmDelete"
-          class="q-mx-md"
-          round
-        />
-        <q-btn
-          color="secondary"
-          :icon="!showJsonEditor ? 'code' : 'topic'"
-          @click="toggleJsonEditor"
-          class="q-mx-md"
-          round
-        />
-        <q-btn
-          color="secondary"
-          icon="fullscreen"
-          @click="getFullScreen"
-          class="q-mx-md"
-          round
-        />
-      </div>
+      <div class="row items-center q-mb-md justify-between">
+  <div class="row items-center">
+    <q-btn
+      type="submit"
+      color="primary"
+      class="q-mx-md"
+      :disabled="!hasChanges"
+      icon="save"
+      round
+    />
+    <q-btn
+      color="negative"
+      icon="delete"
+      @click="confirmDelete"
+      class="q-mx-md"
+      round
+    />
+    <q-btn
+      color="secondary"
+      :icon="!showJsonEditor ? 'code' : 'topic'"
+      @click="toggleJsonEditor"
+      class="q-mx-md"
+      round
+    />
+  </div>
+
+  <q-btn
+    color="secondary"
+    :icon="!fullScreenConfiguration ? 'open_in_full' : ' close_fullscreen'"
+    @click="toggleFullScreen"
+    class="q-mx-md"
+    round
+  />
+</div>
 
       <!-- ID и кнопка копирования на одной линии -->
       <div class="row items-center" v-if="!showJsonEditor">
@@ -124,6 +127,8 @@
 import { ref, watch, computed } from 'vue'
 import { useConfigurationStore } from 'stores/configurationStore'
 import { useShopStore } from 'stores/shopStore'
+import { useDrawerStore } from 'stores/drawerStore'
+
 import { useQuasar } from 'quasar'
 import { validateServiceFiscalization } from 'src/utils/validators.js'
 import AppCash from 'components/Configuration/AppCash.vue'
@@ -135,6 +140,10 @@ const $q = useQuasar()
 const selectedItemStore = useConfigurationStore()
 const shopStore = useShopStore()
 
+const drawerStore = useDrawerStore()
+
+
+
 const selectedItem = computed(() => selectedItemStore.configuration)
 const localItem = ref(null)
 const initialItem = ref(null)
@@ -143,6 +152,8 @@ const showJsonEditor = ref(false)
 const jsonContent = ref('')
 const jsonError = ref(null)
 const hasJsonChanges = ref(false)
+
+const fullScreenConfiguration = computed(() => drawerStore.fullScreenConfiguration);
 
 // Функция для преобразования объекта в JSON (только поле settings)
 const toJsonSettingsOnly = (obj) => {
@@ -354,4 +365,11 @@ const deleteItem = async () => {
     console.error(error)
   }
 }
+
+
+const toggleFullScreen = () => {
+  drawerStore.setfullScreenConfiguration()
+};
+
+
 </script>

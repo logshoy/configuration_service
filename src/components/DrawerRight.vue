@@ -25,7 +25,7 @@
       v-model="drawerOpen"
       side="right"
       bordered
-      :overlay="false"
+      :overlay="drawerStore.fullScreenConfiguration"
       :width="drawerWidthValue"
       behavior="desktop"
     >
@@ -60,6 +60,9 @@ const change = () => {
 
 const selectedItemStore = useConfigurationStore();
 const selectedItem = computed(() => selectedItemStore.configuration);
+
+const fullScreenConfiguration = computed(() => drawerStore.fullScreenConfiguration);
+
 const localItem = ref(null);
 const isCreateFormVisible = computed(() => selectedItemStore.isCreateFormVisible);
 
@@ -70,11 +73,16 @@ const drawerWidthValue = ref(315);
 const calculateWidth = () => {
   const minScreenWidth = 1024;
   const maxScreenWidth = 1920;
-  const minWidth = 315;
-  // const minWidth = 615;
+  let minWidth = 0
+  let maxWidth = 980;
 
-  const maxWidth = 980;
-  // const maxWidth = 1500;
+  if (!fullScreenConfiguration.value) {
+    minWidth = 385;
+    maxWidth = 980;
+  } else {
+    minWidth = 655;
+    maxWidth = 1480;
+  }
 
 
   if (windowWidth.value <= minScreenWidth) return minWidth;
@@ -124,7 +132,7 @@ const saveChanges = () => {
 .drawer_button {
   position: fixed;
   top: 50%;
-  z-index: 2222;
+  z-index: 9322;
 }
 
 .drawer_right {
