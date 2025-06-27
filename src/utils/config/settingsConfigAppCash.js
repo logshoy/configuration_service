@@ -22,6 +22,8 @@ export const settingsConfigAppCash = {
       type: 'select',
       default: null,
     },
+    fiscalAgentLegalEntity: { type: 'select', default: null }, // новое
+    fiscalAgentPrinter: { type: 'select', default: null },
     agentPayment: {
       type: 'select',
       default: null,
@@ -45,6 +47,12 @@ export const mergeSizeColorDefaults = (currentValues = {}) => {
         currentValues.agents?.agentPayment ?? settingsConfigAppCash.agents.agentPayment.default,
       agentDevice:
         currentValues.agents?.agentDevice ?? settingsConfigAppCash.agents.agentDevice.default,
+      fiscalAgentLegalEntity:
+        currentValues.agents?.fiscalAgentLegalEntity ??
+        settingsConfigAppCash.agents.fiscalAgentLegalEntity.default,
+      fiscalAgentPrinter:
+        currentValues.agents?.fiscalAgentPrinter ??
+        settingsConfigAppCash.agents.fiscalAgentPrinter.default,
     },
   }
 }

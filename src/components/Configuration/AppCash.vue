@@ -147,6 +147,30 @@
           </q-tooltip>
         </q-icon>
       </div>
+      <q-select
+  v-if="mergedValues.agents.fiscalAgent"
+  class="col q-mt-sm"
+  filled
+  :model-value="mergedValues.agents.fiscalAgentLegalEntity"
+  :options="legalEntitiesForFiscalAgent"
+  label="Юр. лицо"
+  @update:model-value="updateAgentField('fiscalAgentLegalEntity', $event)"
+  emit-value
+  map-options
+/>
+
+<!-- Выбор принтера -->
+<q-select
+  v-if="mergedValues.agents.fiscalAgent && mergedValues.agents.fiscalAgentLegalEntity"
+  class="col q-mt-sm"
+  filled
+  :model-value="mergedValues.agents.fiscalAgentPrinter"
+  :options="printersForSelectedLegalEntity"
+  label="Принтер"
+  @update:model-value="updateAgentField('fiscalAgentPrinter', $event)"
+  emit-value
+  map-options
+/>
     </q-expansion-item>
   </div>
 </template>
@@ -229,6 +253,22 @@ const updateAgentField = (key, value) => {
   if (mergedValues.value.agents[key] === value) return
   updateModel({ agents: { [key]: value } })
 }
+
+const legalEntitiesForFiscalAgent = computed(() => {
+  const agent = mergedValues.value.agents.fiscalAgent
+  return agent ? selectedItemStore.getLegalEntitiesByAgent(agent) : []
+})
+
+const printersForSelectedLegalEntity = computed(() => {
+  const agent = mergedValues.value.agents.fiscalAgent
+  const legalEntity = mergedValues.value.agents.fiscalAgentLegalEntity
+  return (agent && legalEntity)
+    ? selectedItemStore.getPrintersByAgentAndLegalEntity(agent, legalEntity)
+    : []
+})
+
+
+
 </script>
 
 <style scoped>

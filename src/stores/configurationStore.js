@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
 
 // Константы для API
-const API_BASE_URL = 'http://26.15.251.91:6003/api/v0/configuration'
+const API_BASE_URL = 'http://26.15.251.91:6003/api/v0/config'
 
 export const useConfigurationStore = defineStore('configuration', {
   state: () => ({
@@ -28,11 +28,14 @@ export const useConfigurationStore = defineStore('configuration', {
         if (!response.ok) {
           throw new Error(`Ошибка HTTP: ${response.status}`)
         }
-        const data = await response.json()
-        if (!data.success) {
-          throw new Error('Ошибка в данных: ' + data.message)
+
+        // Проверяем, есть ли тело ответа
+        const text = await response.text()
+        if (!text) {
+          return null // или return {} в зависимости от ваших нужд
         }
-        return data.data
+
+        return JSON.parse(text)
       } catch (err) {
         this.error = err.message
         console.error('Ошибка при выполнении запроса:', err)
@@ -76,8 +79,8 @@ export const useConfigurationStore = defineStore('configuration', {
         settings, // Отправляем объект напрямую, без преобразования в строку
       }
 
-      const data = await this._fetchData(API_BASE_URL, {
-        method: 'POST',
+      const data = await this._fetchData(`${API_BASE_URL}/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -100,8 +103,10 @@ export const useConfigurationStore = defineStore('configuration', {
         return
       }
 
+      console.log(updatedItem)
+
       const data = await this._fetchData(`${API_BASE_URL}/${updatedItem.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -159,31 +164,31 @@ export const useConfigurationStore = defineStore('configuration', {
   getters: {
     // Геттер для получения отфильтрованного списка
     filteredConfigurationList:
-  (state) =>
-  ({ query = null, nodeId = null, serviceType = null }) => {
-    let result = [...state.configurationList]
+      (state) =>
+      ({ query = null, nodeId = null, serviceType = null }) => {
+        let result = [...state.configurationList]
 
-    if (!state.showAllConfiguration) {
-      if (nodeId == null) return []
-      result = result.filter((item) => item.settings.node == nodeId)
-    }
+        if (!state.showAllConfiguration) {
+          if (nodeId == null) return []
+          result = result.filter((item) => item.settings.node == nodeId)
+        }
 
-    if (query?.trim()) {
-      const searchTerm = query.toLowerCase()
-      result = result.filter((item) => {
-        const idMatch = item.id.toLowerCase().includes(searchTerm)
-        const nameMatch = item.settings?.configurationName?.toLowerCase().includes(searchTerm)
-        return idMatch || nameMatch
-      })
-    }
+        if (query?.trim()) {
+          const searchTerm = query.toLowerCase()
+          result = result.filter((item) => {
+            const idMatch = item.id.toLowerCase().includes(searchTerm)
+            const nameMatch = item.settings?.configurationName?.toLowerCase().includes(searchTerm)
+            return idMatch || nameMatch
+          })
+        }
 
-    if (serviceType !== null) {
-      const typeValue = typeof serviceType === 'object' ? serviceType.value : serviceType
-      result = result.filter((item) => item.settings?.serviceType?.value === typeValue)
-    }
+        if (serviceType !== null) {
+          const typeValue = typeof serviceType === 'object' ? serviceType.value : serviceType
+          result = result.filter((item) => item.settings?.serviceType?.value === typeValue)
+        }
 
-    return result
-  },
+        return result
+      },
 
     // Геттер для получения отфильтрованного списка по типу
     typeFilteredConfigurationListService:
