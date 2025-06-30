@@ -1,8 +1,8 @@
 {
     "failed": "failed",
-    "success": "Успешно",
-    "language": "Язык",
-    "configuration": "Конфигурация",
+    "success": "success",
+    "language": "language",
+    "configuration": "configuration",
     "directories": "Справочники",
     "shops": "Магазины",
     "goods": "Товары",
